@@ -750,59 +750,6 @@ Network = function(){
     return nodesMap;
   }
 
-  // showLinkDetails = function (d,i){
-  //   content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
-  //   content += '<hr class="tooltip-hr">';
-  //   if(nodesMap.has(l.source) && nodesMap.has(l.target)){
-  //     var source = nodesMap.get(l.source);
-  //     var target = nodesMap.(l.target);
-  //
-  //     content += '<p class="main">' + l.source  + '</span></p>';
-  //     content += '<hr class="tooltip-hr">';
-  //
-  // }
-  //   if(d.kind == "Client"){
-  //     // console.log(d);
-  //     var AP = d.essid.split("|");
-  //     //contains
-  //     var networkName = $.trim(AP[0]);
-  //     if(networkName === "(not associated)"){
-  //       networkName =  "AP: "+"unassociated";
-  //     }
-  //     else{
-  //
-  //     if( nodesMap.has($.trim(AP[0])) ){
-  //       if(typeof(nodesMap.get($.trim(AP[0])).essid) !=="undefined"){
-  //
-  //         networkName ="AP: "+ nodesMap.get($.trim(AP[0])).essid;
-  //       }
-  //       else{
-  //         networkName ="AP: "+ "Error";
-  //       }
-  //     }
-  //
-  //     }
-  //     content += '<p class="main">' + networkName    + '</span></p>';
-  //     content += '<hr class="tooltip-hr">';
-  //     content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
-  //     console.log(d);
-  //     if(d.probedESSID.length > 0){
-  //       content += '<hr class="tooltip-hr">';
-  //       content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
-  //       d.probedESSID.forEach(function(n){
-  //
-  //         content += '<p class="main">' + n  + '</span></p>';
-  //       });
-  //     }
-  //   }
-  //   else{
-  //     content += '<p class="main">' + "NAME:" + d.essid  + '</span></p>';
-  //     content += '<hr class="tooltip-hr">';
-  //     content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
-  //   }
-  //
-  //   tooltip.showTooltip(content,d3.event);
-  // }
   showDetails = function (d,i){
     content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
     content += '<hr class="tooltip-hr">';
@@ -855,4 +802,4 @@ Network = function(){
   }
 
     return network
-  }
+}
