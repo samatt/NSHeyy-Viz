@@ -4,30 +4,38 @@
 		<title>airoViz</title>
 
 		<!-- Libs -->
+		<script type="text/javascript" src="../lib/jquery/jquery-2.1.0.min.js"></script>
+		<script type="text/javascript" 	src="//cdn.jsdelivr.net/pouchdb/2.2.3/pouchdb.min.js"></script>
 		<script type="text/javascript" src="../lib/d3/d3.js"></script>
 		<!-- // <script type="text/javascript" src="../lib/underscore/underscore-min.js"></script> -->
 		<!-- // <script src="../lib/lodash/lodash.js"></script> -->
-		<script type="text/javascript" 	src="//cdn.jsdelivr.net/pouchdb/2.2.3/pouchdb.min.js"></script>
-		<script type="text/javascript" src="../lib/jquery/jquery-2.1.0.min.js"></script>
+		<script type="text/javascript" src="../lib/colorbrewer/colorBrewer.js"></script>
+
 
 		<!-- Src -->
 		<script type="text/javascript" src="../js/utils.js"></script>
 		<script type="text/javascript" src="../js/pouch.js"></script>
-		<!-- // <script type="text/javascript" src="../js/graph.js"></script> -->
-		<!-- // <script type="text/javascript" src="../js/Tooltip.js"></script> -->
-		<!-- // <script type="text/javascript" src="../js/colorBrewer.js"></script> -->
+		<script type="text/javascript" src="../js/graph.js"></script>
+		<script type="text/javascript" src="../js/Tooltip.js"></script>
+
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 	<body>
 		<script type="text/javascript">
 			var intervalID;
 		  $(document).ready(function() {
-				var dbName = "nodes";
-				var remoteServer  = 'http://127.0.0.1:5984/nodes';
-
+				app.width = $(window).width();
+				app.height=$(window).height();
 				wrapper = Pouch();
-				wrapper(dbName, remoteServer);
-				wrapper.queryDB();
+				wrapper(app.dbName, app.remoteServer);
+
+				myNetwork = Network();
+				wrapper.queryByTime(myNetwork);
+
+
+
+				// wrapper.queryByPower();
+				// console.log(test);
 				// wrapper.queryDB();
 					// app.width = $(window).width();
 					// app.height=$(window).height();
@@ -36,6 +44,7 @@
 			});
 
 		</script>
+		<div id='vis'></div>
 <!--
   	<div id="sync-wrapper">
           <div id="sync-success">Currently syncing</div>

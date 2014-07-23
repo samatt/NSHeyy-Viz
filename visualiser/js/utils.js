@@ -1,5 +1,6 @@
 app = new Object();
-app.server = 'localhost:8080';
+app.dbName = "nodes";
+app.remoteServer  = 'http://127.0.0.1:5984/nodes';
 app.nodes = [];
 app.links = [];
 app.layout = "ConnectionsRealTime";
