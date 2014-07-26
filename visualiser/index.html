@@ -23,25 +23,24 @@
 	<body>
 		<script type="text/javascript">
 			var intervalID;
+			var myNetwork = null;
 		  $(document).ready(function() {
 				app.width = $(window).width();
 				app.height=$(window).height();
 				wrapper = Pouch();
 				wrapper(app.dbName, app.remoteServer);
-
+				time = setUTCDuration(1,0,0);
 				myNetwork = Network();
-				wrapper.queryByTime(myNetwork);
-
-
-
-				// wrapper.queryByPower();
-				// console.log(test);
-				// wrapper.queryDB();
-					// app.width = $(window).width();
-					// app.height=$(window).height();
-
-
+				wrapper.queryByTime(myNetwork,time,true);
+				setInterval(myInterval,app.interval);
 			});
+
+			var myInterval = function(){
+				time = setUTCDuration(1,0,0);
+				console.log("in interval");
+				wrapper.queryByTime(myNetwork,time,false);
+			}
+
 
 		</script>
 		<div id='vis'></div>

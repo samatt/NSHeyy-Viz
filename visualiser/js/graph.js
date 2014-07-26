@@ -3,23 +3,18 @@ Network = function(){
   // in multiple places of Network
   var  width = app.width;
   var  height = app.height;
-  //  allData will store the unfiltered data
   var allData = []
   var allRawData = [];
   var  curLinksData = [];
   var  curNodesData = [];
   var  linkedByIndex = {};
-  // these will hold the svg groups fora
-  // accessing the nodes and links display
   var  nodesG = null;
   var  linksG = null;
-  // these will point to the circles and lines
-  // of the nodes and links
   var  node = "Type";
   var  link = "Distance";
-  //ConnectionsRealTime
-  //Connections
   var  layout = "Distance";
+  // var  layout = "Connections";
+  // var  layout = "ConnectionsRealTime";
   var nodesMap = d3.map();
   var routersMap = d3.map();
   var clientsMap = d3.map();
@@ -448,7 +443,7 @@ Network = function(){
           // console.log(data.nodes[j].probedESSID);
           // console.log(_.intersection(data.nodes[i].probedESSID,data.nodes[j].probedESSID));
         }
-        
+
         var intLength = _.intersection(data.nodes[i].probedESSID,data.nodes[j].probedESSID).length;
         var key = data.nodes[i].name + "_" + data.nodes[j].name;
         var alt_key = data.nodes[j].name + "_" + data.nodes[i].name;
@@ -511,7 +506,7 @@ Network = function(){
 
       if(n.kind == "Client"){
         n.essid = _data[index].ap_essid;
-        console.log(n.essid);
+        // console.log(n.essid);
         n.probedESSID = _data[index].probes;
         if(n.essid === "(not associated)" || n.essid === ""){
 
@@ -590,6 +585,7 @@ Network = function(){
       else{
         n.x = randomnumber=Math.floor(Math.random()*width);
         n.y = randomnumber=Math.floor(Math.random()*height);
+        console.log("NEW NODE");
 
 
         if(layout =="ConnectionsRealTime"){
@@ -678,7 +674,7 @@ Network = function(){
   // console.log(data.links);
     var linksExtent = d3.extent(data.links, function(d){ return d.power;});
     data.links.forEach( function(l){
-      console.log(l);
+      // console.log(l);
       if(nodesMap.has(l.source) && nodesMap.has(l.target)){
         // console.log(l.source + " : "+l.target);
         if(layout === "Distance"){
