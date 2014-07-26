@@ -5,6 +5,7 @@ app.nodes = [];
 app.links = [];
 app.layout = "ConnectionsRealTime";
 app.interval = 5000;
+app.intervalId;
 app.hours = 0;
 app.minutes = 3;
 app.seconds = 0;
@@ -43,8 +44,9 @@ function setUTCDuration (numHours, numMinutes, numSeconds){
 
 	console.log(timestamp);
 	return timestamp
-
 }
+
+
 
 
 
