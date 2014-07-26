@@ -3,7 +3,7 @@ app.dbName = "test";
 app.remoteServer  = 'http://127.0.0.1:5984/test';
 app.nodes = [];
 app.links = [];
-app.layout = "ConnectionsRealTime";
+app.layouts = [ 'Distance', 'Network' , 'Connections' ];
 app.interval = 5000;
 app.intervalId;
 app.hours = 0;
@@ -39,7 +39,7 @@ function setUTCDuration (numHours, numMinutes, numSeconds){
 	var hours 	= (ts.getUTCHours()-numHours) >0 ? (ts.getUTCHours()-numHours) : 0
 
 	//FIXME: Get rid off the -1 from getDate and -2 from hours
-	var timestamp = ts.getFullYear()+"-"+(ts.getMonth()+1)+"-"+(ts.getDate()+1)+"T"+(hours)+":"+ minutes	+":"+seconds+"Z";
+	var timestamp = ts.getFullYear()+"-"+(ts.getMonth()+1)+"-"+(ts.getDate())+"T"+(hours)+":"+ minutes	+":"+seconds+"Z";
 	// timestamp = ts.getFullYear()+"-"+(ts.getMonth()+1)+"-"+(ts.getDate()-1)+" "+(13)+":"+ minutes	+":"+seconds;
 
 	console.log(timestamp);

@@ -63,6 +63,7 @@ Pouch = function(){
 				if(firstTime){
 					console.log("First Time ");
 					network('#vis',postData);
+					network.updateData(postData);
 				}else{
 					console.log("Other Time ");
 					network.updateData(postData);

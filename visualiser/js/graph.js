@@ -14,7 +14,7 @@ Network = function(){
   var  link = "Distance";
   var  layout = "Distance";
   // var  layout = "Connections";
-  // var  layout = "ConnectionsRealTime";
+  // var  layout = "Network";
   var nodesMap = d3.map();
   var routersMap = d3.map();
   var clientsMap = d3.map();
@@ -40,8 +40,8 @@ Network = function(){
 
   function network(selection, data){
     setNodeColor("Type");
-    console.log("setting layout : "+ app.layout );
-    setLayout(app.layout);
+    console.log("setting layout : "+ app.layouts[0] );
+    setLayout(app.layouts[0]);
 
     // format data
     // allRawData = data;
@@ -76,7 +76,7 @@ Network = function(){
         .links(curLinksData)
         .linkDistance(function(d){ return d.target.linkPower; });
     }
-    else if(layout == "ConnectionsRealTime"){
+    else if(layout == "Network"){
       force.nodes(curNodesData)
         .links(curLinksData)
         .linkDistance(function(d){ return d.target.linkPower; });
@@ -100,7 +100,7 @@ Network = function(){
         .charge([-200])
         .size([width, height]);
     }
-    else if (layout == "ConnectionsRealTime"){
+    else if (layout == "Network"){
       force
         .friction(.6)
         .charge([-150])
@@ -125,12 +125,12 @@ Network = function(){
       updateNodesDistance()
 
     }
-    else if (layout == "ConnectionsRealTime"){
+    else if (layout == "Network"){
       updateNodesConnections()
 
     }
     else if (layout == "Connections"){
-      updateNodesConnectionsRealTime()
+      updateNodesNetwork()
 
     }
   }
@@ -192,7 +192,7 @@ Network = function(){
 
   }
 
-  function updateNodesConnectionsRealTime(){
+  function updateNodesNetwork(){
 
       node = nodesG.selectAll("circle.node")
         .data(curNodesData, function(d) { return d.name ;});
@@ -230,8 +230,8 @@ Network = function(){
       updateLinksConnections();
 
     }
-    else if(layout === "ConnectionsRealTime"){
-      updateLinksConnectionsRealTime();
+    else if(layout === "Network"){
+      updateLinksNetwork();
 
     }
   }
@@ -280,7 +280,7 @@ Network = function(){
 
   }
 
-  function updateLinksConnectionsRealTime(){
+  function updateLinksNetwork(){
     link = linksG.selectAll("line.link")
       .data(curLinksData, function(d){ return (d.source.name + " : "+d.target.name) });
 
@@ -311,7 +311,7 @@ Network = function(){
   }
 
   network.isRealTime = function(){
-    if(layout === "ConnectionsRealTime" || layout == "Distance" ){
+    if(layout === "Network" || layout == "Distance" ){
       return true;
     }
     else{
@@ -371,9 +371,9 @@ Network = function(){
       data = setupConnectionsLayout(_data);
 
     }
-    else if(layout === "ConnectionsRealTime"){
+    else if(layout === "Network"){
 
-      data = setupConnectionsRealTimeLayout(_data);
+      data = setupNetworkLayout(_data);
     }
     console.log(data);
     return refreshD3Data(data);
@@ -492,7 +492,7 @@ Network = function(){
     return data;
   }
 
-  setupConnectionsRealTimeLayout = function(_data){
+  setupNetworkLayout = function(_data){
     data = new Object();
     data.links = new Array();
     data.nodes = new Array();
@@ -588,7 +588,7 @@ Network = function(){
         console.log("NEW NODE");
 
 
-        if(layout =="ConnectionsRealTime"){
+        if(layout =="Network"){
           ramp = function(d){
             if(d.kind === "Router"){ return routerColor;}
             else if(d.kind === "Listener"){ return "White";}
@@ -617,7 +617,7 @@ Network = function(){
         n.color = ramp(n);
 
       }
-      else if(layout === "ConnectionsRealTime"){
+      else if(layout === "Network"){
 
         linkRadius = d3.scale.pow().range([10, 30]).domain(countExtent);
         circleRadius = function(d){
@@ -692,7 +692,7 @@ Network = function(){
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
           l.linkColor = linkColor;
         }
-        else if(layout === "ConnectionsRealTime"){
+        else if(layout === "Network"){
           l.source = nodesMap.get(l.source);
           l.target = nodesMap.get(l.target);
 
