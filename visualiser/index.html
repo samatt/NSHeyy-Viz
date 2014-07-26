@@ -5,7 +5,9 @@
 
 		<!-- Libs -->
 		<script type="text/javascript" src="../lib/jquery/jquery-2.1.0.min.js"></script>
-		<script type="text/javascript" 	src="//cdn.jsdelivr.net/pouchdb/2.2.3/pouchdb.min.js"></script>
+		<!-- // <script type="text/javascript" 	src="//cdn.jsdelivr.net/pouchdb/2.2.3/pouchdb.min.js"></script> -->
+		<script type="text/javascript" 	src="../lib/pouchdb/pouchdb.min.js"></script>
+		<script type="text/javascript" 	src="../lib/dat-gui/dat.gui.min.js"></script>
 		<script type="text/javascript" src="../lib/d3/d3.js"></script>
 		<!-- // <script type="text/javascript" src="../lib/underscore/underscore-min.js"></script> -->
 		<!-- // <script src="../lib/lodash/lodash.js"></script> -->
@@ -13,6 +15,7 @@
 
 
 		<!-- Src -->
+		<script type="text/javascript" src="../js/gui.js"></script>
 		<script type="text/javascript" src="../js/utils.js"></script>
 		<script type="text/javascript" src="../js/pouch.js"></script>
 		<script type="text/javascript" src="../js/graph.js"></script>
@@ -22,9 +25,27 @@
 	</head>
 	<body>
 		<script type="text/javascript">
+
 			var intervalID;
 			var myNetwork = null;
 		  $(document).ready(function() {
+
+				var params = new Params();
+				var gui = new dat.GUI();
+				var f1 =  gui.addFolder("Server")
+				f1.add(params, 'dbName');
+				f1.add(params, 'remoteServer');
+
+				var f2 =  gui.addFolder("Graph")
+				f2.add(params, 'layout', [ 'Network', 'Distance' , 'Connections' ]);
+				f2.add(params, 'refreshRate', 0, 10);
+
+				var f3 =  gui.addFolder("Time")
+				f3.add(params, 'hours', 0, 59);
+				f3.add(params, 'minutes', 0, 59);
+				f3.add(params, 'seconds', 0, 59);
+
+
 				app.width = $(window).width();
 				app.height=$(window).height();
 				wrapper = Pouch();
@@ -32,7 +53,9 @@
 				time = setUTCDuration(1,0,0);
 				myNetwork = Network();
 				wrapper.queryByTime(myNetwork,time,true);
-				setInterval(myInterval,app.interval);
+				setInterval(myInterval,params.refreshRate * 1000);
+
+
 			});
 
 			var myInterval = function(){
