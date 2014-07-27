@@ -67,7 +67,7 @@ function Gui(){
       var f3 = graphFolder.addFolder("Distance");
 
       var test = f3.add(params.layoutParams,"circleRadius",1,100).step(1);
-      test.onFinishChange(function(value){myNetwork.updateParams("true:clientRadius:" + value);});
+      test.onFinishChange(function(value){myNetwork.updateParams("true:circleRadius:" + value);});
 
       test = f3.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
       test.onFinishChange(function(value){ myNetwork.updateParams("true:linkRadiusMin:" + value);});
