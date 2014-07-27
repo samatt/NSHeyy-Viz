@@ -60,6 +60,12 @@ function Gui(){
       test = f3.addColor(params.layoutParams,"linkColor");
       test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
 
+      test = f3.add(params.layoutParams,"friction",0,1);
+      test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
+
+      test = f3.add(params.layoutParams,"charge",-300,100).step(1);
+      test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
+
 
     }
     else if(value == "Distance"){
@@ -83,6 +89,12 @@ function Gui(){
 
       test = f3.addColor(params.layoutParams,"linkColor");
       test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
+
+      test = f3.add(params.layoutParams,"friction",0,1);
+      test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
+
+      test = f3.add(params.layoutParams,"charge",-300,100).step(1);
+      test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
 
       // f3.add(params.layoutParams,"circleRadiusRouter").step(1);
       // f3.add(params.layoutParams,"circleRadiusClient").step(1);
@@ -125,14 +137,16 @@ function Params() {
   this.intervalId;
   this.test = " s";
   this.layoutParams = {
-    routerColor: "#fffff4",//colorbrewer.Set3[12][4],
-    clientColor: "#444444", //colorbrewer.Set3[12][3],
-    linkColor: "#456890",//colorbrewer.Blues[9][3],
-    circleRadius: 2,
-    linkRadiusMin: 2,
-    linkRadiusMax: 10,
+    routerColor: colorbrewer.Set3[12][4],
+    clientColor: colorbrewer.Set3[12][3],
+    linkColor: colorbrewer.Blues[9][3],
+    circleRadius: 4,
+    linkRadiusMin: 4,
+    linkRadiusMax: 30,
     routerRadius: 4,
-    clientRadius: 8
+    clientRadius: 8,
+    friction: 0.8,
+    charge: -150
     //FOR GUI:Color min, max
   }
 };

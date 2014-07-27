@@ -33,6 +33,8 @@ Network = function(){
     linkRadiusMax: 10,
     routerRadius: 4,
     clientRadius: 4,
+    friction: 0.8,
+    charge: -150
     //FOR GUI:Color min, max
   }
 
@@ -107,9 +109,13 @@ Network = function(){
 
 
     if(layout == "Distance"){
+      console.log(layoutParams.friction);
+      console.log(layoutParams.charge);
       force
-        .friction(.65)
-        .charge([-200])
+        // .friction(0.6)
+        // .charge([-150])
+        .friction(layoutParams.friction)
+        .charge([layoutParams.charge])
         .size([width, height]);
     }
     else if (layout == "Network"){
@@ -215,7 +221,7 @@ Network = function(){
         .duration(1000)
         .attr("class","node")
         .style("fill",function(d){return d.color;})
-        .attr("r",function(d){console.log(d.radius);return d.radius;});
+        .attr("r",function(d){return d.radius;});
 
       node.enter().append("circle")
         .attr("class", "node")
@@ -254,12 +260,16 @@ Network = function(){
 
     link
       .attr("attr","update")
+      .transition()
+      .duration(500)
+      .style("stroke",function(d){return d.linkColor;})
       .attr("class", "link");
 
     link.enter().append("line")
       .attr("class", "link")
       .style("stroke-width","0.3")
-      .style("stroke",function(d){return (d.target.kind ==="Router"?"White":"Grey")})
+      // .style("stroke",function(d){return (d.target.kind ==="Router"?"White":"Grey")})
+      .style("stroke",function(d){return d.linkColor;})
       .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
@@ -275,7 +285,10 @@ Network = function(){
 
     link
       .attr("attr","update")
+      .transition()
+      .duration(1000)
       .attr("class", "link");
+
     link.enter().append("line")
       .attr("class", "link")
       .style("stoke-width",function(d){return d.power *0.1})
@@ -298,13 +311,16 @@ Network = function(){
 
     link
       .attr("attr","update")
+      .transition()
+      .duration(1000)
+      .style("stroke",function(d){return d.linkColor;})
       .attr("class", "link");
 
     link.enter().append("line")
       .attr("class", "link")
       .style("stroke-width","0.5")
-      .style("stroke",function(d){return (d.target.kind ==="Router"?"White":"Grey")})
-      .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
+      .style("stroke",function(d){return d.linkColor;})
+      // .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
@@ -323,16 +339,15 @@ Network = function(){
   }
   network.updateParams = function(newParams){
     var p =newParams.split(":");
-    console.log(p)
     // bool type = parseBoolean(p[0]);
     var value;
-    console.log(p[0])
     var isInt = p[0];
     key = p[1];
     if(isInt === "true"){
       value = parseInt(p[2]);
-      console.log("parsing int");
     }
+  else if(isInt === "none")
+    value = parseFloat(p[2]);
    else{
      value = p[2];
    }
@@ -541,7 +556,7 @@ Network = function(){
     data.nodes = new Array();
     // console.log("here");
 
-    data.nodes.push({'name' : "Listener", 'power': -10, 'kind': "Listener"});
+    data.nodes.push({'name' : "Listener", 'power': 10, 'kind': "Listener", 'radius': 4});
     for(var index in _data){
 
       // var node = JSON.parse(_data[i]);
@@ -746,6 +761,7 @@ Network = function(){
         if(layout === "Distance"){
           l.source = nodesMap.get(l.source);
           l.target = nodesMap.get(l.target);
+          l.linkColor = linkColor;
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
         }
         else if(layout === "Connections"){
