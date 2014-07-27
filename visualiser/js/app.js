@@ -1,4 +1,4 @@
-function Gui(){
+function App(){
   this.params = new Params();
   var gui = new dat.GUI();
   var utilsGui = gui.addFolder("Utils");
@@ -14,25 +14,23 @@ function Gui(){
 
   var graphGUI = new dat.GUI();
   var graphFolder =  graphGUI.addFolder("Graph");
-  var layouts = graphFolder.add(this.params, 'layout', app.layouts);
+  var layouts = graphFolder.add(this.params, 'layout', config.layouts);
   var refreshRate =  graphFolder.add(this.params, 'refreshRate', 0, 10);
 
-  graphFolder.addFolder(app.layouts[0]);
-  var currentLayout = app.layouts[0];
+  graphFolder.addFolder(config.layouts[0]);
+  var currentLayout = config.layouts[0];
 
-  // cur.onChange(function(value){myNetwork.updateParams(value);});
   this.wrapper = Pouch();
-  this.wrapper(app.dbName, app.remoteServer);
+  this.wrapper(config.dbName, config.remoteServer);
   this.myNetwork = Network();
   time = setUTCDuration(this.params.hours,this.params.minutes,this.params.seconds);
-
   this.wrapper.queryByTime(this.myNetwork,time,true);
 
   params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
-  console.log("new interval ID:" + params.intervalId);
 
   layouts.onChange(function(value) {
-    console.log(value);
+
+    //TODO: Make sure the handkers are being removed from the folders too
     if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
 
     if(value == "Network"){
@@ -45,13 +43,19 @@ function Gui(){
       test = f3.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:"+value);});
 
-      test = f3.add(params.layoutParams,"routerRadius",1,100).step(1);
+      test = f3.add(params.layoutParams,"routerRadius",1,20).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:routerRadius:"+value);});
 
-      test =f3.add(params.layoutParams,"clientRadius",1,100).step(1);
+      test =f3.add(params.layoutParams,"clientRadius",1,20).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:clientRadius:" + value);});
 
-      var test = f3.addColor(params.layoutParams,"routerColor");
+      test = f3.add(params.layoutParams,"friction",0,1);
+      test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
+
+      test = f3.add(params.layoutParams,"charge",-700,500).step(1);
+      test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
+
+      test = f3.addColor(params.layoutParams,"routerColor");
       test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
 
       test = f3.addColor(params.layoutParams,"clientColor");
@@ -59,20 +63,12 @@ function Gui(){
 
       test = f3.addColor(params.layoutParams,"linkColor");
       test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
-
-      test = f3.add(params.layoutParams,"friction",0,1);
-      test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
-
-      test = f3.add(params.layoutParams,"charge",-300,100).step(1);
-      test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
-
-
     }
     else if(value == "Distance"){
 
       var f3 = graphFolder.addFolder("Distance");
 
-      var test = f3.add(params.layoutParams,"circleRadius",1,100).step(1);
+      var test = f3.add(params.layoutParams,"circleRadius",1,20).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:circleRadius:" + value);});
 
       test = f3.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
@@ -93,7 +89,7 @@ function Gui(){
       test = f3.add(params.layoutParams,"friction",0,1);
       test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
 
-      test = f3.add(params.layoutParams,"charge",-300,100).step(1);
+      test = f3.add(params.layoutParams,"charge",-700,500).step(1);
       test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
 
       // f3.add(params.layoutParams,"circleRadiusRouter").step(1);

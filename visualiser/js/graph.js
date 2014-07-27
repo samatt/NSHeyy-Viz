@@ -1,8 +1,8 @@
 Network = function(){
   // variables we want to access
   // in multiple places of Network
-  var  width = app.width;
-  var  height = app.height;
+  var  width = config.width;
+  var  height = config.height;
   var allData = []
   var allRawData = [];
   var  curLinksData = [];
@@ -28,9 +28,10 @@ Network = function(){
     routerColor: colorbrewer.Set3[12][4],
     clientColor: colorbrewer.Set3[12][3],
     linkColor: colorbrewer.Blues[9][3],
-    circleRadius: 2,
+    circleRadius: 6,
+    listenerRadius: 8,
     linkRadiusMin: 2,
-    linkRadiusMax: 10,
+    linkRadiusMax: 100,
     routerRadius: 4,
     clientRadius: 4,
     friction: 0.8,
@@ -53,8 +54,8 @@ Network = function(){
 
   function network(selection, data){
     setNodeColor("Type");
-    console.log("setting layout : "+ app.layouts[0] );
-    setLayout(app.layouts[0]);
+    console.log("setting layout : "+ config.layouts[0] );
+    setLayout(config.layouts[0]);
 
     // format data
     // allRawData = data;
@@ -163,6 +164,7 @@ Network = function(){
       .duration(1000)
       .attr("class","node")
       .style("fill",function(d){return d.color;})
+      // .attr("r", function(d){ return d.radius});
       .attr("r",function(d){return d.radius;});
 
     node.enter().append("circle")
@@ -170,6 +172,7 @@ Network = function(){
       .attr("cx", function(d){ return d.x; })
       .attr("cy", function(d){ return d.y; })
       .attr("r", function(d){ return d.radius})
+      // .attr("r",function(d){if(d.kind === "Listener"){console.log("LISTENER" + d.radius)}return d.radius;})
       .style("fill",function(d){return d.color;})
       .call(force.drag);
 
@@ -395,9 +398,9 @@ Network = function(){
   }
 
   network.updateData = function(newData){
-      allRawData = newData;
-      allData = setupData(newData);
-      update()
+    allRawData = newData;
+    allData = setupData(newData);
+    update()
   }
 
   // tick function for force directed layout
@@ -556,7 +559,7 @@ Network = function(){
     data.nodes = new Array();
     // console.log("here");
 
-    data.nodes.push({'name' : "Listener", 'power': 10, 'kind': "Listener", 'radius': 4});
+    data.nodes.push({'name' : "Listener",  'kind': "Listener"});
     for(var index in _data){
 
       // var node = JSON.parse(_data[i]);
@@ -649,8 +652,9 @@ Network = function(){
           n.px = _n.px;
           n.py = _n.py;
           // n.color = _n.color;
+
           if(layout === "Network"){
-            console.log("HERE");
+
             ramp = function(d){
               if(d.kind === "Router"){ return routerColor;}
               else if(d.kind === "Listener"){ return "White";}
@@ -666,10 +670,14 @@ Network = function(){
             }
 
           }
-        else{
-          n.radius = layoutParams['circleRadius']
-        }
+          else{
+            n.radius = layoutParams['circleRadius']
+          }
           // console.log(layoutParams);
+          if(n.kind === "Listener"){
+            console.log("HERE "+layoutParams['listenerRadius']);
+            n.radius = layoutParams['listenerRadius'];
+          }
       }
       else{
 
@@ -704,6 +712,7 @@ Network = function(){
         circleRadius = d3.scale.pow().range([ 1  ,layoutParams['circleRadius']]).domain(countExtent);
 
         n.radius = circleRadius(n.power);
+        if(n.kind === "Listener"){n.radius = layoutParams['listenerRadius'];}
         n.linkPower = linkRadius(n.power);
         ramp = function(d){
           if(d.kind === "Router"){ return routerColor;}
@@ -722,12 +731,13 @@ Network = function(){
         linkRadius = d3.scale.pow().range([layoutParams['linkRadiusMin'], layoutParams['linkRadiusMax']]).domain(countExtent);
         circleRadius = function(d){
           if(d.kind === "Router"){ return layoutParams['routerRadius'];}
-          else if(d.kind === "Listener"){ return 1;}
+          else if(d.kind === "Listener"){ layoutParams['listenerRadius'];}
           else{return layoutParams['clientRadius'];}
 
         }
         n.linkPower = linkRadius(n.power);
         n.radius = circleRadius(n);
+
       }
       else if(layout === "Connections"){
 
@@ -801,6 +811,9 @@ Network = function(){
       if(typeof(nodesMap.get(n.name)) !=="undefined"){
       }
       else{
+        if(n.kind ==="Listener"){
+          console.log("HERE" + n.radius);
+        }
         nodesMap.set(n.name, n);
       }
 

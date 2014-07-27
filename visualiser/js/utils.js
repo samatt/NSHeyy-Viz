@@ -1,14 +1,14 @@
-app = new Object();
-app.dbName = "test";
-app.remoteServer  = 'http://127.0.0.1:5984/test';
-app.nodes = [];
-app.links = [];
-app.layouts = [ 'Distance', 'Network' , 'Connections' ];
-app.interval = 5000;
-app.intervalId;
-app.hours = 0;
-app.minutes = 3;
-app.seconds = 0;
+config = new Object();
+config.dbName = "test";
+config.remoteServer  = 'http://127.0.0.1:5984/test';
+config.nodes = [];
+config.links = [];
+config.layouts = [ 'Distance', 'Network' , 'Connections' ];
+config.interval = 5000;
+config.intervalId;
+config.hours = 0;
+config.minutes = 3;
+config.seconds = 0;
 
 var node = null;
 var link = null;
