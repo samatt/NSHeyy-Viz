@@ -12,13 +12,37 @@ function App(){
   f3.add(this.params, 'minutes', 0, 59).step(1);
   f3.add(this.params, 'seconds', 0, 59).step(1);
 
+
   var graphGUI = new dat.GUI();
   var graphFolder =  graphGUI.addFolder("Graph");
   var layouts = graphFolder.add(this.params, 'layout', config.layouts);
   var refreshRate =  graphFolder.add(this.params, 'refreshRate', 0, 10);
 
-  graphFolder.addFolder(config.layouts[0]);
+  var f4 = graphFolder.addFolder(config.layouts[0]);
   var currentLayout = config.layouts[0];
+  var test = f4.add(params.layoutParams,"circleRadius",1,20).step(1);
+  test.onFinishChange(function(value){myNetwork.updateParams("true:circleRadius:" + value);});
+
+  test = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
+  test.onFinishChange(function(value){ myNetwork.updateParams("true:linkRadiusMin:" + value);});
+
+  test = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
+  test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:" + value);});
+
+  test = f4.add(params.layoutParams,"friction",0,1);
+  test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
+
+  test = f4.add(params.layoutParams,"charge",-700,500).step(1);
+  test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
+  
+  test = f4.addColor(params.layoutParams,"routerColor");
+  test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
+
+  test = f4.addColor(params.layoutParams,"clientColor");
+  test.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
+
+  test = f4.addColor(params.layoutParams,"linkColor");
+  test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
 
   this.wrapper = Pouch();
   this.wrapper(config.dbName, config.remoteServer);
@@ -35,65 +59,62 @@ function App(){
 
     if(value == "Network"){
 
-      var f3 =graphFolder.addFolder("Network");
+      f4 =graphFolder.addFolder("Network");
 
-      var test = f3.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
+      var test = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMin:" + value);});
 
-      test = f3.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
+      test = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:"+value);});
 
-      test = f3.add(params.layoutParams,"routerRadius",1,20).step(1);
+      test = f4.add(params.layoutParams,"routerRadius",1,20).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:routerRadius:"+value);});
 
-      test =f3.add(params.layoutParams,"clientRadius",1,20).step(1);
+      test =f4.add(params.layoutParams,"clientRadius",1,20).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:clientRadius:" + value);});
 
-      test = f3.add(params.layoutParams,"friction",0,1);
+      test = f4.add(params.layoutParams,"friction",0,1);
       test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
 
-      test = f3.add(params.layoutParams,"charge",-700,500).step(1);
+      test = f4.add(params.layoutParams,"charge",-700,500).step(1);
       test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
 
-      test = f3.addColor(params.layoutParams,"routerColor");
+      test = f4.addColor(params.layoutParams,"routerColor");
       test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
 
-      test = f3.addColor(params.layoutParams,"clientColor");
+      test = f4.addColor(params.layoutParams,"clientColor");
       test.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
 
-      test = f3.addColor(params.layoutParams,"linkColor");
+      test = f4.addColor(params.layoutParams,"linkColor");
       test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
     }
     else if(value == "Distance"){
 
-      var f3 = graphFolder.addFolder("Distance");
+      f4 = graphFolder.addFolder("Distance");
 
-      var test = f3.add(params.layoutParams,"circleRadius",1,20).step(1);
+      var test = f4.add(params.layoutParams,"circleRadius",1,20).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:circleRadius:" + value);});
 
-      test = f3.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
+      test = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
       test.onFinishChange(function(value){ myNetwork.updateParams("true:linkRadiusMin:" + value);});
 
-      test = f3.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
+      test = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:" + value);});
 
-      test = f3.addColor(params.layoutParams,"routerColor");
-      test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
-
-      test = f3.addColor(params.layoutParams,"clientColor");
-      test.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
-
-      test = f3.addColor(params.layoutParams,"linkColor");
-      test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
-
-      test = f3.add(params.layoutParams,"friction",0,1);
+      test = f4.add(params.layoutParams,"friction",0,1);
       test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
 
-      test = f3.add(params.layoutParams,"charge",-700,500).step(1);
+      test = f4.add(params.layoutParams,"charge",-700,500).step(1);
       test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
 
-      // f3.add(params.layoutParams,"circleRadiusRouter").step(1);
-      // f3.add(params.layoutParams,"circleRadiusClient").step(1);
+      test = f4.addColor(params.layoutParams,"routerColor");
+      test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
+
+      test = f4.addColor(params.layoutParams,"clientColor");
+      test.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
+
+      test = f4.addColor(params.layoutParams,"linkColor");
+      test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
     }
     else{
       value = "";
