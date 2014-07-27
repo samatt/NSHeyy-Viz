@@ -198,12 +198,12 @@ def updateClient(cur,params):
 
 if __name__ == '__main__' :
 
-    output = file("wifiCorpus_HOPEX.csv","a")
-    i =0
-    f =  ""
+    # output = file("wifiCorpus_HOPEX.csv","a")
+    # i =0
+    # f =  ""
     server = Server("http://localhost:5984")
 
-    db = server.get_or_create_db("hopex")
+    db = server.get_or_create_db("test")
     Node.set_db(db)
     for i in db.all_docs():
         key = i['id']
@@ -220,37 +220,37 @@ if __name__ == '__main__' :
             if value['kind'] == 'Client' :
                 # print "Im a " + value['kind'] + " with ID: "+  value['id']
                 clientMap[value['bssid']] = value['_id']
-                if len(value["probes"]) >0:
+                # if len(value["probes"]) >0:
                     # print "Client :" + str(i) + " of "+ str(len(db.all_docs()))
-                    sentence = value['bssid'] + ","
-                    sentence += ",".join(value["probes"])
-                    sentence += "\n"
-                    print sentence
-                    f += sentence.encode('utf-8')
+                    # sentence = value['bssid'] + ","
+                    # sentence += ",".join(value["probes"])
+                    # sentence += "\n"
+                    # print sentence
+                    # f += sentence.encode('utf-8')
     
-    output.write(f)
-    output.close
+    # output.write(f)
+    # output.close
 
     # csv = open("/Users/surya/Desktop/test.log", 'r')
     # for line in csv:
     #     readLine(line)
     # csv.close()
 ##########TAIL IMPLEMENTATION
-    # filename = '/Users/surya/Desktop/test.log'
-    # file = open(filename,'r')
+    filename = '/Users/surya/Desktop/test.log'
+    file = open(filename,'r')
 
-    # #Find the size of the file and move to the end
-    # st_results = os.stat(filename)
-    # st_size = st_results[6]
-    # file.seek(st_size)
+    #Find the size of the file and move to the end
+    st_results = os.stat(filename)
+    st_size = st_results[6]
+    file.seek(st_size)
 
 
-    # while 1:
-    #     where = file.tell()
-    #     line = file.readline()
-    #     if not line:
-    #         time.sleep(1)
-    #         file.seek(where)
-    #     else:
-    #         readLine(line)
-    #         print line,
+    while 1:
+        where = file.tell()
+        line = file.readline()
+        if not line:
+            time.sleep(1)
+            file.seek(where)
+        else:
+            readLine(line)
+            print line,
