@@ -7,7 +7,7 @@
 		<script type="text/javascript" src="../lib/jquery/jquery-2.1.0.min.js"></script>
 		<!-- // <script type="text/javascript" 	src="//cdn.jsdelivr.net/pouchdb/2.2.3/pouchdb.min.js"></script> -->
 		<script type="text/javascript" 	src="../lib/pouchdb/pouchdb.min.js"></script>
-		<script type="text/javascript" 	src="../lib/dat-gui/dat.gui.min.js"></script>
+		<script type="text/javascript" 	src="../lib/dat-gui/dat.gui.js"></script>
 		<script type="text/javascript" src="../lib/d3/d3.js"></script>
 		<!-- // <script type="text/javascript" src="../lib/underscore/underscore-min.js"></script> -->
 		<!-- // <script src="../lib/lodash/lodash.js"></script> -->
@@ -15,7 +15,7 @@
 
 
 		<!-- Src -->
-		<script type="text/javascript" src="../js/gui.js"></script>
+		<script type="text/javascript" src="../js/app.js"></script>
 		<script type="text/javascript" src="../js/utils.js"></script>
 		<script type="text/javascript" src="../js/pouch.js"></script>
 		<script type="text/javascript" src="../js/graph.js"></script>
@@ -29,6 +29,7 @@
 			var intervalID;
 			var myNetwork = null;
 		  $(document).ready(function() {
+
 				app.width = $(window).width();
 				app.height=$(window).height();
 				gui = Gui();

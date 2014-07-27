@@ -24,6 +24,17 @@ Network = function(){
   // variables to refect the current settings
   // of the visualization
   var  nodeColor = null;
+  var layoutParams = {
+    routerColor: colorbrewer.Set3[12][4],
+    clientColor: colorbrewer.Set3[12][3],
+    linkColor: colorbrewer.Blues[9][3],
+    circleRadius: 2,
+    linkRadiusMin: 2,
+    linkRadiusMax: 10,
+    routerRadius: 4,
+    clientRadius: 4,
+    //FOR GUI:Color min, max
+  }
 
   var tooltip = Tooltip("vis-tooltip", 230)
 
@@ -93,6 +104,7 @@ Network = function(){
     // enter / exit for nodes
     updateNodes();
     updateLinks();
+
 
     if(layout == "Distance"){
       force
@@ -203,7 +215,7 @@ Network = function(){
         .duration(1000)
         .attr("class","node")
         .style("fill",function(d){return d.color;})
-        .attr("r",function(d){return d.radius;});
+        .attr("r",function(d){console.log(d.radius);return d.radius;});
 
       node.enter().append("circle")
         .attr("class", "node")
@@ -309,7 +321,39 @@ Network = function(){
   setLayout = function(newLayout){
     layout = newLayout;
   }
+  network.updateParams = function(newParams){
+    var p =newParams.split(":");
+    console.log(p)
+    // bool type = parseBoolean(p[0]);
+    var value;
+    console.log(p[0])
+    var isInt = p[0];
+    key = p[1];
+    if(isInt === "true"){
+      value = parseInt(p[2]);
+      console.log("parsing int");
+    }
+   else{
+     value = p[2];
+   }
 
+    console.log("update params in network : " +  newParams+" "+ layoutParams[key]);
+    layoutParams[key] = value;
+    console.log("updated to to "+layoutParams[key]);
+    allData = setupData(allRawData);
+    update();
+
+    // layoutParams.routerColor = newParams.routerColor;
+    // layoutParams.clientColor = newParams.clientColor;
+    // layoutParams.linkColor = newParams.linkColor;
+    // layoutParams.circleRadius =  newParams.circleRadius;
+    // layoutParams.linkRadiusMin = newParams.linkRadiusMin;
+    // layoutParams.linkRadiusMax = newParams.linkRadiusMax;
+    // layoutParams.routerRadius =  newParams.routerRadius;
+    // layoutParams.clientRadius = newParams.clientRadius;
+      //FOR GUI:Color min, max
+
+  }
   network.isRealTime = function(){
     if(layout === "Network" || layout == "Distance" ){
       return true;
@@ -363,19 +407,18 @@ Network = function(){
     data = new Object();
     data.links = new Array();
     data.nodes = new Array();
-    console.log("setup data :" + layout);
+    // console.log("setup data :" + layout);
     if(layout==="Distance"){
       data = setupDistanceLayout(_data);
     }
     else if(layout === "Connections"){
       data = setupConnectionsLayout(_data);
-
     }
     else if(layout === "Network"){
-
       data = setupNetworkLayout(_data);
     }
-    console.log(data);
+    // console.log(data);
+    // console.log(layoutParams);
     return refreshD3Data(data);
   }
   setupConnectionsLayout = function(_data){
@@ -532,7 +575,7 @@ Network = function(){
     data.nodes = new Array();
 
     data.nodes.push({'name' : "Listener", 'power': -10, 'kind': "Listener"});
-    console.log(_data);
+    // console.log(_data);
     for(var node in _data){
 
       var n = {'name' : $.trim(_data[node].bssid), 'power': _data[node].power, 'kind': _data[node].kind};
@@ -558,9 +601,19 @@ Network = function(){
   refreshD3Data = function(data){
     // var color = colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)];
 
-    var routerColor = colorbrewer.Set3[12][4];
-    var clientColor = colorbrewer.Set3[12][3];
-    var linkColor = colorbrewer.Blues[9][3];
+    //FOR GUI: routerColor
+    //FOR GUI: clientColor
+    //FOR GUI: linkColor
+    //FOR GUI:Color min, max
+    //FOR GUI:circleRadius max
+    //FOR GUI:linkRadius min, max
+    //FOR GUI:circle Radius router,client
+    //FOR GUI:linkRadius Min,Max
+    //FOR GUI:circleRadius Max
+
+    var routerColor = layoutParams['routerColor'];//colorbrewer.Set3[12][4];
+    var clientColor = layoutParams['clientColor'];//colorbrewer.Set3[12][3];
+    var linkColor = layoutParams.linkColor;//colorbrewer.Blues[9][3];
     // var linkColor = colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)];
     countExtent = d3.extent(data.nodes, function(d){ return d.power;});
     countExtentESSID = d3.extent(data.nodes,function(d){
@@ -580,12 +633,34 @@ Network = function(){
           n.y = _n.y;
           n.px = _n.px;
           n.py = _n.py;
-          n.color = _n.color;
+          // n.color = _n.color;
+          if(layout === "Network"){
+            console.log("HERE");
+            ramp = function(d){
+              if(d.kind === "Router"){ return routerColor;}
+              else if(d.kind === "Listener"){ return "White";}
+              else{ return clientColor;}
+
+            }
+            n.color = ramp(n);
+            if(n.kind === "Router"){
+                n.radius = layoutParams['routerRadius']
+            }
+            else{
+                n.radius = layoutParams['clientRadius']
+            }
+
+          }
+        else{
+          n.radius = layoutParams['circleRadius']
+        }
+          // console.log(layoutParams);
       }
       else{
+
         n.x = randomnumber=Math.floor(Math.random()*width);
         n.y = randomnumber=Math.floor(Math.random()*height);
-        console.log("NEW NODE");
+
 
 
         if(layout =="Network"){
@@ -602,9 +677,16 @@ Network = function(){
       }
 
       if(layout === "Distance"){
+        //FOR GUI:Color min, max
+        //FOR GUI:circleRadius max
+        //FOR GUI:linkRadius min, max
+        //FOR GUI:circle Radius router,client
+        //FOR GUI:linkRadius Min,Max
+        //FOR GUI:circleRadius Max
 
-        linkRadius = d3.scale.pow().range([300, 30]).domain(countExtent);
-        circleRadius = d3.scale.pow().range([ 5  ,10]).domain(countExtent);
+                                        //[300, 30]
+        linkRadius = d3.scale.linear().range([layoutParams['linkRadiusMin'], layoutParams['linkRadiusMax'] ]).domain(countExtent);
+        circleRadius = d3.scale.pow().range([ 1  ,layoutParams['circleRadius']]).domain(countExtent);
 
         n.radius = circleRadius(n.power);
         n.linkPower = linkRadius(n.power);
@@ -618,51 +700,35 @@ Network = function(){
 
       }
       else if(layout === "Network"){
-
-        linkRadius = d3.scale.pow().range([10, 30]).domain(countExtent);
+        //FOR GUI:Color min, max
+        //FOR GUI:circleRadius max
+        //FOR GUI:linkRadius min, max
+        //FOR GUI:circle Radius router,client
+        linkRadius = d3.scale.pow().range([layoutParams['linkRadiusMin'], layoutParams['linkRadiusMax']]).domain(countExtent);
         circleRadius = function(d){
-          if(d.kind === "Router"){ return 7;}
-          else if(d.kind === "Listener"){ return 5;}
-          else{return 3;}
+          if(d.kind === "Router"){ return layoutParams['routerRadius'];}
+          else if(d.kind === "Listener"){ return 1;}
+          else{return layoutParams['clientRadius'];}
 
         }
-        // ramp = function(d){
-        //   if(d.kind === "Router"){ return color;}
-        //   else if(d.kind === "Listener"){ return "White";}
-        //   else{return linkColor;}
-        // }
-        //
-        // n.color = ramp(n);
-        // n.linkPower = 10;
         n.linkPower = linkRadius(n.power);
         n.radius = circleRadius(n);
       }
       else if(layout === "Connections"){
-          //range(["#8dbbd8","#acbc43"]);
+
+          //FOR GUI:Color min, max
+          //FOR GUI:circleRadius max
+          //FOR GUI:range(["#8dbbd8","#acbc43"]);
           var minColor = colorbrewer.Reds[9][2];
           // var maxColor = colorbrewer.Reds[9][8];
           var maxColor = colorbrewer.Set3[12][3];
-          // linkRadius = d3.scale.pow().range([10, 2]).domain(countExtent);
           var nodeColor = d3.scale.pow().domain(countExtentESSID).range([minColor,maxColor]);
           n.color = nodeColor(n.probedESSID.length);
-          // console.log(n.color);
 
           // n.power = linkRadius(n.power);
           if(n.kind == "Client"){
               circRad = d3.scale.linear().range([ 5  ,10]).domain(countExtentESSID);//circleRadius(n);
               n.radius = circRad(n.probedESSID.length);
-
-              // n.color = color;
-
-          }
-          else {
-            // ramp = function(d){
-            //   if(d.kind === "Router"){ return "#4c92c1";}
-            //   else if(d.kind === "Listener"){ return "White";}
-            //   else{return "#bb7646";}
-            // }
-
-
           }
       }
 

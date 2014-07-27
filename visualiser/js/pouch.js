@@ -58,14 +58,12 @@ Pouch = function(){
 					postData.push(response.rows[row].value);
 
 				}
-				// console.log(postData);
-				// network('#vis',postData);
 				if(firstTime){
-					console.log("First Time ");
+					// console.log("First Time ");
 					network('#vis',postData);
 					network.updateData(postData);
 				}else{
-					console.log("Other Time ");
+					// console.log("Other Time ");
 					network.updateData(postData);
 				}
 			}
