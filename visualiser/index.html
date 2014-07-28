@@ -30,15 +30,17 @@
 			var myNetwork = null;
 		  $(document).ready(function() {
 
-				app.width = $(window).width();
-				app.height=$(window).height();
-				gui = Gui();
+				config.width = $(window).width();
+				config.height=$(window).height();
+				app = App();
 			});
 
 
 
 		</script>
-		<div id='vis'></div>
+		<div id="main" role="main">
+			<div id='vis'></div>
+		</div>
 <!--
   	<div id="sync-wrapper">
           <div id="sync-success">Currently syncing</div>
