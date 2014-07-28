@@ -3,11 +3,11 @@ function App(){
   var gui = new dat.GUI();
   var utilsGui = gui.addFolder("Utils");
 
-  var f1 =  utilsGui.addFolder("Server")
+  var f1 =  utilsGui.addFolder("Server");
   f1.add(this.params, 'dbName');
   f1.add(this.params, 'remoteServer');
 
-  var f3 =  utilsGui.addFolder("Time")
+  var f3 =  utilsGui.addFolder("Time");
   f3.add(this.params, 'hours', 0, 59).step(1);
   f3.add(this.params, 'minutes', 0, 59).step(1);
   f3.add(this.params, 'seconds', 0, 59).step(1);
@@ -61,60 +61,60 @@ function App(){
 
       f4 =graphFolder.addFolder("Network");
 
-      var test = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
-      test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMin:" + value);});
+      var p = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
+      p.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMin:" + value);});
 
-      test = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
-      test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:"+value);});
+      p = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
+      p.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:"+value);});
 
-      test = f4.add(params.layoutParams,"routerRadius",1,20).step(1);
-      test.onFinishChange(function(value){myNetwork.updateParams("true:routerRadius:"+value);});
+      p = f4.add(params.layoutParams,"routerRadius",1,20).step(1);
+      p.onFinishChange(function(value){myNetwork.updateParams("true:routerRadius:"+value);});
 
-      test =f4.add(params.layoutParams,"clientRadius",1,20).step(1);
-      test.onFinishChange(function(value){myNetwork.updateParams("true:clientRadius:" + value);});
+      p =f4.add(params.layoutParams,"clientRadius",1,20).step(1);
+      p.onFinishChange(function(value){myNetwork.updateParams("true:clientRadius:" + value);});
 
-      test = f4.add(params.layoutParams,"friction",0,1);
-      test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
+      p = f4.add(params.layoutParams,"friction",0,1);
+      p.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
 
-      test = f4.add(params.layoutParams,"charge",-700,500).step(1);
-      test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
+      p = f4.add(params.layoutParams,"charge",-700,500).step(1);
+      p.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
 
-      test = f4.addColor(params.layoutParams,"routerColor");
-      test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
+      p = f4.addColor(params.layoutParams,"routerColor");
+      p.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
 
-      test = f4.addColor(params.layoutParams,"clientColor");
-      test.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
+      p = f4.addColor(params.layoutParams,"clientColor");
+      p.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
 
-      test = f4.addColor(params.layoutParams,"linkColor");
-      test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
+      p = f4.addColor(params.layoutParams,"linkColor");
+      p.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
     }
     else if(value == "Distance"){
 
       f4 = graphFolder.addFolder("Distance");
 
-      var test = f4.add(params.layoutParams,"circleRadius",1,20).step(1);
-      test.onFinishChange(function(value){myNetwork.updateParams("true:circleRadius:" + value);});
+      var p1z = f4.add(params.layoutParams,"circleRadius",1,20).step(1);
+      p1.onFinishChange(function(value){myNetwork.updateParams("true:circleRadius:" + value);});
 
-      test = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
-      test.onFinishChange(function(value){ myNetwork.updateParams("true:linkRadiusMin:" + value);});
+      p1 = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
+      p1.onFinishChange(function(value){ myNetwork.updateParams("true:linkRadiusMin:" + value);});
 
-      test = f4.add(params.layoutParams,"linkRadiusMax",1,1000).step(1);
-      test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:" + value);});
+      p1 = f4.add(params.layoutParams,"linkRadiusMax",1,1000).step(1);
+      p1.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:" + value);});
 
-      test = f4.add(params.layoutParams,"friction",0,1);
-      test.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
+      p1 = f4.add(params.layoutParams,"friction",0,1);
+      p1.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
 
-      test = f4.add(params.layoutParams,"charge",-700,500).step(1);
-      test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
+      p1 = f4.add(params.layoutParams,"charge",-700,500).step(1);
+      p1.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
 
-      test = f4.addColor(params.layoutParams,"routerColor");
-      test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
+      p1 = f4.addColor(params.layoutParams,"routerColor");
+      p1.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
 
-      test = f4.addColor(params.layoutParams,"clientColor");
-      test.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
+      p1 = f4.addColor(params.layoutParams,"clientColor");
+      p1.onChange(function(value){myNetwork.updateParams("false:clientColor:" + value);});
 
-      test = f4.addColor(params.layoutParams,"linkColor");
-      test.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
+      p1 = f4.addColor(params.layoutParams,"linkColor");
+      p1.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
     }
     else{
       value = "";
@@ -148,7 +148,8 @@ function App(){
     this.hours = 1;
     this.minutes = 20;
     this.seconds = 0;
-    this.intervalId;
+    //Random value
+    this.intervalId = 0;
     this.test = " s";
     this.layoutParams = {
       routerColor: colorbrewer.Set3[12][4],
@@ -162,8 +163,8 @@ function App(){
       friction: 0.8,
       charge: -150
       //FOR GUI:Color min, max
-    }
-  };
+    };
+  }
 
   return this;
 

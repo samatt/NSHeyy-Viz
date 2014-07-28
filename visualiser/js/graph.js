@@ -2,7 +2,7 @@ Network = function(){
 
   var  width = config.width;
   var  height = config.height;
-  var allData = []
+  var allData = [];
   var allRawData = [];
   var  curLinksData = [];
   var  curNodesData = [];
@@ -33,9 +33,9 @@ Network = function(){
     clientRadius: 4,
     friction: 0.5,
     charge: -150
-  }
+  };
 
-  var tooltip = Tooltip("vis-tooltip", 230)
+  var tooltip = Tooltip("vis-tooltip", 230);
 
   var  force = d3.layout.force()
       .friction(.65)
@@ -55,7 +55,7 @@ Network = function(){
 
     // format data
     // allRawData = data;
-    allData = setupData(data)
+    allData = setupData(data);
 
     // create svg and groups
     vis = d3.select(selection).append("svg")
@@ -131,13 +131,13 @@ Network = function(){
   function updateNodes(){
 
     if(layout == "Distance"){
-      updateNodesDistance()
+      updateNodesDistance();
     }
     else if (layout == "Network"){
-      updateNodesConnections()
+      updateNodesConnections();
     }
     else if (layout == "Connections"){
-      updateNodesNetwork()
+      updateNodesNetwork();
     }
 
   }
@@ -160,7 +160,6 @@ Network = function(){
       .attr("cx", function(d){ return d.x; })
       .attr("cy", function(d){ return d.y; })
       .attr("r", function(d){ return d.radius})
-      // .attr("r",function(d){if(d.kind === "Listener"){console.log("LISTENER" + d.radius)}return d.radius;})
       .style("fill",function(d){return d.color;})
       .call(force.drag);
 
@@ -183,14 +182,13 @@ Network = function(){
       // .style("fill",function(d){return d.color;})
       .attr("r",function(d){return d.radius;});
 
-
+//       // .style("fill",(colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)]))
     node.enter().append("circle")
       .attr("class", "node")
       .attr("cx", function(d){ return d.x; })
       .attr("cy", function(d){ return d.y; })
-      .attr("r", function(d){ return d.radius})
-      .style("fill",function(d){return d.color})
-      // .style("fill",(colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)]))
+      .attr("r", function(d){ return d.radius; })
+      .style("fill",function(d){return d.color; })
       .call(force.drag);
 
     node
@@ -219,7 +217,7 @@ Network = function(){
         .attr("class", "node")
         .attr("cx", function(d){ return d.x; })
         .attr("cy", function(d){ return d.y; })
-        .attr("r", function(d){ return d.radius})
+        .attr("r", function(d){ return d.radius;})
         .style("fill",function(d){return d.color;})
         .call(force.drag);
 
@@ -245,7 +243,7 @@ Network = function(){
 
   function updateLinksDistance(){
     link = linksG.selectAll("line.link")
-      .data(curLinksData, function(d){ return (d.source.name + " : "+d.target.name) });
+      .data(curLinksData, function(d){ return (d.source.name + " : "+d.target.name); });
 
     link
       .attr("attr","update")
@@ -258,7 +256,7 @@ Network = function(){
       .attr("class", "link")
       .style("stroke-width","0.3")
       .style("stroke",function(d){return d.linkColor;})
-      .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
+      .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35";})
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
@@ -269,7 +267,7 @@ Network = function(){
 
   function updateLinksConnections(){
     link = linksG.selectAll("line.link")
-      .data(curLinksData, function(d){ return (d.source.name + " : "+d.target.name) });
+      .data(curLinksData, function(d){ return (d.source.name + " : "+d.target.name); });
 
     link
       .attr("attr","update")
@@ -279,9 +277,9 @@ Network = function(){
 
     link.enter().append("line")
       .attr("class", "link")
-      .style("stoke-width",function(d){return d.power *0.1})
+      .style("stoke-width",function(d){return d.power *0.1;})
       .style("stroke",function(d){return d.linkColor;})
-      .style("opacity",function(d){return d.power *0.01 })
+      .style("opacity",function(d){return d.power *0.01; })
 
       // .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
       .attr("x1", function(d){ return d.source.x;})
@@ -295,7 +293,7 @@ Network = function(){
 
   function updateLinksNetwork(){
     link = linksG.selectAll("line.link")
-      .data(curLinksData, function(d){ return (d.source.name + " : "+d.target.name) });
+      .data(curLinksData, function(d){ return (d.source.name + " : "+d.target.name); });
 
     link
       .attr("attr","update")
@@ -320,11 +318,12 @@ Network = function(){
 
   setNodeColor = function(newColor){
     nodeColor = newColor;
-  }
+  };
 
   setLayout = function(newLayout){
     layout = newLayout;
-  }
+  };
+
   network.updateParams = function(newParams){
     var p =newParams.split(":");
     // bool type = parseBoolean(p[0]);
@@ -345,7 +344,7 @@ Network = function(){
     console.log("updated to to "+layoutParams[key]);
     allData = setupData(allRawData);
     update();
-  }
+  };
 
   network.isRealTime = function(){
     if(layout === "Network" || layout == "Distance" ){
@@ -354,29 +353,29 @@ Network = function(){
     else{
       return false;
     }
-  }
+  };
 
   network.toggleNodeColor = function(newColor){
     // # public function
-    force.stop()
+    force.stop();
     setNodeColor(newColor);
     allData = setupData(allRawData);
     update();
-  }
+  };
 
   network.toggleLayout = function(newLayout){
-    force.stop()
+    force.stop();
     setLayout(newLayout);
     // console.log(allRawData);
     allData = setupData(allRawData);
     update();
-  }
+  };
 
   network.updateData = function(newData){
     allRawData = newData;
     allData = setupData(newData);
-    update()
-  }
+    update();
+  };
 
   // tick function for force directed layout
   function forceTick(e){
@@ -397,9 +396,9 @@ Network = function(){
   setupData = function(_data){
 
 
-    data = new Object();
-    data.links = new Array();
-    data.nodes = new Array();
+    data = {};
+    data.links = [];
+    data.nodes = [];
     // console.log("setup data :" + layout);
     if(layout==="Distance"){
       data = setupDistanceLayout(_data);
@@ -413,22 +412,22 @@ Network = function(){
     // console.log(data);
     // console.log(layoutParams);
     return refreshD3Data(data);
-  }
+  };
   setupConnectionsLayout = function(_data){
-    data = new Object();
-    data.links = new Array();
-    data.nodes = new Array();
-    var networkNames = new Array();
-    // var net = new Object();
+    data = {};
+    data.links = [];
+    data.nodes = [];
+    var networkNames = [];
+    // var net = {};
     // net.name = "dummy";
     // net.ids = new Array();
     networkNames.push({'name' : "dummy", 'ids': []});
-    nameArray = new Array();
+    nameArray = [];
     nameMapIndex = d3.map();
-    clientWeightArray  = new Array();
-    clientWeightArrayNames = new Array();
+    clientWeightArray  = [];
+    clientWeightArrayNames = [];
     clientWeightMap = d3.map();
-    clientWeightLinks = new Array();
+    clientWeightLinks = [];
 
 
     for (var i = 0; i < _data.length; i++) {
@@ -451,9 +450,9 @@ Network = function(){
             networkNames[nameMapIndex.get(n.probedESSID[j])].ids.push(n.name);
           }
           else{
-            var net = new Object();
+            var net = {};
             net.name = n.probedESSID[j];
-            net.ids = new Array();
+            net.ids = [];
             net.ids.push(n.name);
             networkNames.push(net);
             nameArray.push(net.name);
@@ -464,30 +463,30 @@ Network = function(){
       }
     }
 
-    for(var i=0; i< data.nodes.length; i++){
-      for(var j=0; j< data.nodes.length; j++){
+    for(var k=0; k< data.nodes.length; k++){
+      for(var l=0; l< data.nodes.length; l++){
 
-        if(data.nodes[i].name === data.nodes[j].name){
+        if(data.nodes[k].name === data.nodes[l].name){
           continue;
         }
 
-        if(_.intersection(data.nodes[i].probedESSID,data.nodes[j].probedESSID).length <3){
+        if(_.intersection(data.nodes[k].probedESSID,data.nodes[l].probedESSID).length <3){
           continue;
         }
         else{
-          // console.log(data.nodes[i].probedESSID);
-          // console.log(data.nodes[j].probedESSID);
-          // console.log(_.intersection(data.nodes[i].probedESSID,data.nodes[j].probedESSID));
+          // console.log(data.nodes[k].probedESSID);
+          // console.log(data.nodes[l].probedESSID);
+          // console.log(_.intersection(data.nodes[k].probedESSID,data.nodes[l].probedESSID));
         }
 
-        var intLength = _.intersection(data.nodes[i].probedESSID,data.nodes[j].probedESSID).length;
-        var key = data.nodes[i].name + "_" + data.nodes[j].name;
-        var alt_key = data.nodes[j].name + "_" + data.nodes[i].name;
+        var intLength = _.intersection(data.nodes[k].probedESSID,data.nodes[l].probedESSID).length;
+        var key = data.nodes[k].name + "_" + data.nodes[l].name;
+        var alt_key = data.nodes[l].name + "_" + data.nodes[k].name;
 
-        // var index = $.inArray(n.pro  bedESSID[j] , nameArray);
+        // var index = $.inArray(n.pro  bedESSID[l] , nameArray);
         if($.inArray(key , clientWeightArrayNames) > -1){
-          data.nodes[i].numLinks += 1;
-          data.nodes[j].numLinks += 1;
+          data.nodes[k].numLinks += 1;
+          data.nodes[l].numLinks += 1;
           // console.log(clientWeightMap.get(key));
           // console.log(clientWeightArray);
           clientWeightArray[clientWeightMap.get(key)].weight += intLength;
@@ -495,19 +494,19 @@ Network = function(){
 
         }
         else if($.inArray(alt_key , clientWeightArrayNames) > -1){
-          data.nodes[i].numLinks += 1;
-          data.nodes[j].numLinks += 1;
+          data.nodes[k].numLinks += 1;
+          data.nodes[l].numLinks += 1;
             continue;
 
         }
         else{
-          link = new Object();
-          data.nodes[i].numLinks = 1;
-          data.nodes[j].numLinks = 1;
-          link.source = data.nodes[i].name;
-          link.target = data.nodes[j].name;
+          link = {};
+          data.nodes[k].numLinks = 1;
+          data.nodes[l].numLinks = 1;
+          link.source = data.nodes[k].name;
+          link.target = data.nodes[l].name;
           link.weight = intLength;
-          var newKey = data.nodes[i].name + "_" + data.nodes[j].name;
+          var newKey = data.nodes[k].name + "_" + data.nodes[l].name;
           link.key = newKey;
           clientWeightArray.push(link);
           clientWeightArrayNames.push(newKey);
@@ -519,19 +518,19 @@ Network = function(){
 
     for (var q = 0; q <clientWeightArray.length; q++){
 
-        var n = clientWeightArray[q];
-       var l = {'source' : n.source, 'target': n.target, 'power':n.weight};
+        var _n = clientWeightArray[q];
+       var _l = {'source' : _n.source, 'target': _n.target, 'power':_n.weight};
       //  console.log(l);
-       data.links.push(l);
+       data.links.push(_l);
       }
 
     return data;
-  }
+  };
 
   setupNetworkLayout = function(_data){
-    data = new Object();
-    data.links = new Array();
-    data.nodes = new Array();
+    data = {};
+    data.links = {};
+    data.nodes = [];
     // console.log("here");
 
     data.nodes.push({'name' : "Listener",  'kind': "Listener"});
@@ -563,7 +562,7 @@ Network = function(){
   }
 
   setupDistanceLayout=function(_data){
-    data = new Object();
+    data = {};
     data.links = new Array();
     data.nodes = new Array();
 
@@ -666,7 +665,7 @@ Network = function(){
             if(d.kind === "Router"){ return routerColor;}
             else if(d.kind === "Listener"){ return "White";}
             else{return clientColor;}
-          }
+          };
           n.color = ramp(n);
         }
         else if(layout =="Connections"){
@@ -683,17 +682,17 @@ Network = function(){
         //FOR GUI:circleRadius Max
 
                                         //[300, 30]
-        linkRadius = d3.scale.linear().range([layoutParams['linkRadiusMin'], layoutParams['linkRadiusMax'] ]).domain(countExtent);
-        circleRadius = d3.scale.pow().range([ 1  ,layoutParams['circleRadius']]).domain(countExtent);
+        linkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax ]).domain(countExtent);
+        circleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
 
         n.radius = circleRadius(n.power);
-        if(n.kind === "Listener"){n.radius = layoutParams['listenerRadius'];}
+        if(n.kind === "Listener"){n.radius = layoutParams.listenerRadius;}
         n.linkPower = linkRadius(n.power);
         ramp = function(d){
           if(d.kind === "Router"){ return routerColor;}
           else if(d.kind === "Listener"){ return "White";}
           else{return clientColor;}
-        }
+        };
 
         n.color = ramp(n);
 
@@ -703,13 +702,13 @@ Network = function(){
         //FOR GUI:circleRadius max
         //FOR GUI:linkRadius min, max
         //FOR GUI:circle Radius router,client
-        linkRadius = d3.scale.pow().range([layoutParams['linkRadiusMin'], layoutParams['linkRadiusMax']]).domain(countExtent);
+        linkRadius = d3.scale.pow().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain(countExtent);
         circleRadius = function(d){
-          if(d.kind === "Router"){ return layoutParams['routerRadius'];}
-          else if(d.kind === "Listener"){ layoutParams['listenerRadius'];}
-          else{return layoutParams['clientRadius'];}
+          if(d.kind === "Router"){ return layoutParams.routerRadius;}
+          else if(d.kind === "Listener"){ return layoutParams.listenerRadius;}
+          else{return layoutParams.clientRadius;}
 
-        }
+        };
         n.linkPower = linkRadius(n.power);
         n.radius = circleRadius(n);
 
@@ -794,7 +793,7 @@ Network = function(){
 
     });
     return nodesMap;
-  }
+  };
 
   showDetails = function (d,i){
     content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
@@ -841,12 +840,12 @@ Network = function(){
     }
 
     tooltip.showTooltip(content,d3.event);
-  }
+  };
 
 
   hideDetails = function(d,i){
     tooltip.hideTooltip();
-  }
+  };
 
-    return network
-}
+    return network;
+};

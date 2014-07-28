@@ -42,7 +42,7 @@ Pouch = function(){
 	// done to get individual nodes
 	pouch.getDB = function (){
 		// db.get(docId, [options], [callback])
-	}
+	};
 
 	// done to carry a query. Can pass a new Map function if needed
 	pouch.queryByTime = function(network,time, firstTime){
@@ -57,7 +57,7 @@ Pouch = function(){
 
 			if(err){ console.error(err); }
 			else{
-					var postData = new Array();
+					var postData = [];
 					for (var row in response.rows){
 						console.log(response.rows[row]);
 						postData.push(response.rows[row].value);
@@ -74,12 +74,12 @@ Pouch = function(){
 				console.log(postData.length);
 			}
 		});
-	}
+	};
 
 	// done to carry a query. Can pass a new Map function if needed
 	pouch.queryByTimestamp = function(network,time, firstTime){
 		// console.log(time);
-		console.log(time +" : "+ Date.now());
+		// console.log(time +" : "+ Date.now());
 		var opts = {startkey:time,
 								endkey:parseInt(Date.now()/1000),
 								reduce: false,
@@ -91,7 +91,7 @@ Pouch = function(){
 			else{
 					var postData = new Array();
 					for (var row in response.rows){
-						console.log(response.rows[row]);
+						// console.log(response.rows[row]);
 						postData.push(response.rows[row].value);
 
 					}
@@ -106,7 +106,7 @@ Pouch = function(){
 				console.log(postData.length);
 			}
 		});
-	}
+	};
 	pouch.queryByPower = function (network){
 
 		var opts = {reduce: false,descending: true};
@@ -114,7 +114,7 @@ Pouch = function(){
 
 			if(err){ console.error(err); }
 			else{
-					var postData = new Array();
+					var postData =[];
 					for (var row in response.rows){
 						console.log(response.rows[row].key + " : " + response.rows[row].value);
 						postData.push(response.rows[row].value);
@@ -122,13 +122,13 @@ Pouch = function(){
 				network('#vis',postData);
 			}
 		});
-	}
+	};
 
 	pouch.addQuery = function(network, map, opts, firstTime){
 
 		opts.reduce = opts.reduce ||  "false";
 		db.query({map:map},opts,function(err,response){
-			var postData = new Array();
+			var postData = [];
 			for (var row in response.rows){
 				console.log(response.rows[row].key + " : " + response.rows[row].value);
 				postData.push(response.rows[row].value);
@@ -143,7 +143,7 @@ Pouch = function(){
 			}
 
 		});
-	}
+	};
 
 
 	// Sync the localDB to the remoteDB
@@ -164,4 +164,4 @@ Pouch = function(){
 
 	return pouch;
 
-}
+};
