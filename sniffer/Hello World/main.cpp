@@ -10,9 +10,9 @@ using namespace std;
 
 void addRadioHeader(stringstream& ss, const RadioTap& rf,Timestamp& t){
 #if defined DEBUG_LOG
-    ss<<to_string(t.seconds())<<"Radio,"<<std::to_string((rf.db_signal ()))<<","<<rf.channel_freq()<<","<<rf.channel_type()<<",";
+    ss<<to_string(t.milli())<<"Radio,"<<std::to_string((rf.db_signal ()))<<","<<rf.channel_freq()<<","<<rf.channel_type()<<",";
 #else
-    ss<<to_string(t.seconds())<<","<<"Radio,"<<std::to_string((rf.db_signal ()))<<","<<rf.channel_freq()<<","<<rf.channel_type()<<",";
+    ss<<to_string(t.seconds())<<","<<"Radio,"<<std::to_string((rf.dbm_signal()))<<","<<rf.channel_freq()<<","<<rf.channel_type()<<",";
 #endif
 }
 bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
         Timestamp t=pkt.timestamp();
         processPacket(*pkt.pdu(),file,t);
         
-//       cout<< to_string(t.seconds())<<endl; // <- timestamp
+//       cout<< to_string(t.seconds())<<endl; // <- tim estamp
     }
 
     std::cout <<"Closing file"<<std::endl;
