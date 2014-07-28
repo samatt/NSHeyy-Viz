@@ -47,17 +47,22 @@ Pouch = function(){
 	// done to carry a query. Can pass a new Map function if needed
 	pouch.queryByTime = function(network,time, firstTime){
 		// console.log(time);
-		var opts = {end: time,reduce: false};
+		console.log(time +" : "+ setUTCDuration(0,0,0));
+		var opts = {//startkey:time,
+								endkey:time,
+								reduce: false,
+								descending: false};
+
 		db.query("lastTimeSeen", opts, function(err, response) {
 
 			if(err){ console.error(err); }
 			else{
 					var postData = new Array();
 					for (var row in response.rows){
-					// console.log(response.rows[row].key + " : " + response.rows[row].value);
-					postData.push(response.rows[row].value);
+						console.log(response.rows[row]);
+						postData.push(response.rows[row].value);
 
-				}
+					}
 				if(firstTime){
 					// console.log("First Time ");
 					network('#vis',postData);
@@ -66,6 +71,7 @@ Pouch = function(){
 					// console.log("Other Time ");
 					network.updateData(postData);
 				}
+				console.log(postData.length);
 			}
 		});
 	}

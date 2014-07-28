@@ -16,7 +16,7 @@ function App(){
   var graphGUI = new dat.GUI();
   var graphFolder =  graphGUI.addFolder("Graph");
   var layouts = graphFolder.add(this.params, 'layout', config.layouts);
-  var refreshRate =  graphFolder.add(this.params, 'refreshRate', 0, 10);
+  var refreshRate =  graphFolder.add(this.params, 'refreshRate', 0, 10).step(1);
 
   var f4 = graphFolder.addFolder(config.layouts[0]);
   var currentLayout = config.layouts[0];
@@ -26,7 +26,7 @@ function App(){
   test = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
   test.onFinishChange(function(value){ myNetwork.updateParams("true:linkRadiusMin:" + value);});
 
-  test = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
+  test = f4.add(params.layoutParams,"linkRadiusMax",1,1000).step(1);
   test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:" + value);});
 
   test = f4.add(params.layoutParams,"friction",0,1);
@@ -34,7 +34,7 @@ function App(){
 
   test = f4.add(params.layoutParams,"charge",-700,500).step(1);
   test.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
-  
+
   test = f4.addColor(params.layoutParams,"routerColor");
   test.onChange(function(value){myNetwork.updateParams("false:routerColor:"+ value);});
 
@@ -98,7 +98,7 @@ function App(){
       test = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
       test.onFinishChange(function(value){ myNetwork.updateParams("true:linkRadiusMin:" + value);});
 
-      test = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
+      test = f4.add(params.layoutParams,"linkRadiusMax",1,1000).step(1);
       test.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:" + value);});
 
       test = f4.add(params.layoutParams,"friction",0,1);
@@ -134,36 +134,37 @@ function App(){
 
 
   var myInterval = function(){
-    console.log(params.hours+" : "+params.minutes+" : "+params.seconds)
+    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds)
     time = setUTCDuration(params.hours,params.minutes,params.seconds);
     wrapper.queryByTime(myNetwork,time,false);
   };
 
+  function Params() {
+
+    this.dbName = "test";
+    this.remoteServer  = 'http://127.0.0.1:5984/test';
+    this.layout = []; //= [ 'ConnectionsRealTimes', 'Distance' , 'Connections' ];
+    this.refreshRate = 5;
+    this.hours = 1;
+    this.minutes = 20;
+    this.seconds = 0;
+    this.intervalId;
+    this.test = " s";
+    this.layoutParams = {
+      routerColor: colorbrewer.Set3[12][4],
+      clientColor: colorbrewer.Set3[12][3],
+      linkColor: colorbrewer.Blues[9][3],
+      circleRadius: 4,
+      linkRadiusMin: 4,
+      linkRadiusMax: 30,
+      routerRadius: 4,
+      clientRadius: 8,
+      friction: 0.8,
+      charge: -150
+      //FOR GUI:Color min, max
+    }
+  };
+
+  return this;
 
 }
-
-function Params() {
-
-  this.dbName = "test";
-  this.remoteServer  = 'http://127.0.0.1:5984/test';
-  this.layout = []; //= [ 'ConnectionsRealTimes', 'Distance' , 'Connections' ];
-  this.refreshRate = 10;
-  this.hours = 0;
-  this.minutes = 3;
-  this.seconds = 0;
-  this.intervalId;
-  this.test = " s";
-  this.layoutParams = {
-    routerColor: colorbrewer.Set3[12][4],
-    clientColor: colorbrewer.Set3[12][3],
-    linkColor: colorbrewer.Blues[9][3],
-    circleRadius: 4,
-    linkRadiusMin: 4,
-    linkRadiusMax: 30,
-    routerRadius: 4,
-    clientRadius: 8,
-    friction: 0.8,
-    charge: -150
-    //FOR GUI:Color min, max
-  }
-};

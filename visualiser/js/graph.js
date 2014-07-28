@@ -1,6 +1,5 @@
 Network = function(){
-  // variables we want to access
-  // in multiple places of Network
+
   var  width = config.width;
   var  height = config.height;
   var allData = []
@@ -13,8 +12,6 @@ Network = function(){
   var  node = "Type";
   var  link = "Distance";
   var  layout = "Distance";
-  // var  layout = "Connections";
-  // var  layout = "Network";
   var nodesMap = d3.map();
   var routersMap = d3.map();
   var clientsMap = d3.map();
@@ -31,12 +28,11 @@ Network = function(){
     circleRadius: 6,
     listenerRadius: 8,
     linkRadiusMin: 2,
-    linkRadiusMax: 100,
+    linkRadiusMax: 300,
     routerRadius: 4,
     clientRadius: 4,
-    friction: 0.8,
+    friction: 0.5,
     charge: -150
-    //FOR GUI:Color min, max
   }
 
   var tooltip = Tooltip("vis-tooltip", 230)
@@ -103,15 +99,13 @@ Network = function(){
         // .linkStrength(function(d){ return d.power*0.1; });
     }
 
-
     // enter / exit for nodes
     updateNodes();
     updateLinks();
 
-
     if(layout == "Distance"){
-      console.log(layoutParams.friction);
-      console.log(layoutParams.charge);
+      // console.log(layoutParams.friction);
+      // console.log(layoutParams.charge);
       force
         // .friction(0.6)
         // .charge([-150])
@@ -121,37 +115,31 @@ Network = function(){
     }
     else if (layout == "Network"){
       force
-        .friction(.6)
-        .charge([-150])
+        .friction(layoutParams.friction)
+        .charge([layoutParams.charge])
         .size([width, height]);
     }
     else if (layout == "Connections"){
       force
-        .friction(.8)
-        .charge([-150])
+        .friction(layoutParams.friction)
+        .charge([layoutParams.charge])
         .size([width, height]);
     }
-
-
     force.start();
   }
 
   function updateNodes(){
-    // node = nodesG.selectAll("circle.node")
-      // .data(curNodesData, function(d) { return d.name ;});
 
     if(layout == "Distance"){
       updateNodesDistance()
-
     }
     else if (layout == "Network"){
       updateNodesConnections()
-
     }
     else if (layout == "Connections"){
       updateNodesNetwork()
-
     }
+
   }
 
   function updateNodesDistance(){
@@ -177,7 +165,7 @@ Network = function(){
       .call(force.drag);
 
     node.on("mouseover", showDetails)
-      // .on("mouseout", hideDetails)
+      .on("mouseout", hideDetails);
 
     node.exit().remove();
 
@@ -205,9 +193,10 @@ Network = function(){
       // .style("fill",(colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)]))
       .call(force.drag);
 
-    node.on("mouseover", showDetails);
-      // .on("mouseout", hideDetails)
-          // node.on("click", showDetails);
+    node
+      .on("mouseover", showDetails)
+      .on("mouseout", hideDetails);
+
 
     node.exit().remove();
 
@@ -235,7 +224,7 @@ Network = function(){
         .call(force.drag);
 
       node.on("mouseover", showDetails)
-        // .on("mouseout", hideDetails)
+        .on("mouseout", hideDetails);
 
       node.exit().remove();
 
@@ -245,15 +234,12 @@ Network = function(){
 
     if(layout === "Distance"){
       updateLinksDistance();
-
     }
     else if(layout === "Connections"){
       updateLinksConnections();
-
     }
     else if(layout === "Network"){
       updateLinksNetwork();
-
     }
   }
 
@@ -271,7 +257,6 @@ Network = function(){
     link.enter().append("line")
       .attr("class", "link")
       .style("stroke-width","0.3")
-      // .style("stroke",function(d){return (d.target.kind ==="Router"?"White":"Grey")})
       .style("stroke",function(d){return d.linkColor;})
       .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
       .attr("x1", function(d){ return d.source.x;})
@@ -349,29 +334,19 @@ Network = function(){
     if(isInt === "true"){
       value = parseInt(p[2]);
     }
-  else if(isInt === "none")
-    value = parseFloat(p[2]);
-   else{
-     value = p[2];
-   }
+    else if(isInt === "none")
+      value = parseFloat(p[2]);
+    else{
+      value = p[2];
+    }
 
     console.log("update params in network : " +  newParams+" "+ layoutParams[key]);
     layoutParams[key] = value;
     console.log("updated to to "+layoutParams[key]);
     allData = setupData(allRawData);
     update();
-
-    // layoutParams.routerColor = newParams.routerColor;
-    // layoutParams.clientColor = newParams.clientColor;
-    // layoutParams.linkColor = newParams.linkColor;
-    // layoutParams.circleRadius =  newParams.circleRadius;
-    // layoutParams.linkRadiusMin = newParams.linkRadiusMin;
-    // layoutParams.linkRadiusMax = newParams.linkRadiusMax;
-    // layoutParams.routerRadius =  newParams.routerRadius;
-    // layoutParams.clientRadius = newParams.clientRadius;
-      //FOR GUI:Color min, max
-
   }
+
   network.isRealTime = function(){
     if(layout === "Network" || layout == "Distance" ){
       return true;
@@ -596,7 +571,7 @@ Network = function(){
     // console.log(_data);
     for(var node in _data){
 
-      var n = {'name' : $.trim(_data[node].bssid), 'power': _data[node].power, 'kind': _data[node].kind};
+      var n = {'name' : $.trim(_data[node].bssid), 'power': _data[node].power, 'kind': _data[node].kind,'last':_data[node].last};
 
       if(n.kind == "Client"){
         n.essid = _data[node].ap_essid;
@@ -675,7 +650,7 @@ Network = function(){
           }
           // console.log(layoutParams);
           if(n.kind === "Listener"){
-            console.log("HERE "+layoutParams['listenerRadius']);
+            // console.log("HERE "+layoutParams['listenerRadius']);
             n.radius = layoutParams['listenerRadius'];
           }
       }
@@ -762,7 +737,7 @@ Network = function(){
 
     // id's -> node objects
     mapNodes(data.nodes);
-  // console.log(data.links);
+    // console.log(data.links);
     var linksExtent = d3.extent(data.links, function(d){ return d.power;});
     data.links.forEach( function(l){
       // console.log(l);
@@ -812,7 +787,7 @@ Network = function(){
       }
       else{
         if(n.kind ==="Listener"){
-          console.log("HERE" + n.radius);
+          // console.log("HERE" + n.radius);
         }
         nodesMap.set(n.name, n);
       }
@@ -835,7 +810,7 @@ Network = function(){
       else{
 
       if( nodesMap.has($.trim(AP)) ){
-        console.log(nodesMap.get($.trim(AP)));
+        // console.log(nodesMap.get($.trim(AP)));
         if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined"){
 
           networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
