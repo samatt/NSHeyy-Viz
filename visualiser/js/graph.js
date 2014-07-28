@@ -27,19 +27,24 @@ Network = function(){
     linkColor: colorbrewer.Blues[9][3],
     circleRadius: 6,
     listenerRadius: 8,
-    linkRadiusMin: 2,
+    linkRadiusMin: 10,
     linkRadiusMax: 300,
     routerRadius: 4,
     clientRadius: 4,
     friction: 0.5,
-    charge: -150
+    charge: -150,
+    minColor: colorbrewer.Reds[9][2],
+    maxColor: colorbrewer.Set3[12][3],
+    minConnections: 2,
+    circMin :4,
+    circMax: 6
   };
 
   var tooltip = Tooltip("vis-tooltip", 230);
 
   var  force = d3.layout.force()
-      .friction(.65)
-      .charge([-200])
+      .friction(layoutParams.friction)
+      .charge([layoutParams.charge])
       .size([width, height]);
 
       force.on("tick", forceTick);
@@ -104,11 +109,7 @@ Network = function(){
     updateLinks();
 
     if(layout == "Distance"){
-      // console.log(layoutParams.friction);
-      // console.log(layoutParams.charge);
       force
-        // .friction(0.6)
-        // .charge([-150])
         .friction(layoutParams.friction)
         .charge([layoutParams.charge])
         .size([width, height]);
@@ -134,10 +135,10 @@ Network = function(){
       updateNodesDistance();
     }
     else if (layout == "Network"){
-      updateNodesConnections();
+      updateNodesNetwork();
     }
     else if (layout == "Connections"){
-      updateNodesNetwork();
+      updateNodesConnections();
     }
 
   }
@@ -159,7 +160,7 @@ Network = function(){
       .attr("class", "node")
       .attr("cx", function(d){ return d.x; })
       .attr("cy", function(d){ return d.y; })
-      .attr("r", function(d){ return d.radius})
+      .attr("r", function(d){ return d.radius;})
       .style("fill",function(d){return d.color;})
       .call(force.drag);
 
@@ -179,7 +180,7 @@ Network = function(){
       .duration(1000)
       .attr("class","node")
       .style("fill",function(d){return d.color;})
-      // .style("fill",function(d){return d.color;})
+
       .attr("r",function(d){return d.radius;});
 
 //       // .style("fill",(colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)]))
@@ -277,9 +278,9 @@ Network = function(){
 
     link.enter().append("line")
       .attr("class", "link")
-      .style("stoke-width",function(d){return d.power *0.1;})
+      .style("stoke-width",function(d){return d.power;})
       .style("stroke",function(d){return d.linkColor;})
-      .style("opacity",function(d){return d.power *0.01; })
+      .style("opacity",function(d){return d.power *0.1; })
 
       // .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
       .attr("x1", function(d){ return d.source.x;})
@@ -418,9 +419,6 @@ Network = function(){
     data.links = [];
     data.nodes = [];
     var networkNames = [];
-    // var net = {};
-    // net.name = "dummy";
-    // net.ids = new Array();
     networkNames.push({'name' : "dummy", 'ids': []});
     nameArray = [];
     nameMapIndex = d3.map();
@@ -429,29 +427,28 @@ Network = function(){
     clientWeightMap = d3.map();
     clientWeightLinks = [];
 
+    for(var i in _data){
 
-    for (var i = 0; i < _data.length; i++) {
-
-      var node = JSON.parse(_data[i]);
-      var n = {'name' : $.trim(node.BSSID), 'power': node.power, 'kind': node.kind};
+      var node = _data[i];
+      var n = {'name' : $.trim(node.bssid), 'power': node.power, 'kind': node.kind};
 
       if(n.kind == "Client"){
 
         n.essid = node.AP;
-        n.probedESSID = _.unique(node.probedESSID);
+        n.probes = _.unique(node.probes);
 
-        for (var j = 0; j <n.probedESSID.length; j++){
+        for (var j = 0; j <n.probes.length; j++){
 
-          n.probedESSID[j] = $.trim(n.probedESSID[j]);
+          n.probes[j] = $.trim(n.probes[j]);
 
-          var result = $.inArray(n.probedESSID[j] , nameArray);
+          var result = $.inArray(n.probes[j] , nameArray);
           if( result> -1){
             var index = result;
-            networkNames[nameMapIndex.get(n.probedESSID[j])].ids.push(n.name);
+            networkNames[nameMapIndex.get(n.probes[j])].ids.push(n.name);
           }
           else{
             var net = {};
-            net.name = n.probedESSID[j];
+            net.name = n.probes[j];
             net.ids = [];
             net.ids.push(n.name);
             networkNames.push(net);
@@ -470,16 +467,16 @@ Network = function(){
           continue;
         }
 
-        if(_.intersection(data.nodes[k].probedESSID,data.nodes[l].probedESSID).length <3){
+        if(_.intersection(data.nodes[k].probes,data.nodes[l].probes).length <layoutParams.minConnections){
           continue;
         }
         else{
-          // console.log(data.nodes[k].probedESSID);
-          // console.log(data.nodes[l].probedESSID);
-          // console.log(_.intersection(data.nodes[k].probedESSID,data.nodes[l].probedESSID));
+          // console.log(data.nodes[k].probes);
+          // console.log(data.nodes[l].probes);
+          // console.log(_.intersection(data.nodes[k].probes,data.nodes[l].probes));
         }
 
-        var intLength = _.intersection(data.nodes[k].probedESSID,data.nodes[l].probedESSID).length;
+        var intLength = _.intersection(data.nodes[k].probes,data.nodes[l].probes).length;
         var key = data.nodes[k].name + "_" + data.nodes[l].name;
         var alt_key = data.nodes[l].name + "_" + data.nodes[k].name;
 
@@ -520,7 +517,6 @@ Network = function(){
 
         var _n = clientWeightArray[q];
        var _l = {'source' : _n.source, 'target': _n.target, 'power':_n.weight};
-      //  console.log(l);
        data.links.push(_l);
       }
 
@@ -529,9 +525,8 @@ Network = function(){
 
   setupNetworkLayout = function(_data){
     data = {};
-    data.links = {};
+    data.links = [];
     data.nodes = [];
-    // console.log("here");
 
     data.nodes.push({'name' : "Listener",  'kind': "Listener"});
     for(var index in _data){
@@ -542,13 +537,14 @@ Network = function(){
       if(n.kind == "Client"){
         n.essid = _data[index].ap_essid;
         // console.log(n.essid);
-        n.probedESSID = _data[index].probes;
+        n.probes = _data[index].probes;
         if(n.essid === "(not associated)" || n.essid === ""){
 
         }
         else{
-          var l = {'source' : n.essid, 'target': $.trim(_data[index].bssid), 'power':_data[index].power};
-          data.links.push(l);
+          var _l = {'source' : n.essid, 'target': $.trim(_data[index].bssid), 'power':_data[index].power};
+          // console.log(_l);
+          data.links.push(_l);
         }
       }
       else{
@@ -559,12 +555,12 @@ Network = function(){
     // console.log(data);
     return data;
 
-  }
+  };
 
   setupDistanceLayout=function(_data){
     data = {};
-    data.links = new Array();
-    data.nodes = new Array();
+    data.links = [];
+    data.nodes = [];
 
     data.nodes.push({'name' : "Listener", 'power': -10, 'kind': "Listener"});
     // console.log(_data);
@@ -574,37 +570,26 @@ Network = function(){
 
       if(n.kind == "Client"){
         n.essid = _data[node].ap_essid;
-        n.probedESSID = _data[node].probes;
+        n.probes = _data[node].probes;
         var l = {'source' : data.nodes[0].name, 'target': $.trim(_data[node].bssid), 'power':_data[node].power};
         data.links.push(l);
 
       }
       else{
 
-        var l = {'source' : data.nodes[0].name, 'target': $.trim(_data[node].bssid), 'power':_data[node].power};
-        data.links.push(l);
+        var _l = {'source' : data.nodes[0].name, 'target': $.trim(_data[node].bssid), 'power':_data[node].power};
+        data.links.push(_l);
         n.essid =  _data[node].essid;
       }
       data.nodes.push(n);
     }
     return data;
-  }
+  };
 
   refreshD3Data = function(data){
-    // var color = colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)];
 
-    //FOR GUI: routerColor
-    //FOR GUI: clientColor
-    //FOR GUI: linkColor
-    //FOR GUI:Color min, max
-    //FOR GUI:circleRadius max
-    //FOR GUI:linkRadius min, max
-    //FOR GUI:circle Radius router,client
-    //FOR GUI:linkRadius Min,Max
-    //FOR GUI:circleRadius Max
-
-    var routerColor = layoutParams['routerColor'];//colorbrewer.Set3[12][4];
-    var clientColor = layoutParams['clientColor'];//colorbrewer.Set3[12][3];
+    var routerColor = layoutParams.routerColor;
+    var clientColor = layoutParams.clientColor;
     var linkColor = layoutParams.linkColor;//colorbrewer.Blues[9][3];
     // var linkColor = colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)];
     countExtent = d3.extent(data.nodes, function(d){ return d.power;});
@@ -613,7 +598,7 @@ Network = function(){
                                               return 1;
                                             }
                                             else{
-                                              return (d.probedESSID.length>0)?d.probedESSID.length:1;
+                                              return (d.probes.length>0)?d.probes.length:1;
                                             }
                                           });
 
@@ -634,31 +619,27 @@ Network = function(){
               else if(d.kind === "Listener"){ return "White";}
               else{ return clientColor;}
 
-            }
+            };
             n.color = ramp(n);
             if(n.kind === "Router"){
-                n.radius = layoutParams['routerRadius']
+                n.radius = layoutParams.routerRadius;
             }
             else{
-                n.radius = layoutParams['clientRadius']
+                n.radius = layoutParams.clientRadius;
             }
-
           }
           else{
-            n.radius = layoutParams['circleRadius']
+            n.radius = layoutParams.circleRadius;
           }
           // console.log(layoutParams);
           if(n.kind === "Listener"){
-            // console.log("HERE "+layoutParams['listenerRadius']);
-            n.radius = layoutParams['listenerRadius'];
+            n.radius = layoutParams.listenerRadius;
           }
       }
       else{
 
         n.x = randomnumber=Math.floor(Math.random()*width);
         n.y = randomnumber=Math.floor(Math.random()*height);
-
-
 
         if(layout =="Network"){
           ramp = function(d){
@@ -669,17 +650,12 @@ Network = function(){
           n.color = ramp(n);
         }
         else if(layout =="Connections"){
-          n.color = color;
+          var nodeColor = d3.scale.linear().domain(countExtentESSID).range([minColor,maxColor]);
+          n.color = nodeColor(n.probes.length);
         }
       }
 
       if(layout === "Distance"){
-        //FOR GUI:Color min, max
-        //FOR GUI:circleRadius max
-        //FOR GUI:linkRadius min, max
-        //FOR GUI:circle Radius router,client
-        //FOR GUI:linkRadius Min,Max
-        //FOR GUI:circleRadius Max
 
                                         //[300, 30]
         linkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax ]).domain(countExtent);
@@ -693,15 +669,10 @@ Network = function(){
           else if(d.kind === "Listener"){ return "White";}
           else{return clientColor;}
         };
-
         n.color = ramp(n);
-
       }
       else if(layout === "Network"){
-        //FOR GUI:Color min, max
-        //FOR GUI:circleRadius max
-        //FOR GUI:linkRadius min, max
-        //FOR GUI:circle Radius router,client
+
         linkRadius = d3.scale.pow().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain(countExtent);
         circleRadius = function(d){
           if(d.kind === "Router"){ return layoutParams.routerRadius;}
@@ -715,19 +686,15 @@ Network = function(){
       }
       else if(layout === "Connections"){
 
-          //FOR GUI:Color min, max
-          //FOR GUI:circleRadius max
-          //FOR GUI:range(["#8dbbd8","#acbc43"]);
-          var minColor = colorbrewer.Reds[9][2];
-          // var maxColor = colorbrewer.Reds[9][8];
-          var maxColor = colorbrewer.Set3[12][3];
-          var nodeColor = d3.scale.pow().domain(countExtentESSID).range([minColor,maxColor]);
-          n.color = nodeColor(n.probedESSID.length);
+          var minColor = layoutParams.minColor;
+          var maxColor =layoutParams.maxColor;
+          var nodeColor = d3.scale.linear().domain(countExtentESSID).range([minColor,maxColor]);
+          n.color = nodeColor(n.probes.length);
 
           // n.power = linkRadius(n.power);
           if(n.kind == "Client"){
-              circRad = d3.scale.linear().range([ 5  ,10]).domain(countExtentESSID);//circleRadius(n);
-              n.radius = circRad(n.probedESSID.length);
+              circRad = d3.scale.linear().range([ layoutParams.circMin  ,layoutParams.circMax]).domain(countExtentESSID);//circleRadius(n);
+              n.radius = circRad(n.probes.length);
           }
       }
 
@@ -749,7 +716,7 @@ Network = function(){
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
         }
         else if(layout === "Connections"){
-          linkRadius = d3.scale.linear().range([60,100]).domain(linksExtent);
+          linkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin,layoutParams.linkRadiusMax]).domain(linksExtent);
           l.source = nodesMap.get(l.source);
           l.target = nodesMap.get(l.target);
           // l.linkDist =
@@ -774,7 +741,7 @@ Network = function(){
       }
     });
     return data;
-  }
+  };
 
   // Helper function to map node id's to node objects.
   // Returns d3.map of ids -> nodes
@@ -824,10 +791,10 @@ Network = function(){
       content += '<hr class="tooltip-hr">';
       content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
       console.log(d);
-      if(d.probedESSID.length > 0){
+      if(d.probes.length > 0){
         content += '<hr class="tooltip-hr">';
         content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
-        d.probedESSID.forEach(function(n){
+        d.probes.forEach(function(n){
 
           content += '<p class="main">' + n  + '</span></p>';
         });

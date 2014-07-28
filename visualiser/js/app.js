@@ -88,11 +88,44 @@ function App(){
       p = f4.addColor(params.layoutParams,"linkColor");
       p.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
     }
+    else if(value == "Connections"){
+
+      f4 =graphFolder.addFolder("Connections");
+
+      var r = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
+      r.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMin:" + value);});
+
+      r = f4.add(params.layoutParams,"linkRadiusMax",1,400).step(1);
+      r.onFinishChange(function(value){myNetwork.updateParams("true:linkRadiusMax:"+value);});
+      r = f4.add(params.layoutParams,"minConnections",1,10).step(1);
+      r.onFinishChange(function(value){myNetwork.updateParams("true:minConnections:"+value);});
+
+      r = f4.add(params.layoutParams,"circMin",1,20).step(1);
+      r.onFinishChange(function(value){myNetwork.updateParams("true:circMin:"+value);});
+
+      r =f4.add(params.layoutParams,"circMax",1,20).step(1);
+      r.onFinishChange(function(value){myNetwork.updateParams("true:circMax:" + value);});
+
+      r = f4.add(params.layoutParams,"friction",0,1);
+      r.onChange(function(value){myNetwork.updateParams("none:friction:"+value);});
+
+      r = f4.add(params.layoutParams,"charge",-700,500).step(1);
+      r.onChange(function(value){myNetwork.updateParams("none:charge:"+value);});
+
+      r = f4.addColor(params.layoutParams,"maxColor");
+      r.onChange(function(value){myNetwork.updateParams("false:maxColor:"+ value);});
+
+      r = f4.addColor(params.layoutParams,"minColor");
+      r.onChange(function(value){myNetwork.updateParams("false:minColor:" + value);});
+
+      r = f4.addColor(params.layoutParams,"linkColor");
+      r.onChange(function(value){myNetwork.updateParams("false:linkColor:"+value);});
+    }
     else if(value == "Distance"){
 
       f4 = graphFolder.addFolder("Distance");
 
-      var p1z = f4.add(params.layoutParams,"circleRadius",1,20).step(1);
+      var p1 = f4.add(params.layoutParams,"circleRadius",1,20).step(1);
       p1.onFinishChange(function(value){myNetwork.updateParams("true:circleRadius:" + value);});
 
       p1 = f4.add(params.layoutParams,"linkRadiusMin",1,400).step(1);
@@ -161,8 +194,12 @@ function App(){
       routerRadius: 4,
       clientRadius: 8,
       friction: 0.8,
-      charge: -150
-      //FOR GUI:Color min, max
+      charge: -150,
+      minColor: colorbrewer.Reds[9][2],
+      maxColor: colorbrewer.Set3[12][3],
+      minConnections: 2,
+      circMin :1,
+      circMax: 10
     };
   }
 

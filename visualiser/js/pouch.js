@@ -3,7 +3,6 @@ Pouch = function(){
 
 	var syncDom = document.getElementById('sync-wrapper');
 	// var dbName = 'Nodes'
-
   var db;
 	var remoteCouch;
 
@@ -89,7 +88,7 @@ Pouch = function(){
 
 			if(err){ console.error(err); }
 			else{
-					var postData = new Array();
+					var postData = [];
 					for (var row in response.rows){
 						// console.log(response.rows[row]);
 						postData.push(response.rows[row].value);
