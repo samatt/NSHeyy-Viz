@@ -23,7 +23,7 @@ to_zone = tz.gettz('America/New_York')
 routerMap = dict()
 clientMap = dict()
 
-RADIO  = 0
+TIMESTAMP  = 0
 RADIO  = 1
 RADIO_SIGNAL_STRENGTH = 2
 RADIO_FREQUENCY = 3
@@ -56,6 +56,7 @@ class Node(Document):
     first = DateTimeProperty()
     #last time seen
     last = DateTimeProperty()    
+    timestamp = IntegerProperty()
 
 def readLine(line):
 
@@ -108,6 +109,7 @@ def addRouter(params):
      created_at = datetime.now(),
      first = cur_tz,
      last = cur_tz,
+     timestamp = int(params[TIMESTAMP]),
      power = int(params[RADIO_SIGNAL_STRENGTH])
     )
     # save it 
@@ -117,7 +119,7 @@ def addRouter(params):
 
 
 def addClient(params):
-    cur_tz = datetime.utcfromtimestamp(int(params[0]))
+    cur_tz = datetime.utcfromtimestamp(int(params[TIMESTAMP]))
     # utc = _utc.replace(tzinfo=from_zone)
     # cur_tz = utc.astimezone(to_zone)
     print type(datetime.now())
@@ -134,6 +136,7 @@ def addClient(params):
             first = cur_tz,
             last = cur_tz,
             power = int(params[RADIO_SIGNAL_STRENGTH]),
+            timestamp = int(params[TIMESTAMP]),
             probes = _probes,
             ap_essid = "")
         node.save()
@@ -150,6 +153,7 @@ def addClient(params):
             # created_at = datetime.now(),
             first = cur_tz,
             last = cur_tz,
+            timestamp = int(params[TIMESTAMP]),
             power = int(params[RADIO_SIGNAL_STRENGTH]),
             probes = _probes,
             ap_essid = params[DATA_AP_BSSID])
@@ -162,20 +166,21 @@ def addClient(params):
 
 def updateRouter(cur,params):
     node = cur
-    cur_tz = datetime.utcfromtimestamp(int(params[0]))
+    cur_tz = datetime.utcfromtimestamp(int(params[TIMESTAMP]))
     # utc = _utc.replace(tzinfo=from_zone)
     # cur_tz = utc.astimezone(to_zone)
     #power
     node['power'] =  int(params[RADIO_SIGNAL_STRENGTH])
     node['last'] = str(cur_tz)
     #essid
+    node['timestamp'] = int(params[TIMESTAMP])
     node['essid'] = params[BEACON_AP_ESSID]
     db.save_doc(node)
 
 def updateClient(cur,params):
     node = cur
 
-    cur_tz = datetime.utcfromtimestamp(int(params[0]))
+    cur_tz = datetime.utcfromtimestamp(int(params[TIMESTAMP]))
     # utc = _utc.replace(tzinfo=from_zone)
     # cur_tz = utc.astimezone(tzinfo=to_zone)
     # print "***********"
@@ -183,6 +188,7 @@ def updateClient(cur,params):
     # print type(cur_tz)
     # print dir(node['last'])
     node['last'] = str(cur_tz)
+    node['timestamp'] = int(params[TIMESTAMP])
     _probes = list()
     if params[PACKET_TYPE] == "Probe":
         
@@ -203,7 +209,7 @@ if __name__ == '__main__' :
     # f =  ""
     server = Server("http://localhost:5984")
 
-    db = server.get_or_create_db("test")
+    db = server.get_or_create_db("test2")
     Node.set_db(db)
     for i in db.all_docs():
         key = i['id']

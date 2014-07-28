@@ -16,7 +16,7 @@ function App(){
   var graphGUI = new dat.GUI();
   var graphFolder =  graphGUI.addFolder("Graph");
   var layouts = graphFolder.add(this.params, 'layout', config.layouts);
-  var refreshRate =  graphFolder.add(this.params, 'refreshRate', 0, 10).step(1);
+  var refreshRate =  graphFolder.add(this.params, 'refreshRate', 1, 10).step(1);
 
   var f4 = graphFolder.addFolder(config.layouts[0]);
   var currentLayout = config.layouts[0];
@@ -47,8 +47,8 @@ function App(){
   this.wrapper = Pouch();
   this.wrapper(config.dbName, config.remoteServer);
   this.myNetwork = Network();
-  time = setUTCDuration(this.params.hours,this.params.minutes,this.params.seconds);
-  this.wrapper.queryByTime(this.myNetwork,time,true);
+  time = getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  this.wrapper.queryByTimestamp(this.myNetwork,time,true);
 
   params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
 
@@ -135,8 +135,8 @@ function App(){
 
   var myInterval = function(){
     // console.log(params.hours+" : "+params.minutes+" : "+params.seconds)
-    time = setUTCDuration(params.hours,params.minutes,params.seconds);
-    wrapper.queryByTime(myNetwork,time,false);
+    time = getTimeStamp(params.hours,params.minutes,params.seconds);
+    wrapper.queryByTimestamp(myNetwork,time,false);
   };
 
   function Params() {

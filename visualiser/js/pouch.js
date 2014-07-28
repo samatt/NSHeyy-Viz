@@ -76,6 +76,37 @@ Pouch = function(){
 		});
 	}
 
+	// done to carry a query. Can pass a new Map function if needed
+	pouch.queryByTimestamp = function(network,time, firstTime){
+		// console.log(time);
+		console.log(time +" : "+ Date.now());
+		var opts = {startkey:time,
+								endkey:parseInt(Date.now()/1000),
+								reduce: false,
+								descending: false};
+
+		db.query("timestamp", opts, function(err, response) {
+
+			if(err){ console.error(err); }
+			else{
+					var postData = new Array();
+					for (var row in response.rows){
+						console.log(response.rows[row]);
+						postData.push(response.rows[row].value);
+
+					}
+				if(firstTime){
+					// console.log("First Time ");
+					network('#vis',postData);
+					network.updateData(postData);
+				}else{
+					// console.log("Other Time ");
+					network.updateData(postData);
+				}
+				console.log(postData.length);
+			}
+		});
+	}
 	pouch.queryByPower = function (network){
 
 		var opts = {reduce: false,descending: true};
