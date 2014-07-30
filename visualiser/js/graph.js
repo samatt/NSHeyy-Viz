@@ -29,15 +29,20 @@ Network = function(){
     listenerRadius: 8,
     linkRadiusMin: 10,
     linkRadiusMax: 300,
+    linkRadiusMinConnections: 135,
+    linkRadiusMaxConnections: 320,
+    linkRadiusMinNetwork: 10,
+    linkRadiusMaxNetwork: 20,
+    linkStrength: 0.5,
     routerRadius: 4,
     clientRadius: 4,
     friction: 0.5,
     charge: -150,
     minColor: colorbrewer.Reds[9][2],
     maxColor: colorbrewer.Set3[12][3],
-    minConnections: 2,
-    circMin :4,
-    circMax: 6
+    minConnections: 3,
+    circMin : 10,
+    circMax: 11
   };
 
   var tooltip = Tooltip("vis-tooltip", 230);
@@ -100,6 +105,7 @@ Network = function(){
     else if(layout == "Connections"){
       force.nodes(curNodesData)
         .links(curLinksData)
+        .linkStrength(layoutParams.linkStrength)
         .linkDistance(function(d){return d.power; });
         // .linkStrength(function(d){ return d.power*0.1; });
     }
@@ -180,10 +186,8 @@ Network = function(){
       .duration(1000)
       .attr("class","node")
       .style("fill",function(d){return d.color;})
-
       .attr("r",function(d){return d.radius;});
 
-//       // .style("fill",(colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)]))
     node.enter().append("circle")
       .attr("class", "node")
       .attr("cx", function(d){ return d.x; })
@@ -274,15 +278,14 @@ Network = function(){
       .attr("attr","update")
       .transition()
       .duration(1000)
-      .attr("class", "link");
+      .attr("class", "link")
+      .style("stroke",function(d){return d.linkColor;});
 
     link.enter().append("line")
       .attr("class", "link")
       .style("stoke-width",function(d){return d.power;})
       .style("stroke",function(d){return d.linkColor;})
       .style("opacity",function(d){return d.power *0.1; })
-
-      // .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
@@ -381,7 +384,7 @@ Network = function(){
   // tick function for force directed layout
   function forceTick(e){
     node
-      .attr("cx", function(d){ return d.x;})
+      .attr("cx", function(d){ if(!d.x){console.log(d); return 1;}return d.x;})
       .attr("cy", function(d){ return d.y;});
 
     link
@@ -573,7 +576,6 @@ Network = function(){
         n.probes = _data[node].probes;
         var l = {'source' : data.nodes[0].name, 'target': $.trim(_data[node].bssid), 'power':_data[node].power};
         data.links.push(l);
-
       }
       else{
 
@@ -587,126 +589,83 @@ Network = function(){
   };
 
   refreshD3Data = function(data){
+    //Globals of sorts
+    var countExtent = d3.extent(data.nodes, function(d){ return d.power;});
 
-    var routerColor = layoutParams.routerColor;
-    var clientColor = layoutParams.clientColor;
-    var linkColor = layoutParams.linkColor;//colorbrewer.Blues[9][3];
-    // var linkColor = colorbrewer.Set3[12][Math.floor((Math.random() * 12) + 1)];
-    countExtent = d3.extent(data.nodes, function(d){ return d.power;});
-    countExtentESSID = d3.extent(data.nodes,function(d){
-                                            if(d.kind == "Router" || d.kind == "Listener" ){
-                                              return 1;
-                                            }
-                                            else{
-                                              return (d.probes.length>0)?d.probes.length:1;
-                                            }
-                                          });
+    var countExtentESSID = d3.extent(data.nodes,function(d){ return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;});
+
+    var nConnectionsColor = d3.scale.linear().range([layoutParams.minColor,layoutParams.maxColor]).domain(countExtentESSID);
+
+    var nCircleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
+    var nColor = function(d){if(d.kind === "Listener"){return "White";} return (d.kind ==="Client")?layoutParams.clientColor:layoutParams.routerColor;};
+
+    var nConnectionsRadius = d3.scale.linear().range([ layoutParams.circMin, layoutParams.circMax]).domain(countExtentESSID);
+
+    var nNetworkLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMinNetwork, layoutParams.linkRadiusMaxNetwork ]).domain(countExtent);
+    var nDistanceLinkRadius = d3.scale.pow().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain(countExtent);
 
     data.nodes.forEach( function(n){
-
       if(nodesMap.has(n.name)){
+        //update existing nodes
           _n = nodesMap.get(n.name);
           n.x = _n.x;
           n.y = _n.y;
           n.px = _n.px;
           n.py = _n.py;
-          // n.color = _n.color;
+
+          if(n.kind === "Listener"){
+            n.radius = layoutParams.listenerRadius;
+          }
 
           if(layout === "Network"){
-
-            ramp = function(d){
-              if(d.kind === "Router"){ return routerColor;}
-              else if(d.kind === "Listener"){ return "White";}
-              else{ return clientColor;}
-
-            };
-            n.color = ramp(n);
-            if(n.kind === "Router"){
-                n.radius = layoutParams.routerRadius;
-            }
-            else{
-                n.radius = layoutParams.clientRadius;
-            }
+            n.color = nColor(n);
+            n.radius = (n.kind === "Router")?layoutParams.routerRadius:layoutParams.clientRadius;
           }
           else{
             n.radius = layoutParams.circleRadius;
           }
-          // console.log(layoutParams);
-          if(n.kind === "Listener"){
-            n.radius = layoutParams.listenerRadius;
-          }
       }
       else{
-
-        n.x = randomnumber=Math.floor(Math.random()*width);
-        n.y = randomnumber=Math.floor(Math.random()*height);
+        //add new node
+        n.x = Math.floor(Math.random()*width);
+        n.y = Math.floor(Math.random()*height);
 
         if(layout =="Network"){
-          ramp = function(d){
-            if(d.kind === "Router"){ return routerColor;}
-            else if(d.kind === "Listener"){ return "White";}
-            else{return clientColor;}
-          };
-          n.color = ramp(n);
+          n.color = nColor(n);
         }
         else if(layout =="Connections"){
-          var nodeColor = d3.scale.linear().domain(countExtentESSID).range([minColor,maxColor]);
-          n.color = nodeColor(n.probes.length);
+          n.color = nConnectionsColor(n.probes.length);
         }
       }
 
       if(layout === "Distance"){
-
-                                        //[300, 30]
-        linkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax ]).domain(countExtent);
-        circleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
-
-        n.radius = circleRadius(n.power);
+        n.radius = nCircleRadius(n.power);
         if(n.kind === "Listener"){n.radius = layoutParams.listenerRadius;}
-        n.linkPower = linkRadius(n.power);
-        ramp = function(d){
-          if(d.kind === "Router"){ return routerColor;}
-          else if(d.kind === "Listener"){ return "White";}
-          else{return clientColor;}
-        };
-        n.color = ramp(n);
+        n.linkPower = nDistanceLinkRadius(n.power);
+        n.color = nColor(n);
       }
       else if(layout === "Network"){
-
-        linkRadius = d3.scale.pow().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain(countExtent);
-        circleRadius = function(d){
-          if(d.kind === "Router"){ return layoutParams.routerRadius;}
-          else if(d.kind === "Listener"){ return layoutParams.listenerRadius;}
-          else{return layoutParams.clientRadius;}
-
-        };
-        n.linkPower = linkRadius(n.power);
-        n.radius = circleRadius(n);
-
+        n.linkPower = nNetworkLinkRadius(n.power);
+        n.radius = n.radius = (n.kind === "Router")?layoutParams.routerRadius:layoutParams.clientRadius;
       }
       else if(layout === "Connections"){
 
-          var minColor = layoutParams.minColor;
-          var maxColor =layoutParams.maxColor;
-          var nodeColor = d3.scale.linear().domain(countExtentESSID).range([minColor,maxColor]);
-          n.color = nodeColor(n.probes.length);
-
-          // n.power = linkRadius(n.power);
+          n.color =  nConnectionsColor(n.probes.length);
           if(n.kind == "Client"){
-              circRad = d3.scale.linear().range([ layoutParams.circMin  ,layoutParams.circMax]).domain(countExtentESSID);//circleRadius(n);
-              n.radius = circRad(n.probes.length);
+              n.radius = nConnectionsRadius(n.probes.length);
           }
+          // console.log(n);
       }
-
-
     });
 
-    // id's -> node objects
     mapNodes(data.nodes);
-    // console.log(data.links);
-    var linksExtent = d3.extent(data.links, function(d){ return d.power;});
+    var linkColor = layoutParams.linkColor;
+    var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
+    var lConnectionsPower = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
+    // var lConnectionslinkStrength = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
+
     data.links.forEach( function(l){
-      // console.log(l);
+
       if(nodesMap.has(l.source) && nodesMap.has(l.target)){
         // console.log(l.source + " : "+l.target);
         if(layout === "Distance"){
@@ -716,20 +675,19 @@ Network = function(){
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
         }
         else if(layout === "Connections"){
-          linkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin,layoutParams.linkRadiusMax]).domain(linksExtent);
+
           l.source = nodesMap.get(l.source);
           l.target = nodesMap.get(l.target);
-          // l.linkDist =
-          l.power = linkRadius(l.power);
+          l.power = lConnectionsPower(l.power);
+          // l.linkStrength =
 
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
           l.linkColor = linkColor;
+          // console.log(l);
         }
         else if(layout === "Network"){
           l.source = nodesMap.get(l.source);
           l.target = nodesMap.get(l.target);
-
-          // console.log(l);
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
           l.linkColor = linkColor;
         }
@@ -777,6 +735,50 @@ Network = function(){
 
       if( nodesMap.has($.trim(AP)) ){
         // console.log(nodesMap.get($.trim(AP)));
+        if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined" || nodesMap.get($.trim(AP)).essid !== ""){
+
+          networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
+        }
+        else{
+          networkName ="AP: "+ "Error";
+        }
+      }
+
+      }
+      content += '<p class="main">' + networkName    + '</span></p>';
+      content += '<hr class="tooltip-hr">';
+      content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
+      console.log(d);
+      if(d.probes.length > 0){
+        content += '<hr class="tooltip-hr">';
+        content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
+        d.probes.forEach(function(n){
+
+          content += '<p class="main">' + n  + '</span></p>';
+        });
+      }
+    }
+    else{
+      content += '<p class="main">' + "NAME:" + d.essid  + '</span></p>';
+      content += '<hr class="tooltip-hr">';
+      content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
+    }
+
+  showDetailsLinks = function (d,i){
+    content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
+    content += '<hr class="tooltip-hr">';
+    if(d.kind == "Client"){
+      // console.log(d);
+      var AP = d.essid;
+      //contains
+      var networkName = $.trim(AP);
+      if(networkName === "(not associated)"){
+        networkName =  "AP: "+"unassociated";
+      }
+      else{
+
+      if( nodesMap.has($.trim(AP)) ){
+        // console.log(nodesMap.get($.trim(AP)));
         if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined"){
 
           networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
@@ -805,6 +807,9 @@ Network = function(){
       content += '<hr class="tooltip-hr">';
       content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
     }
+
+    tooltip.showTooltip(content,d3.event);
+  };
 
     tooltip.showTooltip(content,d3.event);
   };

@@ -70,7 +70,7 @@ Pouch = function(){
 					// console.log("Other Time ");
 					network.updateData(postData);
 				}
-				console.log(postData.length);
+				// console.log(postData.length);
 			}
 		});
 	};
@@ -115,7 +115,7 @@ Pouch = function(){
 			else{
 					var postData =[];
 					for (var row in response.rows){
-						console.log(response.rows[row].key + " : " + response.rows[row].value);
+						// console.log(response.rows[row].key + " : " + response.rows[row].value);
 						postData.push(response.rows[row].value);
 					}
 				network('#vis',postData);
