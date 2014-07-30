@@ -140,7 +140,7 @@ footer p {
   opacity: 1.0;
   color: #0000.5;
   padding: 7px;
-  width: 250px;
+  width: 300px;
   font-size: 5px;
   z-index: 120;
 }
@@ -153,6 +153,7 @@ footer p {
   padding:0;
   margin:0;
   font-family: "Courier New", Courier, monospace;
+  font-size: 15px;
 
 }
 
@@ -163,7 +164,7 @@ hr.tooltip-hr {
 }
 
 .tooltip .title {
-  font-size: 20px;
+  font-size: 28px;
   line-height: 24px;
 }
 
@@ -173,6 +174,6 @@ hr.tooltip-hr {
 
 
 line.link {
-  fill: none;
+  /*fill: none;*/
   stroke-width: 1.5px;
 }
