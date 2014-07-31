@@ -33,7 +33,7 @@ Network = function(){
     linkRadiusMaxConnections: 320,
     linkRadiusMinNetwork: 10,
     linkRadiusMaxNetwork: 20,
-    linkStrength: 0.5,
+    linkStrength: 0.5 ,
     routerRadius: 4,
     clientRadius: 4,
     friction: 0.5,
@@ -44,6 +44,32 @@ Network = function(){
     circMin : 10,
     circMax: 11
   };
+
+  network.loadParams =function(p){
+
+    layoutParams.routerColor = p['routerColor'];
+    layoutParams.clientColor = p['clientColor'];
+    layoutParams.linkColor = p['linkColor'];
+    layoutParams.circleRadius = p['circleRadius'];
+    layoutParams.listenerRadius = layoutParams.listenerRadius;
+    layoutParams.linkRadiusMin = p['linkRadiusMin'];
+    layoutParams.linkRadiusMax = p['linkRadiusMax'];
+    layoutParams.linkRadiusMinConnections = p['linkRadiusMinConnections'];
+    layoutParams.linkRadiusMaxConnections = p['linkRadiusMaxConnections'];
+    layoutParams.linkRadiusMinNetwork = p['linkRadiusMinNetwork'];
+    layoutParams.linkRadiusMaxNetwork = p['linkRadiusMaxNetwork'];
+    layoutParams.linkStrength = p['linkStrength'];
+    layoutParams.routerRadius = p['routerRadius'];
+    layoutParams.clientRadius = p['clientRadius'];
+    layoutParams.friction = p['friction'];
+    layoutParams.charge = p['charge'];
+    layoutParams.minColor = p['minColor'];
+    layoutParams.maxColor = p['maxColor'];
+    layoutParams.minConnections = p['minConnections'];
+    layoutParams.circMin  = p['circMin'];
+    layoutParams.circMax = p['circMax'];
+  };
+
 
   var tooltip = Tooltip("vis-tooltip", 230);
 
@@ -279,19 +305,24 @@ Network = function(){
       .transition()
       .duration(1000)
       .attr("class", "link")
+      .style("stroke-opacity",function(d){return d.opacity; })
       .style("stroke",function(d){return d.linkColor;});
 
     link.enter().append("line")
       .attr("class", "link")
-      .style("stoke-width",function(d){return d.power;})
+      .style("stoke-width",10)
+      // .style("stoke-width",function(d){return d.power;})
       .style("stroke",function(d){return d.linkColor;})
-      .style("opacity",function(d){return d.power *0.1; })
+      .style("stroke-opacity",function(d){return d.opacity; })
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
       .attr("y2", function(d){ return d.target.y;});
 
+    link.on("mouseover", showLinkDetails)
+      .on("mouseout", hideDetails);
     link.exit().remove();
+
 
   }
 
@@ -310,7 +341,6 @@ Network = function(){
       .attr("class", "link")
       .style("stroke-width","0.5")
       .style("stroke",function(d){return d.linkColor;})
-      // .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35"})
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
@@ -343,9 +373,9 @@ Network = function(){
       value = p[2];
     }
 
-    console.log("update params in network : " +  newParams+" "+ layoutParams[key]);
+    // console.log("update params in network : " +  newParams+" "+ layoutParams[key]);
     layoutParams[key] = value;
-    console.log("updated to to "+layoutParams[key]);
+    // console.log("updated to to "+layoutParams[key]);
     allData = setupData(allRawData);
     update();
   };
@@ -384,7 +414,7 @@ Network = function(){
   // tick function for force directed layout
   function forceTick(e){
     node
-      .attr("cx", function(d){ if(!d.x){console.log(d); return 1;}return d.x;})
+      .attr("cx", function(d){ return d.x;})
       .attr("cy", function(d){ return d.y;});
 
     link
@@ -421,6 +451,7 @@ Network = function(){
     data = {};
     data.links = [];
     data.nodes = [];
+    data.linkProbes = [];
     var networkNames = [];
     networkNames.push({'name' : "dummy", 'ids': []});
     nameArray = [];
@@ -429,6 +460,7 @@ Network = function(){
     clientWeightArrayNames = [];
     clientWeightMap = d3.map();
     clientWeightLinks = [];
+
 
     for(var i in _data){
 
@@ -465,7 +497,7 @@ Network = function(){
 
     for(var k=0; k< data.nodes.length; k++){
       for(var l=0; l< data.nodes.length; l++){
-
+        // console.log("START");
         if(data.nodes[k].name === data.nodes[l].name){
           continue;
         }
@@ -479,23 +511,35 @@ Network = function(){
           // console.log(_.intersection(data.nodes[k].probes,data.nodes[l].probes));
         }
 
-        var intLength = _.intersection(data.nodes[k].probes,data.nodes[l].probes).length;
+        var intersections =  _.intersection(data.nodes[k].probes,data.nodes[l].probes);
+
+        var intLength = intersections.length;
         var key = data.nodes[k].name + "_" + data.nodes[l].name;
         var alt_key = data.nodes[l].name + "_" + data.nodes[k].name;
 
+      if( ($.inArray( key, clientWeightArrayNames) <= 0) && ($.inArray(alt_key,clientWeightArrayNames)) > -1 ){
+        // console.log(key);
+        var _p = {'source' : data.nodes[k].name, 'target': data.nodes[l].name, 'probes':intersections};
+        data.linkProbes.push(_p);
+        console.log(intersections);
+      }
         // var index = $.inArray(n.pro  bedESSID[l] , nameArray);
         if($.inArray(key , clientWeightArrayNames) > -1){
           data.nodes[k].numLinks += 1;
           data.nodes[l].numLinks += 1;
           // console.log(clientWeightMap.get(key));
           // console.log(clientWeightArray);
+
+          console.log("Updating weight on links");
           clientWeightArray[clientWeightMap.get(key)].weight += intLength;
 
 
         }
         else if($.inArray(alt_key , clientWeightArrayNames) > -1){
-          data.nodes[k].numLinks += 1;
-          data.nodes[l].numLinks += 1;
+          // data.nodes[k].numLinks += 1;
+          // data.nodes[l].numLinks += 1;
+          // console.log(key);
+          console.log("Alt _ Updating weight on links");
             continue;
 
         }
@@ -511,7 +555,7 @@ Network = function(){
           clientWeightArray.push(link);
           clientWeightArrayNames.push(newKey);
           clientWeightMap.set(newKey,(clientWeightArray.length -1));
-          // console.log("New Key :" +newKey +" : "+clientWeightArray.length);
+          console.log("New Key :" +newKey +" : "+clientWeightArray.length);
         }
       }
     }
@@ -522,8 +566,9 @@ Network = function(){
        var _l = {'source' : _n.source, 'target': _n.target, 'power':_n.weight};
        data.links.push(_l);
       }
-
+      data.linkProbes = _.uniq(data.linkProbes);
     return data;
+
   };
 
   setupNetworkLayout = function(_data){
@@ -591,18 +636,20 @@ Network = function(){
   refreshD3Data = function(data){
     //Globals of sorts
     var countExtent = d3.extent(data.nodes, function(d){ return d.power;});
-
     var countExtentESSID = d3.extent(data.nodes,function(d){ return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;});
+    var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
 
+    var linkColor = layoutParams.linkColor;
     var nConnectionsColor = d3.scale.linear().range([layoutParams.minColor,layoutParams.maxColor]).domain(countExtentESSID);
-
-    var nCircleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
     var nColor = function(d){if(d.kind === "Listener"){return "White";} return (d.kind ==="Client")?layoutParams.clientColor:layoutParams.routerColor;};
 
+    var nCircleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
     var nConnectionsRadius = d3.scale.linear().range([ layoutParams.circMin, layoutParams.circMax]).domain(countExtentESSID);
-
     var nNetworkLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMinNetwork, layoutParams.linkRadiusMaxNetwork ]).domain(countExtent);
     var nDistanceLinkRadius = d3.scale.pow().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain(countExtent);
+
+    var lConnectionsPower = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
+    var lConnectionsOpacity = d3.scale.linear().range([0.4,0.6]).domain(connectionsLinksExtent);
 
     data.nodes.forEach( function(n){
       if(nodesMap.has(n.name)){
@@ -654,15 +701,10 @@ Network = function(){
           if(n.kind == "Client"){
               n.radius = nConnectionsRadius(n.probes.length);
           }
-          // console.log(n);
       }
     });
 
     mapNodes(data.nodes);
-    var linkColor = layoutParams.linkColor;
-    var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
-    var lConnectionsPower = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
-    // var lConnectionslinkStrength = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
 
     data.links.forEach( function(l){
 
@@ -678,12 +720,24 @@ Network = function(){
 
           l.source = nodesMap.get(l.source);
           l.target = nodesMap.get(l.target);
+          l.common = [];
+          for( var i in data.linkProbes){
+            // console.log(data.linkProbes[i]);
+            // console.log(l.sourv);
+            if(data.linkProbes[i].source == l.source.name && data.linkProbes[i].target == l.target.name){
+              l.common.push(data.linkProbes[i].probes);
+            }
+            else if(data.linkProbes[i].source == l.target.name && data.linkProbes[i].target == l.source.name){
+              l.common.push(data.linkProbes[i].probes);
+            }
+          }
           l.power = lConnectionsPower(l.power);
+          l.opacity = lConnectionsOpacity(l.power);
           // l.linkStrength =
 
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
           l.linkColor = linkColor;
-          // console.log(l);
+          // console.log(l.opacity);
         }
         else if(layout === "Network"){
           l.source = nodesMap.get(l.source);
@@ -764,52 +818,57 @@ Network = function(){
       content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
     }
 
-  showDetailsLinks = function (d,i){
-    content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
-    content += '<hr class="tooltip-hr">';
-    if(d.kind == "Client"){
-      // console.log(d);
-      var AP = d.essid;
-      //contains
-      var networkName = $.trim(AP);
-      if(networkName === "(not associated)"){
-        networkName =  "AP: "+"unassociated";
-      }
-      else{
-
-      if( nodesMap.has($.trim(AP)) ){
-        // console.log(nodesMap.get($.trim(AP)));
-        if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined"){
-
-          networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
-        }
-        else{
-          networkName ="AP: "+ "Error";
-        }
-      }
-
-      }
-      content += '<p class="main">' + networkName    + '</span></p>';
-      content += '<hr class="tooltip-hr">';
-      content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
-      console.log(d);
-      if(d.probes.length > 0){
-        content += '<hr class="tooltip-hr">';
-        content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
-        d.probes.forEach(function(n){
-
-          content += '<p class="main">' + n  + '</span></p>';
-        });
-      }
-    }
-    else{
-      content += '<p class="main">' + "NAME:" + d.essid  + '</span></p>';
-      content += '<hr class="tooltip-hr">';
-      content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
-    }
-
     tooltip.showTooltip(content,d3.event);
   };
+
+  showLinkDetails = function (d,i){
+    // console.log(d);
+    content = '<p class="main">' + d.source.name + " : "+ d.source.kind + '</span></p>';
+    content += '<hr class="tooltip-hr">';
+    content += '<p class="main">' + d.target.name + " : "+ d.target.kind + '</span></p>';
+    if(d.common.length > 0){
+      console.log(d.common);
+      content += '<hr class="tooltip-hr">';
+      content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
+      d.common.forEach(function(n){
+
+        content += '<p class="main">' + n  + '</span></p>';
+      });
+    }
+    if(d.kind == "Client"){
+      // var AP = d.essid;
+      // //contains
+      // var networkName = $.trim(AP);
+      //
+      // if( nodesMap.has($.trim(AP)) ){
+      //   // console.log(nodesMap.get($.trim(AP)));
+      //   if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined"){
+      //
+      //     networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
+      //   }
+      //   else{
+      //     networkName ="AP: "+ "Error";
+      //   }
+      //
+      // }
+      // content += '<p class="main">' + networkName    + '</span></p>';
+      // content += '<hr class="tooltip-hr">';
+      // content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
+      // console.log(d);
+      // if(d.probes.length > 0){
+      //   content += '<hr class="tooltip-hr">';
+      //   content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
+      //   d.probes.forEach(function(n){
+      //
+      //     content += '<p class="main">' + n  + '</span></p>';
+      //   });
+      // }
+    }
+    else{
+      // content += '<p class="main">' + "NAME:" + d.target.essid  + '</span></p>';
+      // content += '<hr class="tooltip-hr">';
+      // content += '<p class="main">' +"RSSI: " + d.source.power  + '</span></p>';
+    }
 
     tooltip.showTooltip(content,d3.event);
   };

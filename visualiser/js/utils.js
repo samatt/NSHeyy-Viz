@@ -3,7 +3,7 @@ config.dbName = "test2";
 config.remoteServer  = 'http://127.0.0.1:5984/test2';
 config.nodes = [];
 config.links = [];
-config.layouts = [ 'Distance', 'Network' , 'Connections' ];
+config.layouts = [ 'Connections','Distance', 'Network'];
 config.interval = 5000;
 config.intervalId;
 config.hours = 0;
