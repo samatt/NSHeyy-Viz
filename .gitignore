@@ -1,3 +1,10 @@
+.org.chromium.*
+*.sublime-*
+node_modules/
+dist/
+public/js
+public/css
+
 /.DS_Store
 
 .DS_Store
@@ -18,3 +25,4 @@
 /sniffer/Hello World.xcodeproj/xcuserdata/surya.xcuserdatad/xcschemes/xcschememanagement.plist
 
 /sniffer/build/
+

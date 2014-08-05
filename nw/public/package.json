@@ -1,0 +1,17 @@
+{
+  "name": "airoViz",
+  "main": "index.html",
+  "single-instance": true,
+  "dom_storage_quota": 2048,
+  "window": {
+    "title": "airoViz",
+    "toolbar": true,
+    "frame": true,
+    "position": "center",
+    "width": 1024,
+    "height": 768,
+    "min_width": 2048,
+    "min_height": 768,
+    "resizable": true
+  }
+}

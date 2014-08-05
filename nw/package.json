@@ -1,0 +1,25 @@
+{
+  "author": "Surya Mattu",
+  "name": "airoViz",
+  "description": "Real-time WiFi Packet Visualiser",
+  "version": "0.0.1",
+  "devDependencies": {
+    "browserify": "^3.33.1",
+    "d3": "^3.4.11",
+    "dat-gui": "^0.5.0",
+    "es6-promise": "^1.0.0",
+    "gulp": "^3.5.6",
+    "gulp-concat": "^2.2.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-sass": "^0.7.1",
+    "nodewebkit": "^0.9.2",
+    "partialify": "^3.1.1",
+    "pouchdb": "^2.2.3",
+    "underscore": "^1.6.0",
+    "vinyl-source-stream": "^0.1.1",
+    "vue": "^0.10.3"
+  },
+  "scripts": {
+    "app": "nodewebkit public"
+  }
+}
