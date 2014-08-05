@@ -1408,7 +1408,7 @@ module.exports = function App(){
     this.layout = [];
     this.refreshRate = 7;
     this.hours = 0;
-    this.minutes = 20;
+    this.minutes = 10;
     this.seconds = 0;
     //Random value
     this.intervalId = 0;
@@ -1433,7 +1433,7 @@ module.exports = function App(){
       minColor: colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))],//.Reds[9][2],
       maxColor: colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))],//.Set3[12][3],
       minConnections: 3,
-      circMin : 4,
+      circMin : 1,
       circMax: 11,
       strokeWidth:3
     };
