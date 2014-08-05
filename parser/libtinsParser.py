@@ -73,19 +73,19 @@ def readLine(line):
         if params[BEACON_AP_BSSID] in routerMap.keys():
             cur = db.get(routerMap[params[PROBE_ST_BSSID]])
             updateRouter(cur,params)
-            print "update Router"
+            # print "update Router"
         else:
             addRouter(params)
-            print "add Router"
+            # print "add Router"
     else:
         if params[PROBE_ST_BSSID] in clientMap.keys():
             # print para    ms
             # print clientMap.keys()
             cur = db.get(clientMap[params[PROBE_ST_BSSID]])
             updateClient(cur,params)
-            print "update Client"
+            # print "update Client"
         else:
-            print "add Client"
+            # print "add Client"
             addClient(params)
 
 
@@ -115,7 +115,7 @@ def addRouter(params):
     # save it 
     node.save()
     routerMap[node['bssid']] = node['_id']
-    print node
+    # print node
 
 
 def addClient(params):
@@ -141,7 +141,7 @@ def addClient(params):
             ap_essid = "")
         node.save()
         clientMap[node['bssid']] = node['_id']
-        print node
+        # print node
 
     #TODO: Add a lookup for Router BSSID to ESSID
     #NOTE: The signal strenght we're picking up from this packet is coming from the router not the client/station
@@ -159,7 +159,7 @@ def addClient(params):
             ap_essid = params[DATA_AP_BSSID])
         node.save()
         clientMap[node['bssid']] = node['_id']
-        print node
+        # print node
 
     
     
