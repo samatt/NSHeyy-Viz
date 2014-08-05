@@ -1,11 +1,11 @@
 var Vue = require('vue');
 var $ = require('jQuery');
-var app = require('./scripts/app');
+var pbj = require('./scripts/pbj');
 
 
-var viz = new Vue({
+var app = new Vue({
   el: '#app',
   ready:function(){
-    app();
+    pbj();
   },
 });

@@ -242,7 +242,7 @@ if __name__ == '__main__' :
     #     readLine(line)
     # csv.close()
 ##########TAIL IMPLEMENTATION
-    filename = '/Users/surya/Desktop/test.log'
+    filename = '../sniffer/build/Release/packets.log'
     file = open(filename,'r')
 
     #Find the size of the file and move to the end
