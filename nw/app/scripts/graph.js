@@ -647,7 +647,7 @@ module.exports = function(){
     var nCircleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
     var nConnectionsRadius = d3.scale.linear().range([ layoutParams.circMin, layoutParams.circMax]).domain(countExtentESSID);
     var nNetworkLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMinNetwork, layoutParams.linkRadiusMaxNetwork ]).domain(countExtent);
-    var nDistanceLinkRadius = d3.scale.pow().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain(countExtent);
+    var nDistanceLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain([255,0]);
 
     var lConnectionsPower = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
     var lConnectionsOpacity = d3.scale.linear().range([0.4,0.6]).domain(connectionsLinksExtent);

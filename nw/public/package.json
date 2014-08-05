@@ -1,10 +1,10 @@
 {
-  "name": "airoViz",
+  "name": "PBJ",
   "main": "index.html",
   "single-instance": true,
   "dom_storage_quota": 2048,
   "window": {
-    "title": "airoViz",
+    "title": "PBJ",
     "toolbar": true,
     "frame": true,
     "position": "center",

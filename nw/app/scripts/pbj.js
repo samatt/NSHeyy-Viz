@@ -8,8 +8,8 @@ module.exports = function App(){
 
 
   this.params = new Params();
-  var gui = new dat.GUI();
-  var utilsGui = gui.addFolder("Utils");
+  var gui1 = new dat.GUI();
+  var utilsGui = gui1.addFolder("Utils");
 
   var f1 =  utilsGui.addFolder("Server");
   f1.add(this.params, 'dbName');
