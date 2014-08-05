@@ -11,7 +11,7 @@ var app = new Vue({
   },
 });
 
-},{"./scripts/pbj":5,"jQuery":77,"vue":99}],2:[function(require,module,exports){
+},{"./scripts/pbj":5,"jQuery":67,"vue":89}],2:[function(require,module,exports){
 var $ = require('jQuery');
 
 module.exports = function(_tooltipId, width){
@@ -64,7 +64,7 @@ module.exports = function(_tooltipId, width){
   };
 }
 
-},{"jQuery":77}],3:[function(require,module,exports){
+},{"jQuery":67}],3:[function(require,module,exports){
 // This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
 module.exports = {YlGn: {
 3: ["#f7fcb9","#addd8e","#31a354"],
@@ -1222,7 +1222,7 @@ module.exports = function(){
     return network;
 };
 
-},{"./Tooltip":2,"./colorBrewer":3,"./utils":7,"d3":63,"jQuery":77,"underscore":78}],5:[function(require,module,exports){
+},{"./Tooltip":2,"./colorBrewer":3,"./utils":7,"d3":63,"jQuery":67,"underscore":68}],5:[function(require,module,exports){
 var colorbrewer = require('./colorBrewer');
 var dat = require('dat-gui');
 var utils = require('./utils');
@@ -1407,7 +1407,7 @@ module.exports = function App(){
     this.remoteServer  = 'http://127.0.0.1:5984/test2';
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 7;
+    this.hours = 0;
     this.minutes = 20;
     this.seconds = 0;
     //Random value
@@ -1444,7 +1444,7 @@ module.exports = function App(){
 },{"./colorBrewer":3,"./graph":4,"./pouch":6,"./utils":7,"dat-gui":64}],6:[function(require,module,exports){
 var PouchDB = require('PouchDB');
 var utils = require('./utils');
-var Promise = require('es6-promise').Promise;
+// var Promise = require('es6-promise').Promise;
 module.exports = function(){
 	// var syncDom = document.getElementById('sync-wrapper');
 	// var dbName = 'Nodes'
@@ -1551,6 +1551,7 @@ module.exports = function(){
 
 					network.updateData(postData);
 				}else{
+          console.log(	postData);
 					// conssole.log("Other Time ");
 					network.updateData(postData);
 				}
@@ -1617,7 +1618,7 @@ module.exports = function(){
 
 };
 
-},{"./utils":7,"PouchDB":22,"es6-promise":67}],7:[function(require,module,exports){
+},{"./utils":7,"PouchDB":22}],7:[function(require,module,exports){
 module.exports.config = {};
 module.exports.config.dbName = "test2";
 module.exports.config.remoteServer  = 'http://127.0.0.1:5984/test2';
@@ -24284,616 +24285,6 @@ dat.dom.dom,
 dat.utils.common);
 
 },{}],67:[function(require,module,exports){
-"use strict";
-var Promise = require("./promise/promise").Promise;
-var polyfill = require("./promise/polyfill").polyfill;
-exports.Promise = Promise;
-exports.polyfill = polyfill;
-},{"./promise/polyfill":71,"./promise/promise":72}],68:[function(require,module,exports){
-"use strict";
-/* global toString */
-
-var isArray = require("./utils").isArray;
-var isFunction = require("./utils").isFunction;
-
-/**
-  Returns a promise that is fulfilled when all the given promises have been
-  fulfilled, or rejected if any of them become rejected. The return promise
-  is fulfilled with an array that gives all the values in the order they were
-  passed in the `promises` array argument.
-
-  Example:
-
-  ```javascript
-  var promise1 = RSVP.resolve(1);
-  var promise2 = RSVP.resolve(2);
-  var promise3 = RSVP.resolve(3);
-  var promises = [ promise1, promise2, promise3 ];
-
-  RSVP.all(promises).then(function(array){
-    // The array here would be [ 1, 2, 3 ];
-  });
-  ```
-
-  If any of the `promises` given to `RSVP.all` are rejected, the first promise
-  that is rejected will be given as an argument to the returned promises's
-  rejection handler. For example:
-
-  Example:
-
-  ```javascript
-  var promise1 = RSVP.resolve(1);
-  var promise2 = RSVP.reject(new Error("2"));
-  var promise3 = RSVP.reject(new Error("3"));
-  var promises = [ promise1, promise2, promise3 ];
-
-  RSVP.all(promises).then(function(array){
-    // Code here never runs because there are rejected promises!
-  }, function(error) {
-    // error.message === "2"
-  });
-  ```
-
-  @method all
-  @for RSVP
-  @param {Array} promises
-  @param {String} label
-  @return {Promise} promise that is fulfilled when all `promises` have been
-  fulfilled, or rejected if any of them become rejected.
-*/
-function all(promises) {
-  /*jshint validthis:true */
-  var Promise = this;
-
-  if (!isArray(promises)) {
-    throw new TypeError('You must pass an array to all.');
-  }
-
-  return new Promise(function(resolve, reject) {
-    var results = [], remaining = promises.length,
-    promise;
-
-    if (remaining === 0) {
-      resolve([]);
-    }
-
-    function resolver(index) {
-      return function(value) {
-        resolveAll(index, value);
-      };
-    }
-
-    function resolveAll(index, value) {
-      results[index] = value;
-      if (--remaining === 0) {
-        resolve(results);
-      }
-    }
-
-    for (var i = 0; i < promises.length; i++) {
-      promise = promises[i];
-
-      if (promise && isFunction(promise.then)) {
-        promise.then(resolver(i), reject);
-      } else {
-        resolveAll(i, promise);
-      }
-    }
-  });
-}
-
-exports.all = all;
-},{"./utils":76}],69:[function(require,module,exports){
-(function (process,global){
-"use strict";
-var browserGlobal = (typeof window !== 'undefined') ? window : {};
-var BrowserMutationObserver = browserGlobal.MutationObserver || browserGlobal.WebKitMutationObserver;
-var local = (typeof global !== 'undefined') ? global : (this === undefined? window:this);
-
-// node
-function useNextTick() {
-  return function() {
-    process.nextTick(flush);
-  };
-}
-
-function useMutationObserver() {
-  var iterations = 0;
-  var observer = new BrowserMutationObserver(flush);
-  var node = document.createTextNode('');
-  observer.observe(node, { characterData: true });
-
-  return function() {
-    node.data = (iterations = ++iterations % 2);
-  };
-}
-
-function useSetTimeout() {
-  return function() {
-    local.setTimeout(flush, 1);
-  };
-}
-
-var queue = [];
-function flush() {
-  for (var i = 0; i < queue.length; i++) {
-    var tuple = queue[i];
-    var callback = tuple[0], arg = tuple[1];
-    callback(arg);
-  }
-  queue = [];
-}
-
-var scheduleFlush;
-
-// Decide what async method to use to triggering processing of queued callbacks:
-if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
-  scheduleFlush = useNextTick();
-} else if (BrowserMutationObserver) {
-  scheduleFlush = useMutationObserver();
-} else {
-  scheduleFlush = useSetTimeout();
-}
-
-function asap(callback, arg) {
-  var length = queue.push([callback, arg]);
-  if (length === 1) {
-    // If length is 1, that means that we need to schedule an async flush.
-    // If additional callbacks are queued before the queue is flushed, they
-    // will be processed by this flush that we are scheduling.
-    scheduleFlush();
-  }
-}
-
-exports.asap = asap;
-}).call(this,require("FWaASH"),typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"FWaASH":62}],70:[function(require,module,exports){
-"use strict";
-var config = {
-  instrument: false
-};
-
-function configure(name, value) {
-  if (arguments.length === 2) {
-    config[name] = value;
-  } else {
-    return config[name];
-  }
-}
-
-exports.config = config;
-exports.configure = configure;
-},{}],71:[function(require,module,exports){
-(function (global){
-"use strict";
-/*global self*/
-var RSVPPromise = require("./promise").Promise;
-var isFunction = require("./utils").isFunction;
-
-function polyfill() {
-  var local;
-
-  if (typeof global !== 'undefined') {
-    local = global;
-  } else if (typeof window !== 'undefined' && window.document) {
-    local = window;
-  } else {
-    local = self;
-  }
-
-  var es6PromiseSupport = 
-    "Promise" in local &&
-    // Some of these methods are missing from
-    // Firefox/Chrome experimental implementations
-    "resolve" in local.Promise &&
-    "reject" in local.Promise &&
-    "all" in local.Promise &&
-    "race" in local.Promise &&
-    // Older version of the spec had a resolver object
-    // as the arg rather than a function
-    (function() {
-      var resolve;
-      new local.Promise(function(r) { resolve = r; });
-      return isFunction(resolve);
-    }());
-
-  if (!es6PromiseSupport) {
-    local.Promise = RSVPPromise;
-  }
-}
-
-exports.polyfill = polyfill;
-}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./promise":72,"./utils":76}],72:[function(require,module,exports){
-"use strict";
-var config = require("./config").config;
-var configure = require("./config").configure;
-var objectOrFunction = require("./utils").objectOrFunction;
-var isFunction = require("./utils").isFunction;
-var now = require("./utils").now;
-var all = require("./all").all;
-var race = require("./race").race;
-var staticResolve = require("./resolve").resolve;
-var staticReject = require("./reject").reject;
-var asap = require("./asap").asap;
-
-var counter = 0;
-
-config.async = asap; // default async is asap;
-
-function Promise(resolver) {
-  if (!isFunction(resolver)) {
-    throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
-  }
-
-  if (!(this instanceof Promise)) {
-    throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
-  }
-
-  this._subscribers = [];
-
-  invokeResolver(resolver, this);
-}
-
-function invokeResolver(resolver, promise) {
-  function resolvePromise(value) {
-    resolve(promise, value);
-  }
-
-  function rejectPromise(reason) {
-    reject(promise, reason);
-  }
-
-  try {
-    resolver(resolvePromise, rejectPromise);
-  } catch(e) {
-    rejectPromise(e);
-  }
-}
-
-function invokeCallback(settled, promise, callback, detail) {
-  var hasCallback = isFunction(callback),
-      value, error, succeeded, failed;
-
-  if (hasCallback) {
-    try {
-      value = callback(detail);
-      succeeded = true;
-    } catch(e) {
-      failed = true;
-      error = e;
-    }
-  } else {
-    value = detail;
-    succeeded = true;
-  }
-
-  if (handleThenable(promise, value)) {
-    return;
-  } else if (hasCallback && succeeded) {
-    resolve(promise, value);
-  } else if (failed) {
-    reject(promise, error);
-  } else if (settled === FULFILLED) {
-    resolve(promise, value);
-  } else if (settled === REJECTED) {
-    reject(promise, value);
-  }
-}
-
-var PENDING   = void 0;
-var SEALED    = 0;
-var FULFILLED = 1;
-var REJECTED  = 2;
-
-function subscribe(parent, child, onFulfillment, onRejection) {
-  var subscribers = parent._subscribers;
-  var length = subscribers.length;
-
-  subscribers[length] = child;
-  subscribers[length + FULFILLED] = onFulfillment;
-  subscribers[length + REJECTED]  = onRejection;
-}
-
-function publish(promise, settled) {
-  var child, callback, subscribers = promise._subscribers, detail = promise._detail;
-
-  for (var i = 0; i < subscribers.length; i += 3) {
-    child = subscribers[i];
-    callback = subscribers[i + settled];
-
-    invokeCallback(settled, child, callback, detail);
-  }
-
-  promise._subscribers = null;
-}
-
-Promise.prototype = {
-  constructor: Promise,
-
-  _state: undefined,
-  _detail: undefined,
-  _subscribers: undefined,
-
-  then: function(onFulfillment, onRejection) {
-    var promise = this;
-
-    var thenPromise = new this.constructor(function() {});
-
-    if (this._state) {
-      var callbacks = arguments;
-      config.async(function invokePromiseCallback() {
-        invokeCallback(promise._state, thenPromise, callbacks[promise._state - 1], promise._detail);
-      });
-    } else {
-      subscribe(this, thenPromise, onFulfillment, onRejection);
-    }
-
-    return thenPromise;
-  },
-
-  'catch': function(onRejection) {
-    return this.then(null, onRejection);
-  }
-};
-
-Promise.all = all;
-Promise.race = race;
-Promise.resolve = staticResolve;
-Promise.reject = staticReject;
-
-function handleThenable(promise, value) {
-  var then = null,
-  resolved;
-
-  try {
-    if (promise === value) {
-      throw new TypeError("A promises callback cannot return that same promise.");
-    }
-
-    if (objectOrFunction(value)) {
-      then = value.then;
-
-      if (isFunction(then)) {
-        then.call(value, function(val) {
-          if (resolved) { return true; }
-          resolved = true;
-
-          if (value !== val) {
-            resolve(promise, val);
-          } else {
-            fulfill(promise, val);
-          }
-        }, function(val) {
-          if (resolved) { return true; }
-          resolved = true;
-
-          reject(promise, val);
-        });
-
-        return true;
-      }
-    }
-  } catch (error) {
-    if (resolved) { return true; }
-    reject(promise, error);
-    return true;
-  }
-
-  return false;
-}
-
-function resolve(promise, value) {
-  if (promise === value) {
-    fulfill(promise, value);
-  } else if (!handleThenable(promise, value)) {
-    fulfill(promise, value);
-  }
-}
-
-function fulfill(promise, value) {
-  if (promise._state !== PENDING) { return; }
-  promise._state = SEALED;
-  promise._detail = value;
-
-  config.async(publishFulfillment, promise);
-}
-
-function reject(promise, reason) {
-  if (promise._state !== PENDING) { return; }
-  promise._state = SEALED;
-  promise._detail = reason;
-
-  config.async(publishRejection, promise);
-}
-
-function publishFulfillment(promise) {
-  publish(promise, promise._state = FULFILLED);
-}
-
-function publishRejection(promise) {
-  publish(promise, promise._state = REJECTED);
-}
-
-exports.Promise = Promise;
-},{"./all":68,"./asap":69,"./config":70,"./race":73,"./reject":74,"./resolve":75,"./utils":76}],73:[function(require,module,exports){
-"use strict";
-/* global toString */
-var isArray = require("./utils").isArray;
-
-/**
-  `RSVP.race` allows you to watch a series of promises and act as soon as the
-  first promise given to the `promises` argument fulfills or rejects.
-
-  Example:
-
-  ```javascript
-  var promise1 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      resolve("promise 1");
-    }, 200);
-  });
-
-  var promise2 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      resolve("promise 2");
-    }, 100);
-  });
-
-  RSVP.race([promise1, promise2]).then(function(result){
-    // result === "promise 2" because it was resolved before promise1
-    // was resolved.
-  });
-  ```
-
-  `RSVP.race` is deterministic in that only the state of the first completed
-  promise matters. For example, even if other promises given to the `promises`
-  array argument are resolved, but the first completed promise has become
-  rejected before the other promises became fulfilled, the returned promise
-  will become rejected:
-
-  ```javascript
-  var promise1 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      resolve("promise 1");
-    }, 200);
-  });
-
-  var promise2 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      reject(new Error("promise 2"));
-    }, 100);
-  });
-
-  RSVP.race([promise1, promise2]).then(function(result){
-    // Code here never runs because there are rejected promises!
-  }, function(reason){
-    // reason.message === "promise2" because promise 2 became rejected before
-    // promise 1 became fulfilled
-  });
-  ```
-
-  @method race
-  @for RSVP
-  @param {Array} promises array of promises to observe
-  @param {String} label optional string for describing the promise returned.
-  Useful for tooling.
-  @return {Promise} a promise that becomes fulfilled with the value the first
-  completed promises is resolved with if the first completed promise was
-  fulfilled, or rejected with the reason that the first completed promise
-  was rejected with.
-*/
-function race(promises) {
-  /*jshint validthis:true */
-  var Promise = this;
-
-  if (!isArray(promises)) {
-    throw new TypeError('You must pass an array to race.');
-  }
-  return new Promise(function(resolve, reject) {
-    var results = [], promise;
-
-    for (var i = 0; i < promises.length; i++) {
-      promise = promises[i];
-
-      if (promise && typeof promise.then === 'function') {
-        promise.then(resolve, reject);
-      } else {
-        resolve(promise);
-      }
-    }
-  });
-}
-
-exports.race = race;
-},{"./utils":76}],74:[function(require,module,exports){
-"use strict";
-/**
-  `RSVP.reject` returns a promise that will become rejected with the passed
-  `reason`. `RSVP.reject` is essentially shorthand for the following:
-
-  ```javascript
-  var promise = new RSVP.Promise(function(resolve, reject){
-    reject(new Error('WHOOPS'));
-  });
-
-  promise.then(function(value){
-    // Code here doesn't run because the promise is rejected!
-  }, function(reason){
-    // reason.message === 'WHOOPS'
-  });
-  ```
-
-  Instead of writing the above, your code now simply becomes the following:
-
-  ```javascript
-  var promise = RSVP.reject(new Error('WHOOPS'));
-
-  promise.then(function(value){
-    // Code here doesn't run because the promise is rejected!
-  }, function(reason){
-    // reason.message === 'WHOOPS'
-  });
-  ```
-
-  @method reject
-  @for RSVP
-  @param {Any} reason value that the returned promise will be rejected with.
-  @param {String} label optional string for identifying the returned promise.
-  Useful for tooling.
-  @return {Promise} a promise that will become rejected with the given
-  `reason`.
-*/
-function reject(reason) {
-  /*jshint validthis:true */
-  var Promise = this;
-
-  return new Promise(function (resolve, reject) {
-    reject(reason);
-  });
-}
-
-exports.reject = reject;
-},{}],75:[function(require,module,exports){
-"use strict";
-function resolve(value) {
-  /*jshint validthis:true */
-  if (value && typeof value === 'object' && value.constructor === this) {
-    return value;
-  }
-
-  var Promise = this;
-
-  return new Promise(function(resolve) {
-    resolve(value);
-  });
-}
-
-exports.resolve = resolve;
-},{}],76:[function(require,module,exports){
-"use strict";
-function objectOrFunction(x) {
-  return isFunction(x) || (typeof x === "object" && x !== null);
-}
-
-function isFunction(x) {
-  return typeof x === "function";
-}
-
-function isArray(x) {
-  return Object.prototype.toString.call(x) === "[object Array]";
-}
-
-// Date.now is not available in browsers < IE9
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now#Compatibility
-var now = Date.now || function() { return new Date().getTime(); };
-
-
-exports.objectOrFunction = objectOrFunction;
-exports.isFunction = isFunction;
-exports.isArray = isArray;
-exports.now = now;
-},{}],77:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
@@ -34085,7 +33476,7 @@ return jQuery;
 
 }));
 
-},{}],78:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -35430,7 +34821,7 @@ return jQuery;
   }
 }).call(this);
 
-},{}],79:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 var utils = require('./utils')
 
 function Batcher () {
@@ -35476,7 +34867,7 @@ BatcherProto.reset = function () {
 }
 
 module.exports = Batcher
-},{"./utils":104}],80:[function(require,module,exports){
+},{"./utils":94}],70:[function(require,module,exports){
 var Batcher        = require('./batcher'),
     bindingBatcher = new Batcher(),
     bindingId      = 1
@@ -35580,7 +34971,7 @@ BindingProto.unbind = function () {
 }
 
 module.exports = Binding
-},{"./batcher":79}],81:[function(require,module,exports){
+},{"./batcher":69}],71:[function(require,module,exports){
 var Emitter     = require('./emitter'),
     Observer    = require('./observer'),
     config      = require('./config'),
@@ -36618,7 +36009,7 @@ function getRoot (compiler) {
 }
 
 module.exports = Compiler
-},{"./binding":80,"./config":82,"./deps-parser":83,"./directive":84,"./emitter":95,"./exp-parser":96,"./observer":100,"./text-parser":102,"./utils":104,"./viewmodel":105}],82:[function(require,module,exports){
+},{"./binding":70,"./config":72,"./deps-parser":73,"./directive":74,"./emitter":85,"./exp-parser":86,"./observer":90,"./text-parser":92,"./utils":94,"./viewmodel":95}],72:[function(require,module,exports){
 var TextParser = require('./text-parser')
 
 module.exports = {
@@ -36638,7 +36029,7 @@ Object.defineProperty(module.exports, 'delimiters', {
         TextParser.setDelimiters(delimiters)
     }
 })
-},{"./text-parser":102}],83:[function(require,module,exports){
+},{"./text-parser":92}],73:[function(require,module,exports){
 var Emitter  = require('./emitter'),
     utils    = require('./utils'),
     Observer = require('./observer'),
@@ -36704,7 +36095,7 @@ module.exports = {
     }
     
 }
-},{"./emitter":95,"./observer":100,"./utils":104}],84:[function(require,module,exports){
+},{"./emitter":85,"./observer":90,"./utils":94}],74:[function(require,module,exports){
 var dirId           = 1,
     ARG_RE          = /^[\w\$-]+$/,
     FILTER_TOKEN_RE = /[^\s'"]+|'[^']+'|"[^"]+"/g,
@@ -36963,7 +36354,7 @@ function escapeQuote (v) {
 }
 
 module.exports = Directive
-},{"./text-parser":102}],85:[function(require,module,exports){
+},{"./text-parser":92}],75:[function(require,module,exports){
 var utils = require('../utils'),
     slice = [].slice
 
@@ -37005,7 +36396,7 @@ module.exports = {
         parent.insertBefore(frag, this.el)
     }
 }
-},{"../utils":104}],86:[function(require,module,exports){
+},{"../utils":94}],76:[function(require,module,exports){
 var utils    = require('../utils')
 
 /**
@@ -37062,7 +36453,7 @@ module.exports = {
         }
     }
 }
-},{"../utils":104}],87:[function(require,module,exports){
+},{"../utils":94}],77:[function(require,module,exports){
 var utils      = require('../utils'),
     config     = require('../config'),
     transition = require('../transition'),
@@ -37192,7 +36583,7 @@ directives.html    = require('./html')
 directives.style   = require('./style')
 directives.partial = require('./partial')
 directives.view    = require('./view')
-},{"../config":82,"../transition":103,"../utils":104,"./html":85,"./if":86,"./model":88,"./on":89,"./partial":90,"./repeat":91,"./style":92,"./view":93,"./with":94}],88:[function(require,module,exports){
+},{"../config":72,"../transition":93,"../utils":94,"./html":75,"./if":76,"./model":78,"./on":79,"./partial":80,"./repeat":81,"./style":82,"./view":83,"./with":84}],78:[function(require,module,exports){
 var utils = require('../utils'),
     isIE9 = navigator.userAgent.indexOf('MSIE 9.0') > 0,
     filter = [].filter
@@ -37367,7 +36758,7 @@ module.exports = {
         }
     }
 }
-},{"../utils":104}],89:[function(require,module,exports){
+},{"../utils":94}],79:[function(require,module,exports){
 var utils    = require('../utils')
 
 /**
@@ -37426,7 +36817,7 @@ module.exports = {
         this.el.removeEventListener('load', this.iframeBind)
     }
 }
-},{"../utils":104}],90:[function(require,module,exports){
+},{"../utils":94}],80:[function(require,module,exports){
 var utils = require('../utils')
 
 /**
@@ -37477,7 +36868,7 @@ module.exports = {
     }
 
 }
-},{"../utils":104}],91:[function(require,module,exports){
+},{"../utils":94}],81:[function(require,module,exports){
 var utils      = require('../utils'),
     config     = require('../config')
 
@@ -37724,7 +37115,7 @@ function indexOf (vms, obj) {
     }
     return -1
 }
-},{"../config":82,"../utils":104}],92:[function(require,module,exports){
+},{"../config":72,"../utils":94}],82:[function(require,module,exports){
 var prefixes = ['-webkit-', '-moz-', '-ms-']
 
 /**
@@ -37771,7 +37162,7 @@ module.exports = {
     }
 
 }
-},{}],93:[function(require,module,exports){
+},{}],83:[function(require,module,exports){
 /**
  *  Manages a conditional child VM using the
  *  binding's value as the component ID.
@@ -37828,7 +37219,7 @@ module.exports = {
     }
 
 }
-},{}],94:[function(require,module,exports){
+},{}],84:[function(require,module,exports){
 var utils = require('../utils')
 
 /**
@@ -37879,7 +37270,7 @@ module.exports = {
     }
 
 }
-},{"../utils":104}],95:[function(require,module,exports){
+},{"../utils":94}],85:[function(require,module,exports){
 var slice = [].slice
 
 function Emitter (ctx) {
@@ -37977,7 +37368,7 @@ EmitterProto.applyEmit = function (event) {
 }
 
 module.exports = Emitter
-},{}],96:[function(require,module,exports){
+},{}],86:[function(require,module,exports){
 var utils           = require('./utils'),
     STR_SAVE_RE     = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g,
     STR_RESTORE_RE  = /"(\d+)"/g,
@@ -38168,7 +37559,7 @@ exports.eval = function (exp, compiler, data) {
     }
     return res
 }
-},{"./utils":104}],97:[function(require,module,exports){
+},{"./utils":94}],87:[function(require,module,exports){
 var utils    = require('./utils'),
     get      = utils.get,
     slice    = [].slice,
@@ -38360,7 +37751,7 @@ function stripQuotes (str) {
         return str.slice(1, -1)
     }
 }
-},{"./utils":104}],98:[function(require,module,exports){
+},{"./utils":94}],88:[function(require,module,exports){
 // string -> DOM conversion
 // wrappers originally from jQuery, scooped from component/domify
 var map = {
@@ -38428,7 +37819,7 @@ module.exports = function (templateString) {
     }
     return frag
 }
-},{}],99:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 var config      = require('./config'),
     ViewModel   = require('./viewmodel'),
     utils       = require('./utils'),
@@ -38617,7 +38008,7 @@ function inheritOptions (child, parent, topLevel) {
 }
 
 module.exports = ViewModel
-},{"./config":82,"./directives":87,"./filters":97,"./observer":100,"./transition":103,"./utils":104,"./viewmodel":105}],100:[function(require,module,exports){
+},{"./config":72,"./directives":77,"./filters":87,"./observer":90,"./transition":93,"./utils":94,"./viewmodel":95}],90:[function(require,module,exports){
 /* jshint proto:true */
 
 var Emitter  = require('./emitter'),
@@ -39064,7 +38455,7 @@ var pub = module.exports = {
     convert     : convert,
     convertKey  : convertKey
 }
-},{"./emitter":95,"./utils":104}],101:[function(require,module,exports){
+},{"./emitter":85,"./utils":94}],91:[function(require,module,exports){
 var toFragment = require('./fragment');
 
 /**
@@ -39112,7 +38503,7 @@ module.exports = function(template) {
     return toFragment(templateNode.outerHTML);
 }
 
-},{"./fragment":98}],102:[function(require,module,exports){
+},{"./fragment":88}],92:[function(require,module,exports){
 var openChar        = '{',
     endChar         = '}',
     ESCAPE_RE       = /[-.*+?^${}()|[\]\/\\]/g,
@@ -39209,7 +38600,7 @@ exports.parse         = parse
 exports.parseAttr     = parseAttr
 exports.setDelimiters = setDelimiters
 exports.delimiters    = [openChar, endChar]
-},{"./directive":84}],103:[function(require,module,exports){
+},{"./directive":74}],93:[function(require,module,exports){
 var endEvents  = sniffEndEvents(),
     config     = require('./config'),
     // batch enter animations so we only force the layout once
@@ -39438,7 +38829,7 @@ function sniffEndEvents () {
 // Expose some stuff for testing purposes
 transition.codes = codes
 transition.sniff = sniffEndEvents
-},{"./batcher":79,"./config":82}],104:[function(require,module,exports){
+},{"./batcher":69,"./config":72}],94:[function(require,module,exports){
 var config       = require('./config'),
     toString     = ({}).toString,
     win          = window,
@@ -39765,7 +39156,7 @@ function enableDebug () {
         }
     }
 }
-},{"./config":82,"./fragment":98,"./template-parser.js":101,"./viewmodel":105}],105:[function(require,module,exports){
+},{"./config":72,"./fragment":88,"./template-parser.js":91,"./viewmodel":95}],95:[function(require,module,exports){
 var Compiler   = require('./compiler'),
     utils      = require('./utils'),
     transition = require('./transition'),
@@ -39957,4 +39348,4 @@ function query (el) {
 
 module.exports = ViewModel
 
-},{"./batcher":79,"./compiler":81,"./transition":103,"./utils":104}]},{},[1])
+},{"./batcher":69,"./compiler":71,"./transition":93,"./utils":94}]},{},[1])

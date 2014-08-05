@@ -182,7 +182,7 @@ module.exports = function App(){
     this.remoteServer  = 'http://127.0.0.1:5984/test2';
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 7;
+    this.hours = 0;
     this.minutes = 20;
     this.seconds = 0;
     //Random value

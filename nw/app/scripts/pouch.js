@@ -1,6 +1,6 @@
 var PouchDB = require('PouchDB');
 var utils = require('./utils');
-var Promise = require('es6-promise').Promise;
+// var Promise = require('es6-promise').Promise;
 module.exports = function(){
 	// var syncDom = document.getElementById('sync-wrapper');
 	// var dbName = 'Nodes'
@@ -107,6 +107,7 @@ module.exports = function(){
 
 					network.updateData(postData);
 				}else{
+          console.log(	postData);
 					// conssole.log("Other Time ");
 					network.updateData(postData);
 				}
