@@ -17,7 +17,7 @@ I'm going to simplify this in the future its a legacy thing. You won't need Couc
 
 ####Required
 1. Node.js
-3. 
+
 
 #### Setup
 
