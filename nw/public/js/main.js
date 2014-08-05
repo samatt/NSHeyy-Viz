@@ -2,21 +2,11 @@
 var Vue = require('vue');
 var $ = require('jQuery');
 var app = require('./scripts/app');
-// var colorbrewer = require('./scripts/colorBrewer');
 
 
-var app = new Vue({
+var viz = new Vue({
   el: '#app',
-  components: {
-    // a: require('./components/component-a/index'),
-    // b: require('./components/component-b/index')
-  },
-  data: {
-    title: 'Hello Node Webkit, Browserify and Vue.js!'
-  },
   ready:function(){
-    // console.log("Im in ready with "+ $(window).width() + " : " + $(window).height()  );
-    // console.log(colorbrewer);
     app();
   },
 });
@@ -257,7 +247,7 @@ module.exports = function App(){
 
     this.dbName = "tests2";
     this.remoteServer  = 'http://127.0.0.1:5984/test2';
-    this.layout = []; //= [ 'ConnectionsRealTimes', 'Distance' , 'Connections' ];
+    this.layout = [];
     this.refreshRate = 7;
     this.hours = 7;
     this.minutes = 20;
@@ -287,13 +277,11 @@ module.exports = function App(){
       minConnections: 3,
       circMin : 4,
       circMax: 11,
-      strokeWidth:1
+      strokeWidth:3
     };
   }
 
-  // return this;
-
-}
+};
 
 },{"./colorBrewer":4,"./graph":5,"./pouch":6,"./utils":7,"dat-gui":64}],4:[function(require,module,exports){
 // This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
@@ -628,7 +616,7 @@ module.exports = function(){
   var ramp = d3.map();
   var numClientLinks = d3.map();
 
-  // variables to refect the current settings
+  // variables to refect the default settings
   // of the visualization
   var  nodeColor = null;
   var layoutParams = {
@@ -682,7 +670,6 @@ module.exports = function(){
     layoutParams.strokeWidth = p.strokeWidth;
   };
 
-  // console.log(Tooltip);
   var tooltip = Tooltip("vis-tooltip", 250);
 
   var  force = d3.layout.force()
@@ -702,9 +689,7 @@ module.exports = function(){
     setLayout(utils.config.layouts[0]);
 
     // format data
-    // allRawData = data;
     allData = setupData(data);
-    console.log(selection);
     // create svg and groups
     vis = d3.select(selection).append("svg")
       .attr("width", width)
@@ -746,7 +731,6 @@ module.exports = function(){
         .links(curLinksData)
         .linkStrength(layoutParams.linkStrength)
         .linkDistance(function(d){return d.power; });
-        // .linkStrength(function(d){ return d.power*0.1; });
     }
 
     // enter / exit for nodes
@@ -839,7 +823,6 @@ module.exports = function(){
       .on("mouseover", showDetails)
       .on("mouseout", hideDetails);
 
-
     node.exit().remove();
 
   }
@@ -925,7 +908,6 @@ module.exports = function(){
 
     link.enter().append("line")
       .attr("class", "link")
-      // .style("stoke-width",function(d){return d.power;})
       .style("stroke",function(d){return d.linkColor;})
       .style("stroke-opacity",function(d){return d.opacity; })
       .style("stroke-width", function(d){return d.width; })
@@ -988,10 +970,8 @@ module.exports = function(){
     else{
       value = p[2];
     }
-
-    // console.log("update params in network : " +  newParams+" "+ layoutParams[key]);
-    layoutParams[key] = value;
     // console.log("updated to to "+layoutParams[key]);
+    layoutParams[key] = value;
     allData = setupData(allRawData);
     update();
   };
@@ -1006,7 +986,6 @@ module.exports = function(){
   };
 
   network.toggleNodeColor = function(newColor){
-    // # public function
     force.stop();
     setNodeColor(newColor);
     allData = setupData(allRawData);
@@ -1059,7 +1038,7 @@ module.exports = function(){
       data = setupNetworkLayout(_data);
     }
     // console.log(data);
-    // console.log(layoutParams);
+    // console.log(layoutParsams);
     return refreshD3Data(data);
   };
   setupConnectionsLayout = function(_data){
@@ -1120,11 +1099,11 @@ module.exports = function(){
         if(_.intersection(data.nodes[k].probes,data.nodes[l].probes).length <layoutParams.minConnections){
           continue;
         }
-        else{
-          // console.log(data.nodes[k].probes);
-          // console.log(data.nodes[l].probes);
-          // console.log(_.intersection(data.nodes[k].probes,data.nodes[l].probes));
-        }
+        // else{
+        //   console.log(data.nodes[k].probes);
+        //   console.log(data.nodes[l].probes);
+        //   console.log(_.intersection(data.nodes[k].probes,data.nodes[l].probes));
+        // }
 
         var intersections =  _.intersection(data.nodes[k].probes,data.nodes[l].probes);
 
@@ -1145,17 +1124,14 @@ module.exports = function(){
           // console.log(clientWeightMap.get(key));
           // console.log(clientWeightArray);
 
-          console.log("Updating weight on links");
+          // console.log("Updating weight on links");
           clientWeightArray[clientWeightMap.get(key)].weight += intLength;
 
 
         }
         else if($.inArray(alt_key , clientWeightArrayNames) > -1){
-          // data.nodes[k].numLinks += 1;
-          // data.nodes[l].numLinks += 1;
-          // console.log(key);
-          console.log("Alt _ Updating weight on links");
-            continue;
+          // console.log("Alt _ Updating weight on links");
+          continue;
 
         }
         else{
@@ -1176,10 +1152,9 @@ module.exports = function(){
     }
 
     for (var q = 0; q <clientWeightArray.length; q++){
-
         var _n = clientWeightArray[q];
-       var _l = {'source' : _n.source, 'target': _n.target, 'power':_n.weight};
-       data.links.push(_l);
+        var _l = {'source' : _n.source, 'target': _n.target, 'power':_n.weight};
+        data.links.push(_l);
       }
       data.linkProbes = _.uniq(data.linkProbes);
     return data;
@@ -1202,7 +1177,7 @@ module.exports = function(){
         // console.log(n.essid);
         n.probes = _data[index].probes;
         if(n.essid === "(not associated)" || n.essid === ""){
-
+          //do nothing for now
         }
         else{
           var _l = {'source' : n.essid, 'target': $.trim(_data[index].bssid), 'power':_data[index].power};
@@ -1307,7 +1282,6 @@ module.exports = function(){
         n.radius = nCircleRadius(n.power);
         if(n.kind === "Listener"){n.radius = layoutParams.listenerRadius;}
         n.linkPower = nDistanceLinkRadius(n.power);
-        // console.log(n.power);
         n.color = nColor(n);
       }
       else if(layout === "Network"){
@@ -1321,7 +1295,6 @@ module.exports = function(){
               n.radius = nConnectionsRadius(n.probes.length);
           }
       }
-      // console.log(n);
     });
 
     mapNodes(data.nodes);
@@ -1372,7 +1345,6 @@ module.exports = function(){
       }
       else{
         delete data.links[l];
-        // console.log("here");
       }
     });
     return data;
@@ -1449,16 +1421,13 @@ module.exports = function(){
     content += '<hr class="tooltip-hr">';
     content += '<p class="main">' + d.target.name + " : "+ d.target.kind + '</span></p>';
     if(d.common.length > 0){
-      console.log(d.common);
       content += '<hr class="tooltip-hr">';
-      content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
+      content += '<p class="main">' + "COMMON NETWORKS:"  + '</span></p>';
       d.common.forEach(function(n){
-
-        content += '<p class="main">' + n  + '</span></p>';
+        for(var i=0; i<n.length; i++){
+          content += '<p class="main">' + n[i]  + '</span></p>';
+        }
       });
-    }
-    else{
-
     }
 
     tooltip.showTooltip(content,d3.event);
@@ -1652,14 +1621,7 @@ module.exports = function(){
 module.exports.config = {};
 module.exports.config.dbName = "test2";
 module.exports.config.remoteServer  = 'http://127.0.0.1:5984/test2';
-module.exports.config.nodes = [];
-module.exports.config.links = [];
 module.exports.config.layouts = [ 'Distance','Connections', 'Network'];
-module.exports.config.interval = 5000;
-module.exports.config.intervalId;
-module.exports.config.hours = 0;
-module.exports.config.minutes = 3;
-module.exports.config.seconds = 0;
 
 // var node = null;
 // var link = null;
@@ -1691,9 +1653,6 @@ module.exports.getTimeStamp = function(numHours, numMinutes, numSeconds){
 	var minutes = (ts.getUTCMinutes()-numMinutes) >0 ? (ts.getUTCMinutes()-numMinutes) : 0;
 	var seconds = (ts.getUTCSeconds()-numSeconds) >0 ? (ts.getUTCSeconds()-numSeconds) : 0;
 	var hours 	= (ts.getUTCHours()-numHours) >0 ? (ts.getUTCHours()-numHours) : 0;
-	// var timestamp = ts.getFullYear()+"-"+(ts.getUTCMonth()+1)+"-"+(ts.getUTCDate())+" 0"+(hours)+":"+ minutes	+":"+seconds+"";
-	// console.log(":"+timestamp+":");
-
 	var millis = (60*60*numHours + 60*numMinutes + numSeconds) * 1000;
 
 	console.log(parseInt((Date.now() - millis)/1000));

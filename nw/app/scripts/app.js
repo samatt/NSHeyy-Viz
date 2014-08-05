@@ -180,7 +180,7 @@ module.exports = function App(){
 
     this.dbName = "tests2";
     this.remoteServer  = 'http://127.0.0.1:5984/test2';
-    this.layout = []; //= [ 'ConnectionsRealTimes', 'Distance' , 'Connections' ];
+    this.layout = [];
     this.refreshRate = 7;
     this.hours = 7;
     this.minutes = 20;
@@ -210,10 +210,8 @@ module.exports = function App(){
       minConnections: 3,
       circMin : 4,
       circMax: 11,
-      strokeWidth:1
+      strokeWidth:3
     };
   }
 
-  // return this;
-
-}
+};

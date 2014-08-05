@@ -1,14 +1,7 @@
 module.exports.config = {};
 module.exports.config.dbName = "test2";
 module.exports.config.remoteServer  = 'http://127.0.0.1:5984/test2';
-module.exports.config.nodes = [];
-module.exports.config.links = [];
 module.exports.config.layouts = [ 'Distance','Connections', 'Network'];
-module.exports.config.interval = 5000;
-module.exports.config.intervalId;
-module.exports.config.hours = 0;
-module.exports.config.minutes = 3;
-module.exports.config.seconds = 0;
 
 // var node = null;
 // var link = null;
@@ -40,9 +33,6 @@ module.exports.getTimeStamp = function(numHours, numMinutes, numSeconds){
 	var minutes = (ts.getUTCMinutes()-numMinutes) >0 ? (ts.getUTCMinutes()-numMinutes) : 0;
 	var seconds = (ts.getUTCSeconds()-numSeconds) >0 ? (ts.getUTCSeconds()-numSeconds) : 0;
 	var hours 	= (ts.getUTCHours()-numHours) >0 ? (ts.getUTCHours()-numHours) : 0;
-	// var timestamp = ts.getFullYear()+"-"+(ts.getUTCMonth()+1)+"-"+(ts.getUTCDate())+" 0"+(hours)+":"+ minutes	+":"+seconds+"";
-	// console.log(":"+timestamp+":");
-
 	var millis = (60*60*numHours + 60*numMinutes + numSeconds) * 1000;
 
 	console.log(parseInt((Date.now() - millis)/1000));

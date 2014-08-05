@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
     if(argc == 2)
     interface = argv[1];
     ofstream file;
-    file.open("/Users/surya/Desktop/test.log", ios::ate);
+    file.open("/Users/surya/Desktop/packets.log", ios::ate);
 //    Sniffer sniffer;
     Sniffer sniffer(interface, 2000, true, "type mgt or type data", true);
     
