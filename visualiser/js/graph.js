@@ -42,7 +42,8 @@ Network = function(){
     maxColor: colorbrewer.Set3[12][3],
     minConnections: 3,
     circMin : 10,
-    circMax: 11
+    circMax: 11,
+    strokeWidth:5
   };
 
   network.loadParams =function(p){
@@ -68,6 +69,7 @@ Network = function(){
     layoutParams.minConnections = p['minConnections'];
     layoutParams.circMin  = p['circMin'];
     layoutParams.circMax = p['circMax'];
+    layoutParams.strokeWidth = p['strokeWidth'];
   };
 
 
@@ -291,7 +293,8 @@ Network = function(){
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
-      .attr("y2", function(d){ return d.target.y;});
+      .attr("y2", function(d){ return d.target.y;})
+      .call(force.drag);
 
     link.exit().remove();
   }
@@ -305,19 +308,21 @@ Network = function(){
       .transition()
       .duration(1000)
       .attr("class", "link")
+      .style("stroke-width", function(d){return d.width; })
       .style("stroke-opacity",function(d){return d.opacity; })
       .style("stroke",function(d){return d.linkColor;});
 
     link.enter().append("line")
       .attr("class", "link")
-      .style("stoke-width",10)
       // .style("stoke-width",function(d){return d.power;})
       .style("stroke",function(d){return d.linkColor;})
       .style("stroke-opacity",function(d){return d.opacity; })
+      .style("stroke-width", function(d){return d.width; })
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
-      .attr("y2", function(d){ return d.target.y;});
+      .attr("y2", function(d){ return d.target.y;})
+      .call(force.drag);
 
     link.on("mouseover", showLinkDetails)
       .on("mouseout", hideDetails);
@@ -339,8 +344,8 @@ Network = function(){
 
     link.enter().append("line")
       .attr("class", "link")
-      .style("stroke-width","0.5")
       .style("stroke",function(d){return d.linkColor;})
+      .attr("stroke-width","10")
       .attr("x1", function(d){ return d.source.x;})
       .attr("y1", function(d){ return d.source.y;})
       .attr("x2", function(d){ return d.target.x;})
@@ -428,7 +433,6 @@ Network = function(){
   // point to node instances
   // Returns modified data
   setupData = function(_data){
-
 
     data = {};
     data.links = [];
@@ -733,6 +737,7 @@ Network = function(){
           }
           l.power = lConnectionsPower(l.power);
           l.opacity = lConnectionsOpacity(l.power);
+          l.width = layoutParams.strokeWidth;
           // l.linkStrength =
 
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
@@ -790,7 +795,6 @@ Network = function(){
       if( nodesMap.has($.trim(AP)) ){
         // console.log(nodesMap.get($.trim(AP)));
         if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined" || nodesMap.get($.trim(AP)).essid !== ""){
-
           networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
         }
         else{
@@ -835,39 +839,8 @@ Network = function(){
         content += '<p class="main">' + n  + '</span></p>';
       });
     }
-    if(d.kind == "Client"){
-      // var AP = d.essid;
-      // //contains
-      // var networkName = $.trim(AP);
-      //
-      // if( nodesMap.has($.trim(AP)) ){
-      //   // console.log(nodesMap.get($.trim(AP)));
-      //   if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined"){
-      //
-      //     networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
-      //   }
-      //   else{
-      //     networkName ="AP: "+ "Error";
-      //   }
-      //
-      // }
-      // content += '<p class="main">' + networkName    + '</span></p>';
-      // content += '<hr class="tooltip-hr">';
-      // content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
-      // console.log(d);
-      // if(d.probes.length > 0){
-      //   content += '<hr class="tooltip-hr">';
-      //   content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
-      //   d.probes.forEach(function(n){
-      //
-      //     content += '<p class="main">' + n  + '</span></p>';
-      //   });
-      // }
-    }
     else{
-      // content += '<p class="main">' + "NAME:" + d.target.essid  + '</span></p>';
-      // content += '<hr class="tooltip-hr">';
-      // content += '<p class="main">' +"RSSI: " + d.source.power  + '</span></p>';
+
     }
 
     tooltip.showTooltip(content,d3.event);

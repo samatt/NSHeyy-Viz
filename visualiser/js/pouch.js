@@ -99,7 +99,7 @@ Pouch = function(){
 					network('#vis',postData);
 					network.updateData(postData);
 				}else{
-					// console.log("Other Time ");
+					// conssole.log("Other Time ");
 					network.updateData(postData);
 				}
 				console.log(postData.length);
