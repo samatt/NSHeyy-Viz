@@ -9,6 +9,7 @@ module.exports = function App(){
 
   this.params = new Params();
   var gui1 = new dat.GUI();
+  var realTime = gui1.add(this.params,'realTime', false);
   var utilsGui = gui1.addFolder("Utils");
 
   var f1 =  utilsGui.addFolder("Server");
@@ -16,6 +17,7 @@ module.exports = function App(){
   f1.add(this.params, 'remoteServer');
 
   var f3 =  utilsGui.addFolder("Time");
+
   f3.add(this.params, 'hours', 0, 59).step(1);
   f3.add(this.params, 'minutes', 0, 59).step(1);
   f3.add(this.params, 'seconds', 0, 59).step(1);
@@ -41,7 +43,8 @@ module.exports = function App(){
   time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
   this.wrapper.queryByTimestamp(this.myNetwork,time,true);
 
-  this.params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
+  // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
+  // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
   layouts.onChange(function(value) {
 
     //TODO: Make sure the handkers are being removed from the folders too
@@ -52,17 +55,26 @@ module.exports = function App(){
 
   });
 
+  realTime.onFinishChange(function(value){
+    if(value){
+      params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
+      console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+    }
+  });
+
   refreshRate.onFinishChange(function(value){
     console.log("clearing interval ID:" + params.intervalId);
     clearInterval(params.intervalId);
     params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
+    console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
     // console.log("setting interval ID:" + params.intervalId);
   });
 
 
 
   var myInterval = function(){
-    console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
+    console.log("In interval");
+    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
     time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     wrapper.queryByTimestamp(myNetwork,time,false);
   };
@@ -106,7 +118,7 @@ module.exports = function App(){
 
       f4 =graphFolder.addFolder("Connections");
 
-      var r = f4.add(params.layoutParams,"minConnections",1,10).step(1);
+      var r = f4.add(params.layoutParams,"minConnections",2,10).step(1);
       r.onFinishChange(function(value){myNetwork.updateParams("true:minConnections:" + value);});
 
       r = f4.add(params.layoutParams,"linkRadiusMinConnections",1,400).step(1);
@@ -177,7 +189,7 @@ module.exports = function App(){
   }
 
   function Params() {
-
+    this.realTime = false;
     this.dbName = "tests2";
     this.remoteServer  = 'http://127.0.0.1:5984/test2';
     this.layout = [];
