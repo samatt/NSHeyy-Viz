@@ -14,7 +14,7 @@ module.exports.setDuration =function (numHours, numMinutes, numSeconds){
 	var timestamp = ts.getFullYear()+"-"+(ts.getMonth()-1)+"-"+(ts.getDate()+4)+" "+(hours)+":"+ minutes	+":"+seconds;
 
 	return timestamp;
-}
+};
 
 module.exports.setUTCDuration = function(numHours, numMinutes, numSeconds){
 
@@ -25,7 +25,7 @@ module.exports.setUTCDuration = function(numHours, numMinutes, numSeconds){
 	var timestamp = ts.getFullYear()+"-"+(ts.getUTCMonth()+1)+"-"+(ts.getUTCDate())+" 0"+(hours)+":"+ minutes	+":"+seconds+"";
 	// console.log(":"+timestamp+":");
 	return timestamp;
-}
+};
 
 module.exports.getTimeStamp = function(numHours, numMinutes, numSeconds){
 
@@ -37,4 +37,4 @@ module.exports.getTimeStamp = function(numHours, numMinutes, numSeconds){
 
 	console.log(parseInt((Date.now() - millis)/1000));
 	return parseInt((Date.now() - millis)/1000);
-}
+};

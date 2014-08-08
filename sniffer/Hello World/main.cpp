@@ -91,7 +91,7 @@ bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
     }
     if(ss.str().length()>6){
         file <<ss.str()<<endl;
-//        cout<< ss.str();
+        cout<< ss.str();
         
     }
     return true;

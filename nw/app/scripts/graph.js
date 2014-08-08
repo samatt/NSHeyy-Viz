@@ -556,7 +556,7 @@ module.exports = function(){
           clientWeightArray.push(link);
           clientWeightArrayNames.push(newKey);
           clientWeightMap.set(newKey,(clientWeightArray.length -1));
-          console.log("New Key :" +newKey +" : "+clientWeightArray.length);
+          // console.log("New Key :" +newKey +" : "+clientWeightArray.length);
         }
       }
     }
@@ -783,7 +783,6 @@ module.exports = function(){
     content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
     content += '<hr class="tooltip-hr">';
     if(d.kind == "Client"){
-      // console.log(d);
       var AP = d.essid;
       //contains
       var networkName = $.trim(AP);
@@ -811,8 +810,8 @@ module.exports = function(){
         content += '<hr class="tooltip-hr">';
         content += '<p class="main">' + "PROBED NETWORKS:"  + '</span></p>';
         d.probes.forEach(function(n){
+          if(n.length > 1){content += '<p class="main">' + n  + '</span></p>';}
 
-          content += '<p class="main">' + n  + '</span></p>';
         });
       }
     }
