@@ -1,15 +1,28 @@
+var utils = require('./utils');
 var $ = require('jQuery');
 var _ = require('underscore');
+var PouchDB = require('PouchDB');
 var spawn = nodeRequire('child_process').spawn;
 
+function createDesignDoc(name, mapFunction) {
+	var ddoc = {
+		_id: '_design/' + name,
+		views: {
+		}
+	};
+	ddoc.views[name] = { map: mapFunction.toString() };
+	return ddoc;
+}
 
 module.exports = function sysInterface(){
+	//TODO: replace hardcoded logFile with dynamic file
 	var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
-	// var tail  = spawn('pwd');
-	// var grep;
+	tail.stdout.on('data', function (data) {parser.parseLine(data);});
+	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
+	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
+
 	var nodeRevMap = {};
 	var nodeIDs = [];
-	var pouch;
 	var t = {
 		timestamp:0,
 		radio:1,
@@ -24,88 +37,89 @@ module.exports = function sysInterface(){
 		probeProbedEssid : 7,
 		dataClientBssid: 6,
 		dataAPBssid : 7
-
 	};
 
-	function parser(_pouch){
-		pouch = _pouch;
-		// console.log(tail);
-	}
+	// Sync the localDB to the remoteDB
+	sync = function() {
+		var opts = {live: true};
+		console.log('syncing');
+		db.replicate.to('http://127.0.0.1:5984/pouchtest', opts, function(err){console.log(err);});
+		db.replicate.from('http://127.0.0.1:5984/pouchtest', opts, function(err){console.log(err);});
+	};
 
-	tail.stdout.on('data', function (data) {
-	  // grep.stdin.write(data);
-		// console.log('stdout : '+  data );
-		parser.parseLine(data);
-	});
 
-	tail.stderr.on('data', function (data) {
-	  console.log('tail stderr: ' + data);
-	});
 
-	tail.on('close', function (code) {
-	  if (code !== 0) {
-	    console.log('tail process exited with code ' + code);
-	  }
-	});
+	var db;
+	var pouch = {};
+	pouch.init = function(){
+		//utils.config.dbName
+		db = new PouchDB("pouchtest",'http://127.0.0.1:5984/pouchtest');
+		// remoteCouch = utils.config.remoteServer;
+		db.info(function(err, info) {
+			if(info){ console.log(info); sync(); }
+			if(err){ console.error(err); }
+		});
+
+		db.allDocs( function(err, doc) {
+			if(err){console.log(err);}
+			console.log("All docs!");
+			for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
+				console.log("All complete!");
+		});
+	};
+
+	var parser ={};
 
 	parser.parseLine = function(lines){
 			var l = $.trim(lines);
 			var p =l.split("\n");
-			// var lines = [];
 
 			for(var i =0; i<p.length; i++){
 				var data = p[i].split(",");
 				if(data.length <6 ){
-					console.error("Bogus values in data");
 					return;
 				}
-				// console.log(data[t.packetType]);
-				// console.log(data[t.signalStrength]);
-				// console.log(data[t.frequency]);
-				// console.log(data[t.channelType]);
-				// console.log(data[t.packetType]);
 
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 							var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
 
-							console.log("Router exists at "+ rIdx);
-						// udpateRouter(p);
+							// console.log("Router exists at "+ rIdx);
+						updateRouter(data);
 					}
 					else{
 						nodeIDs.push($.trim(data[t.beaconBssid]));
-							// addRouter(p);
+							addRouter(data);
 					}
 				}
 				else if(data[t.packetType] === "Probe"){
 					if(_.contains( nodeIDs,data[t.probeBssid])){
 							var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-
 							console.log("Probe exists at "+ pIdx);
-						// updateClientProbe(data);
+						updateClientProbe(data);
 					}
 					else{
 						nodeIDs.push($.trim(data[t.probeBssid]));
-							// addClientProbe(line);
+							addClientProbe(data);
 					}
 				}
 				else{
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
-							var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
+							var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 
-							console.log("Probe exists at "+ pIdx);
-						// updateClientProbe(data);
+							console.log("Probe exists at "+ dIdx);
+						updateClientData(data);
 					}
 					else{
 						nodeIDs.push($.trim(data[t.dataClientBssid]));
-							// addClientProbe(line);
+							addClientData(data);
 					}
 				}
 			}
 
 	};
 
-	parser.addRouter = function(p){
+	addRouter = function(p){
 		var router ={
 			kind :"Router",
 			bssid :p[t.beaconBssid],
@@ -114,10 +128,11 @@ module.exports = function sysInterface(){
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp]
 		};
-		pouch.addNode(node);
+		console.log('adding router : '+ router.bssid);
+		db.put(router, router.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 	};
 
-	parser.addClientProbe = function(p){
+	addClientProbe = function(p){
 		var client ={
 			kind :"Client",
 			bssid :p[t.probeBssid],
@@ -128,11 +143,12 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :[ p[t.probeProbedEssid] ]
 		};
+		console.log('adding client : '+ client.bssid);
+		db.put(client, client.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 
-		pouch.addNode(client);
 	};
 
-	parser.addClientData = function(p){
+	addClientData = function(p){
 		var client ={
 			kind :"Client",
 			bssid :p[t.dataClientBssid],
@@ -141,25 +157,88 @@ module.exports = function sysInterface(){
 			created_at :Date.now(),
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp],
-			probes :[],
+			probes :[]
 		};
-		pouch.addNode(client);
+		db.put(client, client.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 	};
 
-	parser.updateRouter = function(p){
+	updateRouter = function(p){
+		var updatedRouter ={
+			kind :"Router",
+			bssid :p[t.beaconBssid],
+			essid :p[t.beaconEssid],
+			// created_at :Date.now(),
+			power :p[t.signalStrength],
+			timestamp :p[t.timestamp]
+		};
+		// console.log('update Router : '+ router.bssid);
+		db.get(updatedRouter.bssid).then(function(r) {
+			return db.put({
+				_id: r.bssid,
+				_rev: r._rev,
+				kind:"Router",
+				bssid :r.bssid,
+				essid :r.essid,
+				created_at :r.created_at,
+				power: r.power,
+				timestamp: updatedRouter.timestamp,
+			});
+		},function(err, response) {
+				if (err) {
+					// on error
+					console.log(err);
+				} else {
+					console.log(response);
+					// on success
+				}
+			}
+		);
+	};
+
+	updateClientProbe = function(p){
+		var updatedClient ={
+			kind :"Client",
+			bssid :p[t.dataClientBssid],
+			essid :"NA",
+			ap_essid :p[t.dataAPBssid],
+			power :p[t.signalStrength],
+			timestamp :p[t.timestamp],
+			probes :[ p[t.probeProbedEssid] ]
+		};
+
+		db.get(updatedClient.bssid).then(function(c) {
+			console.log(c.probes);
+			// console.log(updatedClient.probes);
+			c.probes.push(updatedClient.probes);
+			c.probes = _.uniq(c.probes);
+			console.log(c.probes);
+
+			return db.put({
+				_id: client.bssid,
+				_rev: c._rev,
+				power: updatedClient.power,
+				ap_essid: updatedClient.ap_essid,
+				created_at: c.created_at,
+				power: updatedClient.power,
+				timestamp: updatedClient.timestamp,
+				probes: c.probes
+			});
+		},function(err, response) {
+				if (err) {console.log(err);}
+				else { console.log(response);}
+			}
+		);
 
 	};
 
-	parser.updateClientProbe = function(p){
+	updateClientData = function(p){
 
 	};
 
-	parser.updateClientData = function(p){
-
-	};
 
 	return{
 		parser: parser,
+		pouch:pouch,
 		tail: tail
 	};
 };

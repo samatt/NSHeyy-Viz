@@ -2,12 +2,22 @@ var colorbrewer = require('./colorBrewer');
 var dat = require('dat-gui');
 var utils = require('./utils');
 var Pouch = require('./pouch');
+var sysInterface = require('./sysInterface');
 var Network = require('./graph');
 
 module.exports = function App(){
 
 
   this.params = new Params();
+  // this.wrapper =  Pouch();
+  // this.wrapper();
+
+  this.sysInterface = sysInterface();
+  this.sysInterface.pouch.init();
+  // this.sysInterface.parser(this.wrapper);
+
+  // this.parser = Parser(this.wrapper);
+
   var gui1 = new dat.GUI();
   var realTime = gui1.add(this.params,'realTime', false);
   var utilsGui = gui1.addFolder("Utils");
@@ -18,7 +28,7 @@ module.exports = function App(){
 
   var f3 =  utilsGui.addFolder("Time");
 
-  f3.add(this.params, 'hours', 0, 59).step(1);
+  f3.add(this.params, 'hours', 0, 100).step(1);
   f3.add(this.params, 'minutes', 0, 59).step(1);
   f3.add(this.params, 'seconds', 0, 59).step(1);
 
@@ -34,14 +44,13 @@ module.exports = function App(){
 
   updateGui(currentLayout);
 
-  this.wrapper =  Pouch();
-  this.wrapper();
+
   // console.log(this.wrapper;
   this.myNetwork = Network();
 
   this.myNetwork.loadParams(this.params.layoutParams);
-  time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  this.wrapper.queryByTimestamp(this.myNetwork,time,true);
+  // time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  // this.wrapper.queryByTimestamp(this.myNetwork,time,true);
 
   // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
   // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
@@ -57,23 +66,28 @@ module.exports = function App(){
 
   realTime.onFinishChange(function(value){
     if(value){
+      //TODO: Fix Potential conflict with refreshRate clearInterval
+      // clearInterval(params.intervalId);
       params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
       console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+    }
+    else{
+      clearInterval(params.intervalId);
     }
   });
 
   refreshRate.onFinishChange(function(value){
-    console.log("clearing interval ID:" + params.intervalId);
+    // console.log("clearing interval ID:" + params.intervalId);
     clearInterval(params.intervalId);
     params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
-    console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+    // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
     // console.log("setting interval ID:" + params.intervalId);
   });
 
 
 
   var myInterval = function(){
-    console.log("In interval");
+    // console.log("In interval");
     // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
     time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     wrapper.queryByTimestamp(myNetwork,time,false);
