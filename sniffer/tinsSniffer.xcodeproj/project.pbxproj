@@ -71,9 +71,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D8C8FA99196DC8ED00593C74 /* Hello World */ = {
+		D8C8FA99196DC8ED00593C74 /* tinsSniffer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D8C8FAA3196DC8ED00593C74 /* Build configuration list for PBXNativeTarget "Hello World" */;
+			buildConfigurationList = D8C8FAA3196DC8ED00593C74 /* Build configuration list for PBXNativeTarget "tinsSniffer" */;
 			buildPhases = (
 				D8C8FA96196DC8ED00593C74 /* Sources */,
 				D8C8FA97196DC8ED00593C74 /* Frameworks */,
@@ -83,7 +83,7 @@
 			);
 			dependencies = (
 			);
-			name = "Hello World";
+			name = tinsSniffer;
 			productName = "Hello World";
 			productReference = D8C8FA9A196DC8ED00593C74 /* Hello World */;
 			productType = "com.apple.product-type.tool";
@@ -97,7 +97,7 @@
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "___FULLUSERNAME___";
 			};
-			buildConfigurationList = D8C8FA95196DC8ED00593C74 /* Build configuration list for PBXProject "Hello World" */;
+			buildConfigurationList = D8C8FA95196DC8ED00593C74 /* Build configuration list for PBXProject "tinsSniffer" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -109,7 +109,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D8C8FA99196DC8ED00593C74 /* Hello World */,
+				D8C8FA99196DC8ED00593C74 /* tinsSniffer */,
 			);
 		};
 /* End PBXProject section */
@@ -207,29 +207,37 @@
 		D8C8FAA4196DC8ED00593C74 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				INSTALL_PATH = ../../;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/surya/Code/libtins/.libs,
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				OBJROOT = build;
+				PRODUCT_NAME = tinsSniffer;
+				SYMROOT = ../common/sniffer;
 			};
 			name = Debug;
 		};
 		D8C8FAA5196DC8ED00593C74 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				INSTALL_PATH = ../../;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/Users/surya/Code/libtins/.libs,
 				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				OBJROOT = build;
+				PRODUCT_NAME = tinsSniffer;
+				SYMROOT = ../common/sniffer;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D8C8FA95196DC8ED00593C74 /* Build configuration list for PBXProject "Hello World" */ = {
+		D8C8FA95196DC8ED00593C74 /* Build configuration list for PBXProject "tinsSniffer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D8C8FAA1196DC8ED00593C74 /* Debug */,
@@ -238,7 +246,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D8C8FAA3196DC8ED00593C74 /* Build configuration list for PBXNativeTarget "Hello World" */ = {
+		D8C8FAA3196DC8ED00593C74 /* Build configuration list for PBXNativeTarget "tinsSniffer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D8C8FAA4196DC8ED00593C74 /* Debug */,
