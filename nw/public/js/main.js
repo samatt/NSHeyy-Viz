@@ -1803,15 +1803,12 @@ module.exports = function sysInterface(){
 
 		db.get(updatedClient.bssid).then(function(c) {
 			console.log(c.probes);
-			// console.log(updatedClient.probes);
 			c.probes.push(updatedClient.probes);
 			c.probes = _.uniq(c.probes);
-			console.log(c.probes);
 
 			return db.put({
 				_id: updatedClient.bssid,
 				_rev: c._rev,
-				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
 				created_at: c.created_at,
 				power: updatedClient.power,

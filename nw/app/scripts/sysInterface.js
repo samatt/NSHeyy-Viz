@@ -219,7 +219,6 @@ module.exports = function sysInterface(){
 				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
 				created_at: c.created_at,
-				power: updatedClient.power,
 				timestamp: updatedClient.timestamp,
 				probes: c.probes
 			});
