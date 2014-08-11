@@ -1,7 +1,7 @@
 module.exports.config = {};
 module.exports.config.dbName = "test2";
 module.exports.config.remoteServer  = 'http://127.0.0.1:5984/test2';
-module.exports.config.layouts = [ 'Distance','Connections', 'Network'];
+module.exports.config.layouts = [ 'Distance','Connections','Network',];
 
 // var node = null;
 // var link = null;

@@ -189,7 +189,7 @@ module.exports = function(){
     node
       .attr("attr","update")
       .transition()
-      .duration(1000)
+      .duration(5000)
       .attr("class","node")
       .style("fill",function(d){return d.color;})
       // .attr("r", function(d){ return d.radius});
@@ -644,6 +644,7 @@ module.exports = function(){
     var nConnectionsColor = d3.scale.linear().range([layoutParams.minColor,layoutParams.maxColor]).domain(countExtentESSID);
     var nColor = function(d){if(d.kind === "Listener"){return "White";} return (d.kind ==="Client")?layoutParams.clientColor:layoutParams.routerColor;};
 
+    var initPos = d3.scale.linear().range([ 0  ,180]).domain([0,data.nodes.length]);
     var nCircleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
     var nConnectionsRadius = d3.scale.linear().range([ layoutParams.circMin, layoutParams.circMax]).domain(countExtentESSID);
     var nNetworkLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMinNetwork, layoutParams.linkRadiusMaxNetwork ]).domain(countExtent);
@@ -652,12 +653,13 @@ module.exports = function(){
     var lConnectionsPower = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
     var lConnectionsOpacity = d3.scale.linear().range([0.4,0.6]).domain(connectionsLinksExtent);
 
-    data.nodes.forEach( function(n){
+    data.nodes.forEach( function(n,i){
       if(nodesMap.has(n.name)){
         //update existing nodes
 
           _n = nodesMap.get(n.name);
           // if(_n.x)
+          // console.log(n);
           n.x =_n.x;
           n.y = _n.y;
           n.px = _n.px;
@@ -677,8 +679,12 @@ module.exports = function(){
       }
       else{
         //add new node
-        n.x = Math.floor(Math.random()*width);
-        n.y = Math.floor(Math.random()*height);
+        // n.x = Math.floor(Math.random()*width);
+        // n.y = Math.floor(Math.random()*height);
+
+        n.x =  (Math.sin(initPos(i))+1)*(width/2);
+        n.y = (height/2); //+ (Math.tan(initPos(i))+1)*(height/2); //Math.floor(Math.random()*height);
+        console.log();
 
         if(layout =="Network"){
           n.color = nColor(n);

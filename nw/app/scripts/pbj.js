@@ -2,7 +2,7 @@ var colorbrewer = require('./colorBrewer');
 var dat = require('dat-gui');
 var utils = require('./utils');
 var Pouch = require('./pouch');
-var sysInterface = require('./sysInterface');
+var SysInterface = require('./sysInterface');
 var Network = require('./graph');
 
 module.exports = function App(){
@@ -12,8 +12,8 @@ module.exports = function App(){
   // this.wrapper =  Pouch();
   // this.wrapper();
 
-  this.sysInterface = sysInterface();
-  this.sysInterface.pouch.init();
+  this.sysInterface = SysInterface();
+  this.sysInterface.pouch();
 
 
   var gui1 = new dat.GUI();
@@ -47,16 +47,50 @@ module.exports = function App(){
   this.myNetwork = Network();
 
   this.myNetwork.loadParams(this.params.layoutParams);
-  time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  this.sysInterface.pouch.getPostsSince(time).then(function(result){
-    var postData = [];
-  	for (var i =0; i<result.rows.length; i++){
-  		postData.push(result.rows[i].doc);
-  	}
-  		myNetwork('#vis',postData);
-  		myNetwork.updateData(postData);
-  });
-  // this.sysInterface.pouch.queryByTimestamp(this.myNetwork,time,true);
+  var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
+  //   var postData = [];
+  // 	for (var i =0; i<result.rows.length; i++){
+  // 		postData.push(result.rows[i].doc);
+  // 	}
+  // 		myNetwork('#vis',postData);
+  // 		myNetwork.updateData(postData);
+  // });
+  var sys = this.sysInterface.pouch;
+  var timeoutID = null;
+  var firstTime = true;
+  function dataTimer(){
+    // console.log(time);
+    sysInterface.pouch.getPostsSince(time).then(function(result){
+      var postData = [];
+      for (var i =0; i<result.rows.length; i++){
+        if(result.rows[i].doc.bssid){
+          postData.push(result.rows[i].doc);
+        }
+        else{
+          // console.log(result.rows[i].doc);
+        }
+
+
+      }
+      if(firstTime){
+        // console.log(time);
+        myNetwork('#vis',postData);
+        myNetwork.updateData(postData);
+        firstTime = false;
+      }
+      else{
+
+        myNetwork.updateData(postData);
+      }
+
+    });
+
+    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+  }
+
+  dataTimer();
+
 
   // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
   // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
@@ -73,9 +107,9 @@ module.exports = function App(){
   realTime.onFinishChange(function(value){
     if(value){
       //TODO: Fix Potential conflict with refreshRate clearInterval
-      // clearInterval(params.intervalId);
-      params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
-      console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+      clearTimeout(timeoutID);
+      timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
     }
     else{
       clearInterval(params.intervalId);
@@ -84,8 +118,8 @@ module.exports = function App(){
 
   refreshRate.onFinishChange(function(value){
     // console.log("clearing interval ID:" + params.intervalId);
-    clearInterval(params.intervalId);
-    params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
+    clearInterval(timeoutID);
+    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
     // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
     // console.log("setting interval ID:" + params.intervalId);
   });
@@ -226,8 +260,8 @@ module.exports = function App(){
       linkColor: colorbrewer.Spectral[11][Math.ceil((Math.random() * (colorbrewer.Spectral[11].length-2)) )],//Blues[9][3],
       circleRadius: 6,
       listenerRadius: 8,
-      linkRadiusMin: 10,
-      linkRadiusMax: 300,
+      linkRadiusMin: 150,
+      linkRadiusMax: 500,
       linkRadiusMinConnections: 135,
       linkRadiusMaxConnections: 320,
       linkRadiusMinNetwork: 10,

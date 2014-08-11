@@ -54,8 +54,8 @@ module.exports = function sysInterface(){
 	}
 
 	var db;
-	var pouch = {};
-	pouch.init = function(onComplete){
+	// var pouch = {};
+	function pouch(onComplete){
 		db = new PouchDB("pouchtest",'http://127.0.0.1:5984/pouchtest');
 		db.info(function(err, info) {
 			if(info){ console.log(info);  }
@@ -90,6 +90,7 @@ module.exports = function sysInterface(){
 	};
 
 	pouch.getPostsSince = function(when) {
+		console.log("Post since");
 		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
 	};
 	pouch.getPostsBefore = function(when) {
@@ -228,9 +229,9 @@ module.exports = function sysInterface(){
 	updateClientProbe = function(p){
 		var updatedClient ={
 			kind :"Client",
-			bssid :p[t.dataClientBssid],
+			bssid :p[t.probeBssid],
 			essid :"NA",
-			ap_essid :p[t.dataAPBssid],
+			ap_essid :"",
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp],
 			probes :p[t.probeProbedEssid]
@@ -261,6 +262,31 @@ module.exports = function sysInterface(){
 	};
 
 	updateClientData = function(p){
+		var updatedClient ={
+			kind :"Client",
+			bssid :p[t.dataClientBssid],
+			essid :"NA",
+			ap_essid :p[t.dataAPBssid],
+			power :p[t.signalStrength],
+			timestamp :p[t.timestamp],
+		};
+
+		db.get(updatedClient.bssid).then(function(c) {
+			
+			return db.put({
+				_id: client.bssid,
+				_rev: c._rev,
+				power: updatedClient.power,
+				ap_essid: updatedClient.ap_essid,
+				created_at: c.created_at,
+				timestamp: updatedClient.timestamp,
+				probes: c.probes
+			});
+		},function(err, response) {
+				if (err) {console.log(err);}
+				else { console.log(response);}
+			}
+		);
 
 	};
 

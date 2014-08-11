@@ -560,7 +560,7 @@ module.exports = function(){
     node
       .attr("attr","update")
       .transition()
-      .duration(1000)
+      .duration(5000)
       .attr("class","node")
       .style("fill",function(d){return d.color;})
       // .attr("r", function(d){ return d.radius});
@@ -1015,6 +1015,7 @@ module.exports = function(){
     var nConnectionsColor = d3.scale.linear().range([layoutParams.minColor,layoutParams.maxColor]).domain(countExtentESSID);
     var nColor = function(d){if(d.kind === "Listener"){return "White";} return (d.kind ==="Client")?layoutParams.clientColor:layoutParams.routerColor;};
 
+    var initPos = d3.scale.linear().range([ 0  ,180]).domain([0,data.nodes.length]);
     var nCircleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
     var nConnectionsRadius = d3.scale.linear().range([ layoutParams.circMin, layoutParams.circMax]).domain(countExtentESSID);
     var nNetworkLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMinNetwork, layoutParams.linkRadiusMaxNetwork ]).domain(countExtent);
@@ -1023,12 +1024,13 @@ module.exports = function(){
     var lConnectionsPower = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
     var lConnectionsOpacity = d3.scale.linear().range([0.4,0.6]).domain(connectionsLinksExtent);
 
-    data.nodes.forEach( function(n){
+    data.nodes.forEach( function(n,i){
       if(nodesMap.has(n.name)){
         //update existing nodes
 
           _n = nodesMap.get(n.name);
           // if(_n.x)
+          // console.log(n);
           n.x =_n.x;
           n.y = _n.y;
           n.px = _n.px;
@@ -1048,8 +1050,12 @@ module.exports = function(){
       }
       else{
         //add new node
-        n.x = Math.floor(Math.random()*width);
-        n.y = Math.floor(Math.random()*height);
+        // n.x = Math.floor(Math.random()*width);
+        // n.y = Math.floor(Math.random()*height);
+
+        n.x =  (Math.sin(initPos(i))+1)*(width/2);
+        n.y = (height/2); //+ (Math.tan(initPos(i))+1)*(height/2); //Math.floor(Math.random()*height);
+        console.log();
 
         if(layout =="Network"){
           n.color = nColor(n);
@@ -1226,7 +1232,7 @@ var colorbrewer = require('./colorBrewer');
 var dat = require('dat-gui');
 var utils = require('./utils');
 var Pouch = require('./pouch');
-var sysInterface = require('./sysInterface');
+var SysInterface = require('./sysInterface');
 var Network = require('./graph');
 
 module.exports = function App(){
@@ -1236,8 +1242,8 @@ module.exports = function App(){
   // this.wrapper =  Pouch();
   // this.wrapper();
 
-  this.sysInterface = sysInterface();
-  this.sysInterface.pouch.init();
+  this.sysInterface = SysInterface();
+  this.sysInterface.pouch();
 
 
   var gui1 = new dat.GUI();
@@ -1271,16 +1277,50 @@ module.exports = function App(){
   this.myNetwork = Network();
 
   this.myNetwork.loadParams(this.params.layoutParams);
-  time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  this.sysInterface.pouch.getPostsSince(time).then(function(result){
-    var postData = [];
-  	for (var i =0; i<result.rows.length; i++){
-  		postData.push(result.rows[i].doc);
-  	}
-  		myNetwork('#vis',postData);
-  		myNetwork.updateData(postData);
-  });
-  // this.sysInterface.pouch.queryByTimestamp(this.myNetwork,time,true);
+  var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
+  //   var postData = [];
+  // 	for (var i =0; i<result.rows.length; i++){
+  // 		postData.push(result.rows[i].doc);
+  // 	}
+  // 		myNetwork('#vis',postData);
+  // 		myNetwork.updateData(postData);
+  // });
+  var sys = this.sysInterface.pouch;
+  var timeoutID = null;
+  var firstTime = true;
+  function dataTimer(){
+    // console.log(time);
+    sysInterface.pouch.getPostsSince(time).then(function(result){
+      var postData = [];
+      for (var i =0; i<result.rows.length; i++){
+        if(result.rows[i].doc.bssid){
+          postData.push(result.rows[i].doc);
+        }
+        else{
+          // console.log(result.rows[i].doc);
+        }
+
+
+      }
+      if(firstTime){
+        // console.log(time);
+        myNetwork('#vis',postData);
+        myNetwork.updateData(postData);
+        firstTime = false;
+      }
+      else{
+
+        myNetwork.updateData(postData);
+      }
+
+    });
+
+    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+  }
+
+  dataTimer();
+
 
   // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
   // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
@@ -1297,9 +1337,9 @@ module.exports = function App(){
   realTime.onFinishChange(function(value){
     if(value){
       //TODO: Fix Potential conflict with refreshRate clearInterval
-      // clearInterval(params.intervalId);
-      params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
-      console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+      clearTimeout(timeoutID);
+      timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
     }
     else{
       clearInterval(params.intervalId);
@@ -1308,8 +1348,8 @@ module.exports = function App(){
 
   refreshRate.onFinishChange(function(value){
     // console.log("clearing interval ID:" + params.intervalId);
-    clearInterval(params.intervalId);
-    params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
+    clearInterval(timeoutID);
+    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
     // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
     // console.log("setting interval ID:" + params.intervalId);
   });
@@ -1450,8 +1490,8 @@ module.exports = function App(){
       linkColor: colorbrewer.Spectral[11][Math.ceil((Math.random() * (colorbrewer.Spectral[11].length-2)) )],//Blues[9][3],
       circleRadius: 6,
       listenerRadius: 8,
-      linkRadiusMin: 10,
-      linkRadiusMax: 300,
+      linkRadiusMin: 150,
+      linkRadiusMax: 500,
       linkRadiusMinConnections: 135,
       linkRadiusMaxConnections: 320,
       linkRadiusMinNetwork: 10,
@@ -1655,8 +1695,8 @@ module.exports = function sysInterface(){
 	}
 
 	var db;
-	var pouch = {};
-	pouch.init = function(onComplete){
+	// var pouch = {};
+	function pouch(onComplete){
 		db = new PouchDB("pouchtest",'http://127.0.0.1:5984/pouchtest');
 		db.info(function(err, info) {
 			if(info){ console.log(info);  }
@@ -1691,6 +1731,7 @@ module.exports = function sysInterface(){
 	};
 
 	pouch.getPostsSince = function(when) {
+		console.log("Post since");
 		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
 	};
 	pouch.getPostsBefore = function(when) {
@@ -1829,9 +1870,9 @@ module.exports = function sysInterface(){
 	updateClientProbe = function(p){
 		var updatedClient ={
 			kind :"Client",
-			bssid :p[t.dataClientBssid],
+			bssid :p[t.probeBssid],
 			essid :"NA",
-			ap_essid :p[t.dataAPBssid],
+			ap_essid :"",
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp],
 			probes :p[t.probeProbedEssid]
@@ -1862,6 +1903,31 @@ module.exports = function sysInterface(){
 	};
 
 	updateClientData = function(p){
+		var updatedClient ={
+			kind :"Client",
+			bssid :p[t.dataClientBssid],
+			essid :"NA",
+			ap_essid :p[t.dataAPBssid],
+			power :p[t.signalStrength],
+			timestamp :p[t.timestamp],
+		};
+
+		db.get(updatedClient.bssid).then(function(c) {
+			
+			return db.put({
+				_id: client.bssid,
+				_rev: c._rev,
+				power: updatedClient.power,
+				ap_essid: updatedClient.ap_essid,
+				created_at: c.created_at,
+				timestamp: updatedClient.timestamp,
+				probes: c.probes
+			});
+		},function(err, response) {
+				if (err) {console.log(err);}
+				else { console.log(response);}
+			}
+		);
 
 	};
 
@@ -1877,7 +1943,7 @@ module.exports = function sysInterface(){
 module.exports.config = {};
 module.exports.config.dbName = "test2";
 module.exports.config.remoteServer  = 'http://127.0.0.1:5984/test2';
-module.exports.config.layouts = [ 'Distance','Connections', 'Network'];
+module.exports.config.layouts = [ 'Distance','Connections','Network',];
 
 // var node = null;
 // var link = null;
