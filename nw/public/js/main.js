@@ -1238,9 +1238,7 @@ module.exports = function App(){
 
   this.sysInterface = sysInterface();
   this.sysInterface.pouch.init();
-  // this.sysInterface.parser(this.wrapper);
 
-  // this.parser = Parser(this.wrapper);
 
   var gui1 = new dat.GUI();
   var realTime = gui1.add(this.params,'realTime', false);
@@ -1273,8 +1271,16 @@ module.exports = function App(){
   this.myNetwork = Network();
 
   this.myNetwork.loadParams(this.params.layoutParams);
-  // time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  // this.wrapper.queryByTimestamp(this.myNetwork,time,true);
+  time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  this.sysInterface.pouch.getPostsSince(time).then(function(result){
+    var postData = [];
+  	for (var i =0; i<result.rows.length; i++){
+  		postData.push(result.rows[i].doc);
+  	}
+  		myNetwork('#vis',postData);
+  		myNetwork.updateData(postData);
+  });
+  // this.sysInterface.pouch.queryByTimestamp(this.myNetwork,time,true);
 
   // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
   // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
@@ -1432,7 +1438,7 @@ module.exports = function App(){
     this.remoteServer  = 'http://127.0.0.1:5984/test2';
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 0;
+    this.hours = 100;
     this.minutes = 10;
     this.seconds = 0;
     //Random value
@@ -1634,7 +1640,6 @@ module.exports = function sysInterface(){
 		dataAPBssid : 7
 	};
 
-	// Sync the localDB to the remoteDB
 	sync = function() {
 		var opts = {live: true};
 		console.log('syncing');
@@ -1642,25 +1647,57 @@ module.exports = function sysInterface(){
 		db.replicate.from('http://127.0.0.1:5984/pouchtest', opts, function(err){console.log(err);});
 	};
 
-
+	function getPostsBefore(when) {
+		return db.query('by_timestamp', {startkey: when,include_docs: true});
+	}
+	function getPostsBetween(startTime, endTime) {
+		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
+	}
 
 	var db;
 	var pouch = {};
-	pouch.init = function(){
-		//utils.config.dbName
+	pouch.init = function(onComplete){
 		db = new PouchDB("pouchtest",'http://127.0.0.1:5984/pouchtest');
-		// remoteCouch = utils.config.remoteServer;
 		db.info(function(err, info) {
-			if(info){ console.log(info); sync(); }
+			if(info){ console.log(info);  }
 			if(err){ console.error(err); }
 		});
 
+		sync();
+		pouch.initDDocs();
 		db.allDocs( function(err, doc) {
 			if(err){console.log(err);}
-			console.log("All docs!");
-			for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
+				for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
 				console.log("All complete!");
 		});
+	};
+
+	pouch.initDDocs = function(){
+		var ddoc = createDesignDoc('by_timestamp', function (doc) {
+			emit(doc.timestamp, doc._id);
+		});
+
+		db.put(ddoc)
+		.then(function(){
+			// kick off an initial build, return immediately
+			console.log("Query added");
+			return db.query('by_timestamp', {stale: 'update_after'});
+		})
+		.catch(function (err) {
+			if (err.name === 'conflict'){
+					console.log("Design document already exists");
+			}
+		});
+	};
+
+	pouch.getPostsSince = function(when) {
+		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
+	};
+	pouch.getPostsBefore = function(when) {
+		return db.query('by_timestamp', {startkey: when,include_docs: true});
+	};
+	pouch.getPostsBetween = function(startTime, endTime) {
+		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
 	};
 
 	var parser ={};
@@ -1677,20 +1714,19 @@ module.exports = function sysInterface(){
 
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
-							var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
-
-							// console.log("Router exists at "+ rIdx);
+						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
+						// console.log("Router exists at "+ rIdx);
 						updateRouter(data);
 					}
 					else{
 						nodeIDs.push($.trim(data[t.beaconBssid]));
-							addRouter(data);
+						addRouter(data);
 					}
 				}
 				else if(data[t.packetType] === "Probe"){
 					if(_.contains( nodeIDs,data[t.probeBssid])){
 							var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-							console.log("Probe exists at "+ pIdx);
+							// console.log("Probe exists at "+ pIdx);
 						updateClientProbe(data);
 					}
 					else{
@@ -1702,7 +1738,7 @@ module.exports = function sysInterface(){
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
 							var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 
-							console.log("Probe exists at "+ dIdx);
+							// console.log("Probe exists at "+ dIdx);
 						updateClientData(data);
 					}
 					else{
@@ -1803,15 +1839,17 @@ module.exports = function sysInterface(){
 
 		db.get(updatedClient.bssid).then(function(c) {
 			console.log(c.probes);
+			// console.log(updatedClient.probes);
 			c.probes.push(updatedClient.probes);
 			c.probes = _.uniq(c.probes);
+			console.log(c.probes);
 
 			return db.put({
-				_id: updatedClient.bssid,
+				_id: client.bssid,
 				_rev: c._rev,
+				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
 				created_at: c.created_at,
-				power: updatedClient.power,
 				timestamp: updatedClient.timestamp,
 				probes: c.probes
 			});
@@ -2308,7 +2346,7 @@ AbstractPouchDB.prototype.compact =
   }});
 });
 
-/* Begin api wrappers. Specific functionality to storage belongs in the
+/* Begin api wrappers. Specific functionality to storage belongs in the 
    _[method] */
 AbstractPouchDB.prototype.get =
   utils.adapterFun('get', function (id, opts, callback) {
@@ -3123,7 +3161,7 @@ function HttpPouch(opts, callback) {
   }));
 
   // Add the document given by doc (in JSON string format) to the database
-  // given by host. This does not assume that doc is a new document
+  // given by host. This does not assume that doc is a new document 
   // (i.e. does not have a _id or a _rev field.)
   api.post = utils.adapterFun('post', function (doc, opts, callback) {
     // If no options were given, set the callback to be the second parameter
@@ -3139,7 +3177,7 @@ function HttpPouch(opts, callback) {
       doc._id = utils.uuid();
     }
     api.put(doc, opts, callback);
-
+    
   });
 
   // Update/create multiple documents given by req in the database
@@ -3177,7 +3215,7 @@ function HttpPouch(opts, callback) {
     var method = 'GET';
 
     // TODO I don't see conflicts as a valid parameter for a
-    // _all_docs request
+    // _all_docs request 
     // (see http://wiki.apache.org/couchdb/HTTP_Document_API#all_docs)
     if (opts.conflicts) {
       params.push('conflicts=true');
@@ -5898,7 +5936,7 @@ Changes.prototype.filterChanges = function (opts) {
         return;
       }
       if (ddoc && ddoc.views && ddoc.views[viewName[1]]) {
-
+        
         var filter = evalView(ddoc.views[viewName[1]].map);
         opts.filter = filter;
         self.doChanges(opts);
@@ -5996,7 +6034,7 @@ function PouchDB(name, opts, callback) {
       delete resp.then;
       fulfill(resp);
     };
-
+  
     opts = utils.clone(opts);
     var originalName = opts.name || name;
     var backend, error;
@@ -6010,7 +6048,7 @@ function PouchDB(name, opts, callback) {
         }
 
         backend = PouchDB.parseAdapter(originalName, opts);
-
+        
         opts.originalName = originalName;
         opts.name = backend.name;
         opts.adapter = opts.adapter || backend.adapter;
@@ -6086,7 +6124,7 @@ function PouchDB(name, opts, callback) {
       PouchDB.emit('created', opts.originalName);
       self.taskqueue.ready(self);
       callback(null, self);
-
+      
     });
     if (opts.skipSetup) {
       self.taskqueue.ready(self);
@@ -6591,7 +6629,7 @@ Dual licensed under the MIT and GPL licenses.
  *   >>> Math.uuid(15)     // 15 character ID (default base=62)
  *   "VcydxgltxrVZSTV"
  *
- *   // Two arguments - returns ID of the specified length, and radix.
+ *   // Two arguments - returns ID of the specified length, and radix. 
  *   // (Radix must be <= 62)
  *   >>> Math.uuid(8, 2)  // 8 character ID (base=2)
  *   "01001010"
@@ -7986,7 +8024,7 @@ exports.clone = function (obj) {
 };
 exports.inherits = require('inherits');
 // Determine id an ID is valid
-//   - invalid IDs begin with an underescore that does not begin '_design' or
+//   - invalid IDs begin with an underescore that does not begin '_design' or 
 //     '_local'
 //   - any other string value is a valid id
 // Returns the specific error object for each case
@@ -8567,7 +8605,7 @@ module.exports = function all(iterable) {
   var resolved = 0;
   var i = -1;
   var promise = new Promise(INTERNAL);
-
+  
   while (++i < len) {
     allResolver(iterable[i], i);
   }
@@ -8675,7 +8713,7 @@ Promise.prototype.then = function (onFulfilled, onRejected) {
   }
   var promise = new Promise(INTERNAL);
 
-
+  
   if (this.state !== states.PENDING) {
     var resolver = this.state === states.FULFILLED ? onFulfilled: onRejected;
     unwrap(promise, resolver, this.outcome);
@@ -8788,7 +8826,7 @@ function safelyResolveThenable(self, thenable) {
   function tryToUnwrap() {
     thenable(onSuccess, onError);
   }
-
+  
   var result = tryCatch(tryToUnwrap);
   if (result.status === 'error') {
     onError(result.value);
@@ -9166,7 +9204,7 @@ module.exports = function (opts) {
         db.auto_compaction = true;
         var view = {
           name: depDbName,
-          db: db,
+          db: db, 
           sourceDB: sourceDB,
           adapter: sourceDB.adapter,
           mapFun: mapFun,
@@ -9211,7 +9249,7 @@ var toIndexableString = pouchCollate.toIndexableString;
 var normalizeKey = pouchCollate.normalizeKey;
 var createView = require('./create-view');
 var evalFunc = require('./evalfunc');
-var log;
+var log; 
 /* istanbul ignore else */
 if ((typeof console !== 'undefined') && (typeof console.log === 'function')) {
   log = Function.prototype.bind.call(console.log, console);
@@ -10015,7 +10053,7 @@ module.exports = function extend() {
 
 var MIN_MAGNITUDE = -324; // verified by -Number.MIN_VALUE
 var MAGNITUDE_DIGITS = 3; // ditto
-var SEP = ''; // set to '_' for easier debugging
+var SEP = ''; // set to '_' for easier debugging 
 
 var utils = require('./utils');
 
@@ -11946,7 +11984,7 @@ process.chdir = function (dir) {
         d3_mouse_bug44083 = !(ctm.f || ctm.e);
         svg.remove();
       }
-      if (d3_mouse_bug44083) point.x = e.pageX, point.y = e.pageY; else point.x = e.clientX,
+      if (d3_mouse_bug44083) point.x = e.pageX, point.y = e.pageY; else point.x = e.clientX, 
       point.y = e.clientY;
       point = point.matrixTransform(container.getScreenCTM().inverse());
       return [ point.x, point.y ];
@@ -12287,7 +12325,7 @@ process.chdir = function (dir) {
     }
     function mousewheeled() {
       var dispatch = event.of(this, arguments);
-      if (mousewheelTimer) clearTimeout(mousewheelTimer); else translate0 = location(center0 = center || d3.mouse(this)),
+      if (mousewheelTimer) clearTimeout(mousewheelTimer); else translate0 = location(center0 = center || d3.mouse(this)), 
       d3_selection_interrupt.call(this), zoomstarted(dispatch);
       mousewheelTimer = setTimeout(function() {
         mousewheelTimer = null;
@@ -12667,7 +12705,7 @@ process.chdir = function (dir) {
   d3.xhr = d3_xhrType(d3_identity);
   function d3_xhrType(response) {
     return function(url, mimeType, callback) {
-      if (arguments.length === 2 && typeof mimeType === "function") callback = mimeType,
+      if (arguments.length === 2 && typeof mimeType === "function") callback = mimeType, 
       mimeType = null;
       return d3_xhr(url, mimeType, response, callback);
     };
@@ -13499,7 +13537,7 @@ process.chdir = function (dir) {
     return n ? (date.y = d3_time_expandYear(+n[0]), i + n[0].length) : -1;
   }
   function d3_time_parseZone(date, string, i) {
-    return /^[+-]\d{4}$/.test(string = string.substring(i, i + 5)) ? (date.Z = -string,
+    return /^[+-]\d{4}$/.test(string = string.substring(i, i + 5)) ? (date.Z = -string, 
     i + 5) : -1;
   }
   function d3_time_expandYear(d) {
@@ -13692,7 +13730,7 @@ process.chdir = function (dir) {
     var λ00, φ00, λ0, cosφ0, sinφ0;
     d3_geo_area.point = function(λ, φ) {
       d3_geo_area.point = nextPoint;
-      λ0 = (λ00 = λ) * d3_radians, cosφ0 = Math.cos(φ = (φ00 = φ) * d3_radians / 2 + π / 4),
+      λ0 = (λ00 = λ) * d3_radians, cosφ0 = Math.cos(φ = (φ00 = φ) * d3_radians / 2 + π / 4), 
       sinφ0 = Math.sin(φ);
     };
     function nextPoint(λ, φ) {
@@ -15521,7 +15559,7 @@ process.chdir = function (dir) {
       return _ ? center([ -_[1], _[0] ]) : (_ = center(), [ _[1], -_[0] ]);
     };
     projection.rotate = function(_) {
-      return _ ? rotate([ _[0], _[1], _.length > 2 ? _[2] + 90 : 90 ]) : (_ = rotate(),
+      return _ ? rotate([ _[0], _[1], _.length > 2 ? _[2] + 90 : 90 ]) : (_ = rotate(), 
       [ _[0], _[1], _[2] - 90 ]);
     };
     return rotate([ 0, 0, 90 ]);
@@ -16372,7 +16410,7 @@ process.chdir = function (dir) {
     };
     quadtree.extent = function(_) {
       if (!arguments.length) return x1 == null ? null : [ [ x1, y1 ], [ x2, y2 ] ];
-      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0],
+      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0], 
       y2 = +_[1][1];
       return quadtree;
     };
@@ -18038,7 +18076,7 @@ process.chdir = function (dir) {
         return d3_layout_treemapPad(node, x);
       }
       var type;
-      pad = (padding = x) == null ? d3_layout_treemapPadNull : (type = typeof x) === "function" ? padFunction : type === "number" ? (x = [ x, x, x, x ],
+      pad = (padding = x) == null ? d3_layout_treemapPadNull : (type = typeof x) === "function" ? padFunction : type === "number" ? (x = [ x, x, x, x ], 
       padConstant) : padConstant;
       return treemap;
     };
@@ -18338,7 +18376,7 @@ process.chdir = function (dir) {
     scale.tickFormat = function(n, format) {
       if (!arguments.length) return d3_scale_logFormat;
       if (arguments.length < 2) format = d3_scale_logFormat; else if (typeof format !== "function") format = d3.format(format);
-      var k = Math.max(.1, n / scale.ticks().length), f = positive ? (e = 1e-12, Math.ceil) : (e = -1e-12,
+      var k = Math.max(.1, n / scale.ticks().length), f = positive ? (e = 1e-12, Math.ceil) : (e = -1e-12, 
       Math.floor), e;
       return function(d) {
         return d / pow(f(log(d) + e)) <= k ? format(d) : "";
@@ -18624,7 +18662,7 @@ process.chdir = function (dir) {
   d3.svg.arc = function() {
     var innerRadius = d3_svg_arcInnerRadius, outerRadius = d3_svg_arcOuterRadius, startAngle = d3_svg_arcStartAngle, endAngle = d3_svg_arcEndAngle;
     function arc() {
-      var r0 = innerRadius.apply(this, arguments), r1 = outerRadius.apply(this, arguments), a0 = startAngle.apply(this, arguments) + d3_svg_arcOffset, a1 = endAngle.apply(this, arguments) + d3_svg_arcOffset, da = (a1 < a0 && (da = a0,
+      var r0 = innerRadius.apply(this, arguments), r1 = outerRadius.apply(this, arguments), a0 = startAngle.apply(this, arguments) + d3_svg_arcOffset, a1 = endAngle.apply(this, arguments) + d3_svg_arcOffset, da = (a1 < a0 && (da = a0, 
       a0 = a1, a1 = da), a1 - a0), df = da < π ? "0" : "1", c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
       return da >= d3_svg_arcMax ? r0 ? "M0," + r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + -r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + r1 + "M0," + r0 + "A" + r0 + "," + r0 + " 0 1,0 0," + -r0 + "A" + r0 + "," + r0 + " 0 1,0 0," + r0 + "Z" : "M0," + r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + -r1 + "A" + r1 + "," + r1 + " 0 1,1 0," + r1 + "Z" : r0 ? "M" + r1 * c0 + "," + r1 * s0 + "A" + r1 + "," + r1 + " 0 " + df + ",1 " + r1 * c1 + "," + r1 * s1 + "L" + r0 * c1 + "," + r0 * s1 + "A" + r0 + "," + r0 + " 0 " + df + ",0 " + r0 * c0 + "," + r0 * s0 + "Z" : "M" + r1 * c0 + "," + r1 * s0 + "A" + r1 + "," + r1 + " 0 " + df + ",1 " + r1 * c1 + "," + r1 * s1 + "L0,0" + "Z";
     }
@@ -18760,7 +18798,7 @@ process.chdir = function (dir) {
     return points.length < 4 ? d3_svg_lineLinear(points) : points[1] + d3_svg_lineHermite(points.slice(1, points.length - 1), d3_svg_lineCardinalTangents(points, tension));
   }
   function d3_svg_lineCardinalClosed(points, tension) {
-    return points.length < 3 ? d3_svg_lineLinear(points) : points[0] + d3_svg_lineHermite((points.push(points[0]),
+    return points.length < 3 ? d3_svg_lineLinear(points) : points[0] + d3_svg_lineHermite((points.push(points[0]), 
     points), d3_svg_lineCardinalTangents([ points[points.length - 2] ].concat(points, [ points[1] ]), tension));
   }
   function d3_svg_lineCardinal(points, tension) {
@@ -19466,7 +19504,7 @@ process.chdir = function (dir) {
         var g = d3.select(this);
         var scale0 = this.__chart__ || scale, scale1 = this.__chart__ = scale.copy();
         var ticks = tickValues == null ? scale1.ticks ? scale1.ticks.apply(scale1, tickArguments_) : scale1.domain() : tickValues, tickFormat = tickFormat_ == null ? scale1.tickFormat ? scale1.tickFormat.apply(scale1, tickArguments_) : d3_identity : tickFormat_, tick = g.selectAll(".tick").data(ticks, scale1), tickEnter = tick.enter().insert("g", ".domain").attr("class", "tick").style("opacity", ε), tickExit = d3.transition(tick.exit()).style("opacity", ε).remove(), tickUpdate = d3.transition(tick.order()).style("opacity", 1), tickTransform;
-        var range = d3_scaleRange(scale1), path = g.selectAll(".domain").data([ 0 ]), pathUpdate = (path.enter().append("path").attr("class", "domain"),
+        var range = d3_scaleRange(scale1), path = g.selectAll(".domain").data([ 0 ]), pathUpdate = (path.enter().append("path").attr("class", "domain"), 
         d3.transition(path));
         tickEnter.append("line");
         tickEnter.append("text");
@@ -20096,7 +20134,7 @@ dat.color = dat.color || {};
 dat.utils = dat.utils || {};
 
 dat.utils.common = (function () {
-
+  
   var ARR_EACH = Array.prototype.forEach;
   var ARR_SLICE = Array.prototype.slice;
 
@@ -20106,38 +20144,38 @@ dat.utils.common = (function () {
    * http://documentcloud.github.com/underscore/
    */
 
-  return {
-
+  return { 
+    
     BREAK: {},
-
+  
     extend: function(target) {
-
+      
       this.each(ARR_SLICE.call(arguments, 1), function(obj) {
-
+        
         for (var key in obj)
-          if (!this.isUndefined(obj[key]))
+          if (!this.isUndefined(obj[key])) 
             target[key] = obj[key];
-
+        
       }, this);
-
+      
       return target;
-
+      
     },
-
+    
     defaults: function(target) {
-
+      
       this.each(ARR_SLICE.call(arguments, 1), function(obj) {
-
+        
         for (var key in obj)
-          if (this.isUndefined(target[key]))
+          if (this.isUndefined(target[key])) 
             target[key] = obj[key];
-
+        
       }, this);
-
+      
       return target;
-
+    
     },
-
+    
     compose: function() {
       var toCall = ARR_SLICE.call(arguments);
             return function() {
@@ -20148,34 +20186,34 @@ dat.utils.common = (function () {
               return args[0];
             }
     },
-
+    
     each: function(obj, itr, scope) {
 
-
-      if (ARR_EACH && obj.forEach === ARR_EACH) {
-
+      
+      if (ARR_EACH && obj.forEach === ARR_EACH) { 
+        
         obj.forEach(itr, scope);
-
+        
       } else if (obj.length === obj.length + 0) { // Is number but not NaN
-
+        
         for (var key = 0, l = obj.length; key < l; key++)
-          if (key in obj && itr.call(scope, obj[key], key) === this.BREAK)
+          if (key in obj && itr.call(scope, obj[key], key) === this.BREAK) 
             return;
-
+            
       } else {
 
-        for (var key in obj)
+        for (var key in obj) 
           if (itr.call(scope, obj[key], key) === this.BREAK)
             return;
-
+            
       }
-
+            
     },
-
+    
     defer: function(fnc) {
       setTimeout(fnc, 0);
     },
-
+    
     toArray: function(obj) {
       if (obj.toArray) return obj.toArray();
       return ARR_SLICE.call(obj);
@@ -20184,41 +20222,41 @@ dat.utils.common = (function () {
     isUndefined: function(obj) {
       return obj === undefined;
     },
-
+    
     isNull: function(obj) {
       return obj === null;
     },
-
+    
     isNaN: function(obj) {
       return obj !== obj;
     },
-
+    
     isArray: Array.isArray || function(obj) {
       return obj.constructor === Array;
     },
-
+    
     isObject: function(obj) {
       return obj === Object(obj);
     },
-
+    
     isNumber: function(obj) {
       return obj === obj+0;
     },
-
+    
     isString: function(obj) {
       return obj === obj+'';
     },
-
+    
     isBoolean: function(obj) {
       return obj === false || obj === true;
     },
-
+    
     isFunction: function(obj) {
       return Object.prototype.toString.call(obj) === '[object Function]';
     }
-
+  
   };
-
+    
 })();
 
 
@@ -35199,7 +35237,7 @@ var Emitter     = require('./emitter'),
     DepsParser  = require('./deps-parser'),
     ExpParser   = require('./exp-parser'),
     ViewModel,
-
+    
     // cache methods
     slice       = [].slice,
     extend      = utils.extend,
@@ -36310,7 +36348,7 @@ module.exports = {
         Observer.shouldGet = false
         utils.log('\ndone.')
     }
-
+    
 }
 },{"./emitter":86,"./observer":91,"./utils":95}],75:[function(require,module,exports){
 var dirId           = 1,
@@ -36397,7 +36435,7 @@ function Directive (name, ast, definition, compiler, el) {
 var DirProto = Directive.prototype
 
 /**
- *  called when a new value is set
+ *  called when a new value is set 
  *  for computed properties, this will only be called once
  *  during initialization.
  */
@@ -36622,7 +36660,7 @@ var utils    = require('../utils')
 module.exports = {
 
     bind: function () {
-
+        
         this.parent = this.el.parentNode
         this.ref    = document.createComment('vue-if')
         this.Ctor   = this.compiler.resolveComponent(this.el)
@@ -36660,7 +36698,7 @@ module.exports = {
                 this.childVM.$before(this.ref)
             }
         }
-
+        
     },
 
     unbind: function () {
@@ -37609,7 +37647,7 @@ var KEYWORDS =
         ',arguments,let,yield' +
         // allow using Math in expressions
         ',Math',
-
+        
     KEYWORDS_RE = new RegExp(["\\b" + KEYWORDS.replace(/,/g, '\\b|\\b') + "\\b"].join('|'), 'g'),
     REMOVE_RE   = /\/\*(?:.|\n)*?\*\/|\/\/[^\n]*\n|\/\/[^\n]*$|'[^']*'|"[^"]*"|[\s\t\n]*\.[\s\t\n]*[$\w\.]+|[\{,]\s*[\w\$_]+\s*:/g,
     SPLIT_RE    = /[^\w$]+/g,
@@ -38187,7 +38225,7 @@ function extend (options) {
  *  For options such as `data`, `vms`, `directives`, 'partials',
  *  they should be further extended. However extending should only
  *  be done at top level.
- *
+ *  
  *  `proto` is an exception because it's handled directly on the
  *  prototype.
  *
@@ -38295,7 +38333,7 @@ function watchMutation (method) {
             inserted = args.slice(2)
             removed = result
         }
-
+        
         // link & unlink
         linkArrayElements(this, inserted)
         unlinkArrayElements(this, removed)
@@ -38310,7 +38348,7 @@ function watchMutation (method) {
         })
 
         return result
-
+        
     }, !hasProto)
 }
 
@@ -38746,7 +38784,7 @@ function setDelimiters (delimiters) {
     exports.Regex = buildInterpolationRegex()
 }
 
-/**
+/** 
  *  Parse a piece of text, return an array of tokens
  *  token types:
  *  1. plain string
@@ -38964,7 +39002,7 @@ function applyTransitionClass (el, stage, changeState, hasAnimation) {
             changeState()
         }
         return codes.CSS_L
-
+        
     }
 
 }
@@ -39359,7 +39397,7 @@ function enableDebug () {
             console.log(msg)
         }
     }
-
+    
     /**
      *  warnings, traces by default
      *  can be suppressed by `silent` option.

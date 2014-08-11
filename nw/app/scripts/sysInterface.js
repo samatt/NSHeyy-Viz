@@ -39,7 +39,6 @@ module.exports = function sysInterface(){
 		dataAPBssid : 7
 	};
 
-	// Sync the localDB to the remoteDB
 	sync = function() {
 		var opts = {live: true};
 		console.log('syncing');
@@ -47,25 +46,57 @@ module.exports = function sysInterface(){
 		db.replicate.from('http://127.0.0.1:5984/pouchtest', opts, function(err){console.log(err);});
 	};
 
-
+	function getPostsBefore(when) {
+		return db.query('by_timestamp', {startkey: when,include_docs: true});
+	}
+	function getPostsBetween(startTime, endTime) {
+		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
+	}
 
 	var db;
 	var pouch = {};
-	pouch.init = function(){
-		//utils.config.dbName
+	pouch.init = function(onComplete){
 		db = new PouchDB("pouchtest",'http://127.0.0.1:5984/pouchtest');
-		// remoteCouch = utils.config.remoteServer;
 		db.info(function(err, info) {
-			if(info){ console.log(info); sync(); }
+			if(info){ console.log(info);  }
 			if(err){ console.error(err); }
 		});
 
+		sync();
+		pouch.initDDocs();
 		db.allDocs( function(err, doc) {
 			if(err){console.log(err);}
-			console.log("All docs!");
-			for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
+				for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
 				console.log("All complete!");
 		});
+	};
+
+	pouch.initDDocs = function(){
+		var ddoc = createDesignDoc('by_timestamp', function (doc) {
+			emit(doc.timestamp, doc._id);
+		});
+
+		db.put(ddoc)
+		.then(function(){
+			// kick off an initial build, return immediately
+			console.log("Query added");
+			return db.query('by_timestamp', {stale: 'update_after'});
+		})
+		.catch(function (err) {
+			if (err.name === 'conflict'){
+					console.log("Design document already exists");
+			}
+		});
+	};
+
+	pouch.getPostsSince = function(when) {
+		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
+	};
+	pouch.getPostsBefore = function(when) {
+		return db.query('by_timestamp', {startkey: when,include_docs: true});
+	};
+	pouch.getPostsBetween = function(startTime, endTime) {
+		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
 	};
 
 	var parser ={};
@@ -82,20 +113,19 @@ module.exports = function sysInterface(){
 
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
-							var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
-
-							// console.log("Router exists at "+ rIdx);
+						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
+						// console.log("Router exists at "+ rIdx);
 						updateRouter(data);
 					}
 					else{
 						nodeIDs.push($.trim(data[t.beaconBssid]));
-							addRouter(data);
+						addRouter(data);
 					}
 				}
 				else if(data[t.packetType] === "Probe"){
 					if(_.contains( nodeIDs,data[t.probeBssid])){
 							var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-							console.log("Probe exists at "+ pIdx);
+							// console.log("Probe exists at "+ pIdx);
 						updateClientProbe(data);
 					}
 					else{
@@ -107,7 +137,7 @@ module.exports = function sysInterface(){
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
 							var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 
-							console.log("Probe exists at "+ dIdx);
+							// console.log("Probe exists at "+ dIdx);
 						updateClientData(data);
 					}
 					else{
@@ -203,7 +233,7 @@ module.exports = function sysInterface(){
 			ap_essid :p[t.dataAPBssid],
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp],
-			probes :[ p[t.probeProbedEssid] ]
+			probes :p[t.probeProbedEssid]
 		};
 
 		db.get(updatedClient.bssid).then(function(c) {

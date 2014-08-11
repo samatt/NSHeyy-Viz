@@ -14,9 +14,7 @@ module.exports = function App(){
 
   this.sysInterface = sysInterface();
   this.sysInterface.pouch.init();
-  // this.sysInterface.parser(this.wrapper);
 
-  // this.parser = Parser(this.wrapper);
 
   var gui1 = new dat.GUI();
   var realTime = gui1.add(this.params,'realTime', false);
@@ -49,8 +47,16 @@ module.exports = function App(){
   this.myNetwork = Network();
 
   this.myNetwork.loadParams(this.params.layoutParams);
-  // time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  // this.wrapper.queryByTimestamp(this.myNetwork,time,true);
+  time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  this.sysInterface.pouch.getPostsSince(time).then(function(result){
+    var postData = [];
+  	for (var i =0; i<result.rows.length; i++){
+  		postData.push(result.rows[i].doc);
+  	}
+  		myNetwork('#vis',postData);
+  		myNetwork.updateData(postData);
+  });
+  // this.sysInterface.pouch.queryByTimestamp(this.myNetwork,time,true);
 
   // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
   // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
@@ -208,7 +214,7 @@ module.exports = function App(){
     this.remoteServer  = 'http://127.0.0.1:5984/test2';
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 0;
+    this.hours = 100;
     this.minutes = 10;
     this.seconds = 0;
     //Random value
