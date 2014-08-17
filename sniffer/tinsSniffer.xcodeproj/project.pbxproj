@@ -25,7 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D8C8FA9A196DC8ED00593C74 /* Hello World */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Hello World"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8C8FA9A196DC8ED00593C74 /* tinsSniffer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tinsSniffer; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8C8FA9D196DC8ED00593C74 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D8C8FA9F196DC8ED00593C74 /* Hello_World.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Hello_World.1; sourceTree = "<group>"; };
 		D8D2A315196DD48C00C48C7E /* tins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = tins.h; path = ../../../libtins/include/tins.h; sourceTree = "<group>"; };
@@ -53,7 +53,7 @@
 		D8C8FA9B196DC8ED00593C74 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D8C8FA9A196DC8ED00593C74 /* Hello World */,
+				D8C8FA9A196DC8ED00593C74 /* tinsSniffer */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -85,7 +85,7 @@
 			);
 			name = tinsSniffer;
 			productName = "Hello World";
-			productReference = D8C8FA9A196DC8ED00593C74 /* Hello World */;
+			productReference = D8C8FA9A196DC8ED00593C74 /* tinsSniffer */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -160,7 +160,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INSTALL_PATH = ../;
-				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ltins";
@@ -197,7 +197,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INSTALL_PATH = ../;
-				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = "-ltins";
 				SDKROOT = macosx;
@@ -211,7 +211,7 @@
 				INSTALL_PATH = ../../;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					/Users/surya/Code/libtins/.libs,
+					/usr/local/libs,
 				);
 				OBJROOT = build;
 				PRODUCT_NAME = tinsSniffer;
@@ -226,7 +226,7 @@
 				INSTALL_PATH = ../../;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					/Users/surya/Code/libtins/.libs,
+					/usr/local/libs,
 				);
 				OBJROOT = build;
 				PRODUCT_NAME = tinsSniffer;

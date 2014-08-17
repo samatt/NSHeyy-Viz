@@ -3,6 +3,9 @@ var $ = require('jQuery');
 var _ = require('underscore');
 var PouchDB = require('PouchDB');
 var spawn = nodeRequire('child_process').spawn;
+// var process = nodeRequire('process');
+var path = require('path');
+
 
 function createDesignDoc(name, mapFunction) {
 	var ddoc = {
@@ -15,8 +18,13 @@ function createDesignDoc(name, mapFunction) {
 }
 
 module.exports = function sysInterface(){
-	//TODO: replace hardcoded logFile with dynamic file
-	var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
+
+	// var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
+	// console.log('Hello ' + __dirname);
+	// var cwd = path.dirname( process.execPath );
+
+	//TODO: Need to change this as right now i think it need to be built each time;
+	var tail  = spawn('tail', ['-f','../public/sniffer/packets.log']);
 	tail.stdout.on('data', function (data) {parser.parseLine(data);});
 	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
@@ -65,8 +73,7 @@ module.exports = function sysInterface(){
 					var obj = {
 						id:doc.rows[i].id,
 						timestamp:doc.rows[i].doc.timestamp
-					}
-					console.log(obj);
+					};
 					nodeTimeMap.push(obj);
 				}
 
@@ -125,7 +132,7 @@ module.exports = function sysInterface(){
 							updateRouter(data);
 							console.log("Last updated : " + diff  +"secs ago");
 						}
-						nodeTimeMap[rIdx] = data[t.timestamp]
+						nodeTimeMap[rIdx] = data[t.timestamp];
 
 					}
 					else{
@@ -142,7 +149,7 @@ module.exports = function sysInterface(){
 							updateClientProbe(data);
 							console.log("Last updated : " + pdiff + "secs ago");
 						}
-						nodeTimeMap[pIdx] = data[t.timestamp]
+						nodeTimeMap[pIdx] = data[t.timestamp];
 
 					}
 					else{
@@ -154,11 +161,11 @@ module.exports = function sysInterface(){
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
 						var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 						var ddiff = ( Date.now()/1000 - nodeTimeMap[dIdx] );
-						if(diff >5 ){
+						if(ddiff >5 ){
 							updateClientData(data);
 							console.log("Last updated : " + ddiff + "secs ago");
 						}
-						nodeTimeMap[dIdx] = data[t.timestamp]
+						nodeTimeMap[dIdx] = data[t.timestamp];
 
 					}
 					else{

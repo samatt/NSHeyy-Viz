@@ -92,7 +92,7 @@ bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
     if(ss.str().length()>6){
         
 //#ifdef DEBUG_LOG
-      cout<< ss.str();
+//      cout<< ss.str();
 //#else
         file <<ss.str()<<endl;
 //#endif

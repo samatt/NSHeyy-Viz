@@ -9,6 +9,7 @@ var partialify = require('partialify');
 
 var jsPath = './app/**/*';
 var cssPath = './app/css/**/*.scss';
+var sniffPath = '../common/sniffer/Release/*';
 
 gulp.task('browserify', function() {
   var bundleStream = browserify('./app/main.js')
@@ -29,9 +30,16 @@ gulp.task('css', function() {
     .pipe(gulp.dest('./public/css/'));
 });
 
+gulp.task('sniffer', function() {
+  gulp.src(sniffPath)
+    .pipe(gulp.dest('./public/sniffer/'));
+});
+
+
 gulp.task('watch', function() {
   gulp.watch(jsPath, ['browserify']);
   gulp.watch(cssPath, ['css']);
+  gulp.watch(sniffPath, ['sniffer']);
 });
 
-gulp.task('default', ['css', 'browserify', 'watch']);
+gulp.task('default', ['sniffer','css', 'browserify', 'watch']);
