@@ -56,12 +56,11 @@ module.exports = function(){
 						postData.push(response.rows[row].value);
 
 					}
-          if(postData.length<=0){
-            return;
-          }
-        console.log(	postData);
+          // if(postData.length<=0){
+          //   return;
+          // }
 				if(firstTime){
-					// console.log(	postData);
+					console.log(	postData);
 					network('#vis',postData);
 
 					network.updateData(postData);

@@ -1,6 +1,6 @@
 module.exports.config = {};
-module.exports.config.dbName = "pouchtest3";
-module.exports.config.remoteServer  = 'http://127.0.0.1:5984/pouchtest3';
+module.exports.config.dbName = "pouchtest4";
+module.exports.config.remoteServer  = 'http://127.0.0.1:5984/pouchtest4';
 module.exports.config.layouts = [ 'Connections','Distance','Network'];
 
 // var node = null;
@@ -28,38 +28,6 @@ module.exports.setUTCDuration = function(numHours, numMinutes, numSeconds){
 };
 
 module.exports.getTimeStamp = function(numHours, numMinutes, numSeconds){
-
-	var ts = new Date();
-	var minutes = (ts.getMinutes()-numMinutes) >0 ? (ts.getMinutes()-numMinutes) : 0;
-	var seconds = (ts.getSeconds()-numSeconds) >0 ? (ts.getSeconds()-numSeconds) : 0;
-	var hours 	= (ts.getHours()-numHours) >0 ? (ts.getHours()-numHours) : 0;
-
-	var timestamp =days[ts.getDay()]+" "+ts.getFullYear()+" "+months[ts.getMonth()]+" "+(ts.getDate())+" "+(hours)+":"+ minutes	+":"+seconds;
-	var uxtimestamp = Date.parse(timestamp);
 	var millis = (60*60*numHours + 60*numMinutes + numSeconds) * 1000;
-	return parseInt((uxtimestamp)/1000);
-};
-
-var days = {
-	0:"Sun",
-	1:"Mon",
-	2:"Tue",
-	3:"Wed",
-	4:"Thurs",
-	5:"Fri",
-	6:"Sat"
-};
-var months = {
-	0:"Jan",
-	1:"Feb",
-	2:"Mar",
-	3:"Apr",
-	4:"May",
-	5:"Jun",
-	6:"Jul",
-	7:"Aug",
-	8:"Sep",
-	9:"Oct",
-	10:"Nov",
-	11:"Dec"
+	return parseInt((Date.now() - millis)/1000);
 };

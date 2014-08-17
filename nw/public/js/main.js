@@ -951,7 +951,7 @@ module.exports = function(){
 
       // var node = JSON.parse(_data[i]);
       var n = {'name' : $.trim(_data[index].bssid), 'power': _data[index].power, 'kind': _data[index].kind};
-          n.timestamp = _data[node].timestamp;
+          n.timestamp = _data[index].timestamp;
       if(n.kind == "Client"){
         n.essid = _data[index].ap_essid;
         // console.log(n.essid);
@@ -1260,9 +1260,9 @@ module.exports = function App(){
 
   var f3 =  utilsGui.addFolder("Time");
 
-  var h =  f3.add(this.params, 'hours', 0, 59).step(1);
-  var m = f3.add(this.params, 'minutes', 0, 59).step(1);
-  var s =  f3.add(this.params, 'seconds', 0, 59).step(1);
+  f3.add(this.params, 'hours', 0, 100).step(1);
+  f3.add(this.params, 'minutes', 0, 59).step(1);
+  f3.add(this.params, 'seconds', 0, 59).step(1);
 
 
   var graphGUI = new dat.GUI();
@@ -1282,35 +1282,53 @@ module.exports = function App(){
 
   this.myNetwork.loadParams(this.params.layoutParams);
   var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
+  //   var postData = [];
+  // 	for (var i =0; i<result.rows.length; i++){
+  // 		postData.push(result.rows[i].doc);
+  // 	}
+  // 		myNetwork('#vis',postData);
+  // 		myNetwork.updateData(postData);
+  // });
+  // this.sysInterface.pouch.getConflicts().then(function(result){
+  //     // var postData = [];
+  //   	for (var i =0; i<result.rows.length; i++){
+  //   		console.log(result.rows[i]);
+  //   	}
+  //   });
 
+  var sys = this.sysInterface.pouch;
   var timeoutID = null;
   var firstTime = true;
   function dataTimer(){
-
+    // console.log(time);
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    console.log(t);
-    sysInterface.pouch.getPostsBetween(t, parseInt(Date.now()/1000)).then(function(result){
-    // sysInterface.pouch.getPostsSince(t).then(function(result){
-    // sysInterface.pouch.getPostsSince(1408300384).then(function(result){
-
+    sysInterface.pouch.getPostsSince(t).then(function(result){
       var postData = [];
       // console.log(time);
       for (var i =0; i<result.rows.length; i++){
-        // console.log(result.rows[i].doc);
         if(result.rows[i].doc.bssid){
-          console.log(result.rows[i].doc.timestamp);
           postData.push(result.rows[i].doc);
         }
+        else{
+          console.log("                  ");
+          console.log(result.rows[i].doc);
+          console.log("                  ");
+        }
+
+
       }
       if(firstTime){
+        // console.log(time);
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
       }
       else{
+
         myNetwork.updateData(postData);
       }
-
+        console.log(postData.length);
     });
 
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
@@ -1320,12 +1338,8 @@ module.exports = function App(){
 
 
 
-  // params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
-  console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-
-  h.onChange(function(value){console.log(value);});
-  m.onChange(function(value){console.log(value);});
-  s.onChange(function(value){console.log(value);});
+  // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
+  // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
   layouts.onChange(function(value) {
 
     //TODO: Make sure the handkers are being removed from the folders too
@@ -1338,9 +1352,10 @@ module.exports = function App(){
 
   realTime.onFinishChange(function(value){
     if(value){
+      //TODO: Fix Potential conflict with refreshRate clearInterval
       clearTimeout(timeoutID);
       timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-      // console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
+      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
     }
     else{
       clearInterval(params.intervalId);
@@ -1348,15 +1363,18 @@ module.exports = function App(){
   });
 
   refreshRate.onFinishChange(function(value){
+    // console.log("clearing interval ID:" + params.intervalId);
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+    // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+    // console.log("setting interval ID:" + params.intervalId);
   });
 
 
 
   var myInterval = function(){
     // console.log("In interval");
-    // consle.log(params.hours+" : "+params.minutes+" : "+params.seconds);
+    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
     time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     wrapper.queryByTimestamp(myNetwork,time,false);
   };
@@ -1472,12 +1490,12 @@ module.exports = function App(){
 
   function Params() {
     this.realTime = false;
-    this.dbName = "pouchtest3";
-    this.remoteServer  = 'http://127.0.0.1:5984/pouchtest3';
+    this.dbName = "tests2";
+    this.remoteServer  = 'http://127.0.0.1:5984/test2';
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 0;
-    this.minutes = 0;
+    this.hours = 10;
+    this.minutes = 10;
     this.seconds = 0;
     //Random value
     this.intervalId = 0;
@@ -1569,12 +1587,11 @@ module.exports = function(){
 						postData.push(response.rows[row].value);
 
 					}
-          if(postData.length<=0){
-            return;
-          }
-        console.log(	postData);
+          // if(postData.length<=0){
+          //   return;
+          // }
 				if(firstTime){
-					// console.log(	postData);
+					console.log(	postData);
 					network('#vis',postData);
 
 					network.updateData(postData);
@@ -1691,29 +1708,14 @@ module.exports = function sysInterface(){
 	sync = function() {
 		var opts = {live: true};
 		console.log('syncing');
-		db.replicate.to('http://127.0.0.1:5984/pouchtest3', opts, function(err){console.log(err);});
-		// db.replicate.from('http://127.0.0.1:5984/pouchtest3', opts, function(err){console.log(err);});
+	  // = 'http://127.0.0.1:5984/pouchtest3';
+		db.replicate.to(utils.config.remoteServer, opts, function(err){console.log(err);});
+		db.replicate.from(	utils.config.remoteServer, opts, function(err){console.log(err);});
 	};
 
-	// function getPostsBefore(when) {
-	// 	return db.query('by_timestamp', {startkey: when,include_docs: true});
-	// }
-	// function getPostsBetween(startTime, endTime) {
-	// 	return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
-	// }
-	// function getPostsSince(when) {
-	//   return db.query({
-	//     map: function(doc, emit) {
-	//       if (doc.timestamp > when) {
-	//         emit(doc.name, 1);
-	//       }
-	//     }
-	// 	});
-	// }
 	var db;
-	// var pouch = {};
 	function pouch(){
-		db = new PouchDB("pouchtest3",'http://127.0.0.1:5984/pouchtest3');
+		db = new PouchDB(	utils.config.dbName,	utils.config.remoteServer);
 		db.info(function(err, info) {
 			if(info){ console.log(info);  }
 			if(err){ console.error(err); }
@@ -1750,20 +1752,10 @@ module.exports = function sysInterface(){
 		console.log("END KEY : "+ when);
 		return db.query('by_timestamp', {endkey: String(when), descending: true,include_docs: true});
 	};
-
-	pouch.getPostsSinceMap = function(when) {
-		// function(doc){
-
-		// }
-		console.log("Post since");
-		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
-	};
 	pouch.getPostsBefore = function(when) {
 		return db.query('by_timestamp', {startkey: when,include_docs: true});
 	};
 	pouch.getPostsBetween = function(startTime, endTime) {
-		// startTime = "1408214365";
-		// endTime = "1408300377";
 		console.log(" START KEY : "+ startTime + " END KEY : "+ endTime + " delta: " +(endTime - startTime));
 		return db.query('by_timestamp', {startkey: String(startTime), endkey: String(endTime),
 			reduce: false,descending: false,include_docs: true});
@@ -1804,7 +1796,7 @@ module.exports = function sysInterface(){
 				}
 				else{
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
-							var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
+						var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 						updateClientData(data);
 					}
 					else{
@@ -1911,6 +1903,8 @@ module.exports = function sysInterface(){
 			return db.put({
 				_id: c.bssid,
 				_rev: c._rev,
+				kind:"Client",
+				bssid :updatedClient.bssid,
 				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
 				created_at: c.created_at,
@@ -1940,6 +1934,8 @@ module.exports = function sysInterface(){
 			return db.put({
 				_id: c.bssid,
 				_rev: c._rev,
+				kind:"Client",
+				bssid :updatedClient.bssid,
 				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
 				created_at: c.created_at,
@@ -1964,8 +1960,8 @@ module.exports = function sysInterface(){
 
 },{"./utils":8,"PouchDB":23,"jQuery":68,"underscore":69}],8:[function(require,module,exports){
 module.exports.config = {};
-module.exports.config.dbName = "pouchtest3";
-module.exports.config.remoteServer  = 'http://127.0.0.1:5984/pouchtest3';
+module.exports.config.dbName = "pouchtest4";
+module.exports.config.remoteServer  = 'http://127.0.0.1:5984/pouchtest4';
 module.exports.config.layouts = [ 'Connections','Distance','Network'];
 
 // var node = null;
@@ -1993,40 +1989,8 @@ module.exports.setUTCDuration = function(numHours, numMinutes, numSeconds){
 };
 
 module.exports.getTimeStamp = function(numHours, numMinutes, numSeconds){
-
-	var ts = new Date();
-	var minutes = (ts.getMinutes()-numMinutes) >0 ? (ts.getMinutes()-numMinutes) : 0;
-	var seconds = (ts.getSeconds()-numSeconds) >0 ? (ts.getSeconds()-numSeconds) : 0;
-	var hours 	= (ts.getHours()-numHours) >0 ? (ts.getHours()-numHours) : 0;
-
-	var timestamp =days[ts.getDay()]+" "+ts.getFullYear()+" "+months[ts.getMonth()]+" "+(ts.getDate())+" "+(hours)+":"+ minutes	+":"+seconds;
-	var uxtimestamp = Date.parse(timestamp);
 	var millis = (60*60*numHours + 60*numMinutes + numSeconds) * 1000;
-	return parseInt((uxtimestamp)/1000);
-};
-
-var days = {
-	0:"Sun",
-	1:"Mon",
-	2:"Tue",
-	3:"Wed",
-	4:"Thurs",
-	5:"Fri",
-	6:"Sat"
-};
-var months = {
-	0:"Jan",
-	1:"Feb",
-	2:"Mar",
-	3:"Apr",
-	4:"May",
-	5:"Jun",
-	6:"Jul",
-	7:"Aug",
-	8:"Sep",
-	9:"Oct",
-	10:"Nov",
-	11:"Dec"
+	return parseInt((Date.now() - millis)/1000);
 };
 
 },{}],9:[function(require,module,exports){

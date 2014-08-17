@@ -582,7 +582,7 @@ module.exports = function(){
 
       // var node = JSON.parse(_data[i]);
       var n = {'name' : $.trim(_data[index].bssid), 'power': _data[index].power, 'kind': _data[index].kind};
-          n.timestamp = _data[node].timestamp;
+          n.timestamp = _data[index].timestamp;
       if(n.kind == "Client"){
         n.essid = _data[index].ap_essid;
         // console.log(n.essid);

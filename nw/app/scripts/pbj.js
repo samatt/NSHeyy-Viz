@@ -26,9 +26,9 @@ module.exports = function App(){
 
   var f3 =  utilsGui.addFolder("Time");
 
-  var h =  f3.add(this.params, 'hours', 0, 59).step(1);
-  var m = f3.add(this.params, 'minutes', 0, 59).step(1);
-  var s =  f3.add(this.params, 'seconds', 0, 59).step(1);
+  f3.add(this.params, 'hours', 0, 100).step(1);
+  f3.add(this.params, 'minutes', 0, 59).step(1);
+  f3.add(this.params, 'seconds', 0, 59).step(1);
 
 
   var graphGUI = new dat.GUI();
@@ -48,35 +48,53 @@ module.exports = function App(){
 
   this.myNetwork.loadParams(this.params.layoutParams);
   var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
+  //   var postData = [];
+  // 	for (var i =0; i<result.rows.length; i++){
+  // 		postData.push(result.rows[i].doc);
+  // 	}
+  // 		myNetwork('#vis',postData);
+  // 		myNetwork.updateData(postData);
+  // });
+  // this.sysInterface.pouch.getConflicts().then(function(result){
+  //     // var postData = [];
+  //   	for (var i =0; i<result.rows.length; i++){
+  //   		console.log(result.rows[i]);
+  //   	}
+  //   });
 
+  var sys = this.sysInterface.pouch;
   var timeoutID = null;
   var firstTime = true;
   function dataTimer(){
-
+    // console.log(time);
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    console.log(t);
-    sysInterface.pouch.getPostsBetween(t, parseInt(Date.now()/1000)).then(function(result){
-    // sysInterface.pouch.getPostsSince(t).then(function(result){
-    // sysInterface.pouch.getPostsSince(1408300384).then(function(result){
-
+    sysInterface.pouch.getPostsSince(t).then(function(result){
       var postData = [];
       // console.log(time);
       for (var i =0; i<result.rows.length; i++){
-        // console.log(result.rows[i].doc);
         if(result.rows[i].doc.bssid){
-          console.log(result.rows[i].doc.timestamp);
           postData.push(result.rows[i].doc);
         }
+        else{
+          console.log("                  ");
+          console.log(result.rows[i].doc);
+          console.log("                  ");
+        }
+
+
       }
       if(firstTime){
+        // console.log(time);
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
       }
       else{
+
         myNetwork.updateData(postData);
       }
-
+        console.log(postData.length);
     });
 
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
@@ -86,12 +104,8 @@ module.exports = function App(){
 
 
 
-  // params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
-  console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-
-  h.onChange(function(value){console.log(value);});
-  m.onChange(function(value){console.log(value);});
-  s.onChange(function(value){console.log(value);});
+  // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
+  // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
   layouts.onChange(function(value) {
 
     //TODO: Make sure the handkers are being removed from the folders too
@@ -104,9 +118,10 @@ module.exports = function App(){
 
   realTime.onFinishChange(function(value){
     if(value){
+      //TODO: Fix Potential conflict with refreshRate clearInterval
       clearTimeout(timeoutID);
       timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-      // console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
+      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
     }
     else{
       clearInterval(params.intervalId);
@@ -114,15 +129,18 @@ module.exports = function App(){
   });
 
   refreshRate.onFinishChange(function(value){
+    // console.log("clearing interval ID:" + params.intervalId);
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+    // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+    // console.log("setting interval ID:" + params.intervalId);
   });
 
 
 
   var myInterval = function(){
     // console.log("In interval");
-    // consle.log(params.hours+" : "+params.minutes+" : "+params.seconds);
+    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
     time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     wrapper.queryByTimestamp(myNetwork,time,false);
   };
@@ -238,12 +256,12 @@ module.exports = function App(){
 
   function Params() {
     this.realTime = false;
-    this.dbName = "pouchtest3";
-    this.remoteServer  = 'http://127.0.0.1:5984/pouchtest3';
+    this.dbName = "tests2";
+    this.remoteServer  = 'http://127.0.0.1:5984/test2';
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 0;
-    this.minutes = 0;
+    this.hours = 10;
+    this.minutes = 10;
     this.seconds = 0;
     //Random value
     this.intervalId = 0;
