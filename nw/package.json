@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "devDependencies": {
     "browserify": "^3.33.1",
+    "couchdb-auto-views": "0.0.2",
     "d3": "^3.4.11",
     "dat-gui": "^0.5.0",
     "es6-promise": "^1.0.0",
