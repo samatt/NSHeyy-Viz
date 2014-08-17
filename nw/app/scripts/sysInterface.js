@@ -42,21 +42,21 @@ module.exports = function sysInterface(){
 	sync = function() {
 		var opts = {live: true};
 		console.log('syncing');
-		db.replicate.to('http://127.0.0.1:5984/pouchtest', opts, function(err){console.log(err);});
-		db.replicate.from('http://127.0.0.1:5984/pouchtest', opts, function(err){console.log(err);});
+		db.replicate.to('http://127.0.0.1:5984/pouchtest3', opts, function(err){console.log(err);});
+		// db.replicate.from('http://127.0.0.1:5984/pouchtest3', opts, function(err){console.log(err);});
 	};
 
-	function getPostsBefore(when) {
-		return db.query('by_timestamp', {startkey: when,include_docs: true});
-	}
-	function getPostsBetween(startTime, endTime) {
-		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
-	}
+	// function getPostsBefore(when) {
+	// 	return db.query('by_timestamp', {startkey: when,include_docs: true});
+	// }
+	// function getPostsBetween(startTime, endTime) {
+	// 	return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
+	// }
 
 	var db;
 	// var pouch = {};
 	function pouch(onComplete){
-		db = new PouchDB("pouchtest",'http://127.0.0.1:5984/pouchtest');
+		db = new PouchDB("pouchtest3",'http://127.0.0.1:5984/pouchtest3');
 		db.info(function(err, info) {
 			if(info){ console.log(info);  }
 			if(err){ console.error(err); }
@@ -73,7 +73,7 @@ module.exports = function sysInterface(){
 
 	pouch.initDDocs = function(){
 		var ddoc = createDesignDoc('by_timestamp', function (doc) {
-			emit(doc.timestamp, doc._id);
+			emit(doc.timestamp, doc.null);
 		});
 
 		db.put(ddoc)
@@ -90,6 +90,14 @@ module.exports = function sysInterface(){
 	};
 
 	pouch.getPostsSince = function(when) {
+		console.log("END KEY : "+ when);
+		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
+	};
+	
+	pouch.getPostsSinceMap = function(when) {
+		// function(doc){
+
+		// }
 		console.log("Post since");
 		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
 	};
@@ -97,7 +105,8 @@ module.exports = function sysInterface(){
 		return db.query('by_timestamp', {startkey: when,include_docs: true});
 	};
 	pouch.getPostsBetween = function(startTime, endTime) {
-		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
+		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,
+			reduce: false,descending: false,include_docs: true});
 	};
 
 	var parser ={};
@@ -238,11 +247,11 @@ module.exports = function sysInterface(){
 		};
 
 		db.get(updatedClient.bssid).then(function(c) {
-			console.log(c.probes);
+			// console.log(c.probes);
 			// console.log(updatedClient.probes);
 			c.probes.push(updatedClient.probes);
 			c.probes = _.uniq(c.probes);
-			console.log(c.probes);
+			// console.log(c.probes);
 
 			return db.put({
 				_id: client.bssid,
@@ -272,7 +281,7 @@ module.exports = function sysInterface(){
 		};
 
 		db.get(updatedClient.bssid).then(function(c) {
-			
+
 			return db.put({
 				_id: client.bssid,
 				_rev: c._rev,

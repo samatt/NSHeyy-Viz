@@ -26,9 +26,9 @@ module.exports = function App(){
 
   var f3 =  utilsGui.addFolder("Time");
 
-  f3.add(this.params, 'hours', 0, 100).step(1);
-  f3.add(this.params, 'minutes', 0, 59).step(1);
-  f3.add(this.params, 'seconds', 0, 59).step(1);
+  var h =  f3.add(this.params, 'hours', 0, 59).step(1);
+  var m = f3.add(this.params, 'minutes', 0, 59).step(1);
+  var s =  f3.add(this.params, 'seconds', 0, 59).step(1);
 
 
   var graphGUI = new dat.GUI();
@@ -56,25 +56,44 @@ module.exports = function App(){
   // 		myNetwork('#vis',postData);
   // 		myNetwork.updateData(postData);
   // });
+  // this.sysInterface.pouch.getConflicts().then(function(result){
+  //     // var postData = [];
+  //   	for (var i =0; i<result.rows.length; i++){
+  //   		console.log(result.rows[i]);
+  //   	}
+  //   });
+
   var sys = this.sysInterface.pouch;
   var timeoutID = null;
   var firstTime = true;
   function dataTimer(){
-    // console.log(time);
-    sysInterface.pouch.getPostsSince(time).then(function(result){
+    // console.log(params);
+    // console.log(params.hours+ " : "+params.minutes+ " : "+ params.seconds);
+    var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
+    console.log(t);
+    
+    // sysInterface.pouch.getPostsBetween(t, parseInt(Date.now()/1000)).then(function(result){
+    sysInterface.pouch.getPostsSince(t).then(function(result){
+  
       var postData = [];
+      // console.log(time);
       for (var i =0; i<result.rows.length; i++){
+        // console.log(result.rows[i].doc);
         if(result.rows[i].doc.bssid){
+          console.log(result.rows[i].doc.timestamp);
           postData.push(result.rows[i].doc);
         }
         else{
+          // console.log("                  ");
           // console.log(result.rows[i].doc);
+          // console.log("                  ");
         }
 
 
       }
       if(firstTime){
         // console.log(time);
+        // console.log(postData);
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
@@ -92,8 +111,13 @@ module.exports = function App(){
   dataTimer();
 
 
+
   // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
   // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+
+  h.onChange(function(value){console.log(value);});
+  m.onChange(function(value){console.log(value);});
+  s.onChange(function(value){console.log(value);});
   layouts.onChange(function(value) {
 
     //TODO: Make sure the handkers are being removed from the folders too
@@ -244,12 +268,12 @@ module.exports = function App(){
 
   function Params() {
     this.realTime = false;
-    this.dbName = "tests2";
-    this.remoteServer  = 'http://127.0.0.1:5984/test2';
+    this.dbName = "pouchtest3";
+    this.remoteServer  = 'http://127.0.0.1:5984/pouchtest3';
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 100;
-    this.minutes = 10;
+    this.hours = 0;
+    this.minutes = 0;
     this.seconds = 0;
     //Random value
     this.intervalId = 0;
@@ -269,12 +293,12 @@ module.exports = function App(){
       linkStrength: 0.5 ,
       routerRadius: 4,
       clientRadius: 4,
-      friction: 0.5,
+      friction: 0.53,
       charge: -150,
       minColor: colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))],//.Reds[9][2],
       maxColor: colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))],//.Set3[12][3],
       minConnections: 3,
-      circMin : 1,
+      circMin : 4,
       circMax: 11,
       strokeWidth:3
     };

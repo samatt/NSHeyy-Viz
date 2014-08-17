@@ -5,7 +5,5 @@ var pbj = require('./scripts/pbj');
 
 var app = new Vue({
   el: '#app',
-  ready:function(){
-    pbj();
-  },
+  ready:function(){ pbj();}
 });

@@ -189,7 +189,7 @@ module.exports = function(){
     node
       .attr("attr","update")
       .transition()
-      .duration(5000)
+      .duration(1000)
       .attr("class","node")
       .style("fill",function(d){return d.color;})
       // .attr("r", function(d){ return d.radius});
@@ -285,7 +285,7 @@ module.exports = function(){
     link
       .attr("attr","update")
       .transition()
-      .duration(5000)
+      .duration(1000)
       .style("stroke",function(d){return d.linkColor;})
       .attr("class", "link");
 
@@ -470,7 +470,8 @@ module.exports = function(){
 
       var node = _data[i];
       var n = {'name' : $.trim(node.bssid), 'power': node.power, 'kind': node.kind};
-
+      n.timestamp = _data[i].timestamp;
+      // console.log(_data[i].timestamp);
       if(n.kind == "Client"){
 
         n.essid = node.AP;
@@ -581,7 +582,7 @@ module.exports = function(){
 
       // var node = JSON.parse(_data[i]);
       var n = {'name' : $.trim(_data[index].bssid), 'power': _data[index].power, 'kind': _data[index].kind};
-
+          n.timestamp = _data[node].timestamp;
       if(n.kind == "Client"){
         n.essid = _data[index].ap_essid;
         // console.log(n.essid);
@@ -616,7 +617,7 @@ module.exports = function(){
     for(var node in _data){
 
       var n = {'name' : $.trim(_data[node].bssid), 'power': _data[node].power, 'kind': _data[node].kind,'last':_data[node].last};
-
+          n.timestamp = _data[node].timestamp;
       if(n.kind == "Client"){
         n.essid = _data[node].ap_essid;
         n.probes = _data[node].probes;
@@ -682,9 +683,8 @@ module.exports = function(){
         // n.x = Math.floor(Math.random()*width);
         // n.y = Math.floor(Math.random()*height);
 
-        n.x =  (Math.sin(initPos(i))+1)*(width/2);
+        n.x =   (Math.sin(initPos(i))+1)*(width/2);
         n.y = (height/2); //+ (Math.tan(initPos(i))+1)*(height/2); //Math.floor(Math.random()*height);
-        console.log();
 
         if(layout =="Network"){
           n.color = nColor(n);
@@ -786,8 +786,12 @@ module.exports = function(){
   };
 
   showDetails = function (d,i){
+    var myDate  = new Date(d.timestamp*1000);
     content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
     content += '<hr class="tooltip-hr">';
+    content += '<p class="main">' +"TIME: " + myDate  + '</span></p>';
+    content += '<hr class="tooltip-hr">';
+    content += '<p class="main">' +"TIME: " + d.timestamp  + '</span></p>';
     if(d.kind == "Client"){
       var AP = d.essid;
       //contains
@@ -811,6 +815,7 @@ module.exports = function(){
       content += '<p class="main">' + networkName    + '</span></p>';
       content += '<hr class="tooltip-hr">';
       content += '<p class="main">' +"RSSI: " + d.power  + '</span></p>';
+
       // console.log(d);
       if(d.probes.length > 0){
         content += '<hr class="tooltip-hr">';
@@ -835,6 +840,7 @@ module.exports = function(){
     content = '<p class="main">' + d.source.name + " : "+ d.source.kind + '</span></p>';
     content += '<hr class="tooltip-hr">';
     content += '<p class="main">' + d.target.name + " : "+ d.target.kind + '</span></p>';
+
     if(d.common.length > 0){
       content += '<hr class="tooltip-hr">';
       content += '<p class="main">' + "COMMON NETWORKS:"  + '</span></p>';

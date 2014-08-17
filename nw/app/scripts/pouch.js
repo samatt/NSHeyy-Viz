@@ -38,8 +38,8 @@ module.exports = function(){
 
 		var opts = {startkey:time,
 								endkey:parseInt(Date.now()/1000),
-								reduce: false,
-								descending: false};
+  								reduce: false,
+  								descending: false};
 
 		db.query("timestamp", opts, function(err, response) {
 
