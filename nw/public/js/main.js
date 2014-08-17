@@ -1282,33 +1282,17 @@ module.exports = function App(){
 
   this.myNetwork.loadParams(this.params.layoutParams);
   var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
-  //   var postData = [];
-  // 	for (var i =0; i<result.rows.length; i++){
-  // 		postData.push(result.rows[i].doc);
-  // 	}
-  // 		myNetwork('#vis',postData);
-  // 		myNetwork.updateData(postData);
-  // });
-  // this.sysInterface.pouch.getConflicts().then(function(result){
-  //     // var postData = [];
-  //   	for (var i =0; i<result.rows.length; i++){
-  //   		console.log(result.rows[i]);
-  //   	}
-  //   });
 
-  var sys = this.sysInterface.pouch;
   var timeoutID = null;
   var firstTime = true;
   function dataTimer(){
-    // console.log(params);
-    // console.log(params.hours+ " : "+params.minutes+ " : "+ params.seconds);
+
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     console.log(t);
-    
-    // sysInterface.pouch.getPostsBetween(t, parseInt(Date.now()/1000)).then(function(result){
-    sysInterface.pouch.getPostsSince(t).then(function(result){
-  
+    sysInterface.pouch.getPostsBetween(t, parseInt(Date.now()/1000)).then(function(result){
+    // sysInterface.pouch.getPostsSince(t).then(function(result){
+    // sysInterface.pouch.getPostsSince(1408300384).then(function(result){
+
       var postData = [];
       // console.log(time);
       for (var i =0; i<result.rows.length; i++){
@@ -1317,23 +1301,13 @@ module.exports = function App(){
           console.log(result.rows[i].doc.timestamp);
           postData.push(result.rows[i].doc);
         }
-        else{
-          // console.log("                  ");
-          // console.log(result.rows[i].doc);
-          // console.log("                  ");
-        }
-
-
       }
       if(firstTime){
-        // console.log(time);
-        // console.log(postData);
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
       }
       else{
-
         myNetwork.updateData(postData);
       }
 
@@ -1346,8 +1320,8 @@ module.exports = function App(){
 
 
 
-  // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
-  // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+  // params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
+  console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
 
   h.onChange(function(value){console.log(value);});
   m.onChange(function(value){console.log(value);});
@@ -1364,10 +1338,9 @@ module.exports = function App(){
 
   realTime.onFinishChange(function(value){
     if(value){
-      //TODO: Fix Potential conflict with refreshRate clearInterval
       clearTimeout(timeoutID);
       timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
+      // console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
     }
     else{
       clearInterval(params.intervalId);
@@ -1375,18 +1348,15 @@ module.exports = function App(){
   });
 
   refreshRate.onFinishChange(function(value){
-    // console.log("clearing interval ID:" + params.intervalId);
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-    // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-    // console.log("setting interval ID:" + params.intervalId);
   });
 
 
 
   var myInterval = function(){
     // console.log("In interval");
-    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
+    // consle.log(params.hours+" : "+params.minutes+" : "+params.seconds);
     time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     wrapper.queryByTimestamp(myNetwork,time,false);
   };
@@ -1579,12 +1549,17 @@ module.exports = function(){
 
 	pouch.queryByTimestamp = function(network,time, firstTime){
 
+  var endTime = parseInt(Date.now()/1000);
+  time = String(time);
+  endTime = String(endTime);
+  console.log(typeof time === 'string');
+  console.log(typeof endTime === 'string');
 		var opts = {startkey:time,
-								endkey:parseInt(Date.now()/1000),
+								endkey : endTime,
   								reduce: false,
   								descending: false};
-
-		db.query("timestamp", opts, function(err, response) {
+    console.log(opts.startkey + " : "+opts.endkey);
+		db.query("by_timestamp", opts, function(err, response) {
 
 			if(err){ console.log(err); }
 			else{
@@ -1594,6 +1569,10 @@ module.exports = function(){
 						postData.push(response.rows[row].value);
 
 					}
+          if(postData.length<=0){
+            return;
+          }
+        console.log(	postData);
 				if(firstTime){
 					// console.log(	postData);
 					network('#vis',postData);
@@ -1654,6 +1633,7 @@ module.exports = function(){
     var opts = {live: true};
 		console.log(remoteCouch);
     db.replicate.from(remoteCouch, opts, syncError);
+    db.replicate.to(remoteCouch, opts, syncError);
   };
 
   // There was some form or error syncing
@@ -1721,10 +1701,18 @@ module.exports = function sysInterface(){
 	// function getPostsBetween(startTime, endTime) {
 	// 	return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
 	// }
-
+	// function getPostsSince(when) {
+	//   return db.query({
+	//     map: function(doc, emit) {
+	//       if (doc.timestamp > when) {
+	//         emit(doc.name, 1);
+	//       }
+	//     }
+	// 	});
+	// }
 	var db;
 	// var pouch = {};
-	function pouch(onComplete){
+	function pouch(){
 		db = new PouchDB("pouchtest3",'http://127.0.0.1:5984/pouchtest3');
 		db.info(function(err, info) {
 			if(info){ console.log(info);  }
@@ -1738,17 +1726,17 @@ module.exports = function sysInterface(){
 				for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
 				console.log("All complete!");
 		});
-	};
+	}
 
 	pouch.initDDocs = function(){
 		var ddoc = createDesignDoc('by_timestamp', function (doc) {
-			emit(doc.timestamp, doc.null);
+			emit(doc.timestamp, doc.bssid);
 		});
 
 		db.put(ddoc)
 		.then(function(){
 			// kick off an initial build, return immediately
-			console.log("Query added");
+			console.log("Original timestamp added");
 			return db.query('by_timestamp', {stale: 'update_after'});
 		})
 		.catch(function (err) {
@@ -1760,9 +1748,9 @@ module.exports = function sysInterface(){
 
 	pouch.getPostsSince = function(when) {
 		console.log("END KEY : "+ when);
-		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
+		return db.query('by_timestamp', {endkey: String(when), descending: true,include_docs: true});
 	};
-	
+
 	pouch.getPostsSinceMap = function(when) {
 		// function(doc){
 
@@ -1774,7 +1762,10 @@ module.exports = function sysInterface(){
 		return db.query('by_timestamp', {startkey: when,include_docs: true});
 	};
 	pouch.getPostsBetween = function(startTime, endTime) {
-		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,
+		// startTime = "1408214365";
+		// endTime = "1408300377";
+		console.log(" START KEY : "+ startTime + " END KEY : "+ endTime + " delta: " +(endTime - startTime));
+		return db.query('by_timestamp', {startkey: String(startTime), endkey: String(endTime),
 			reduce: false,descending: false,include_docs: true});
 	};
 
@@ -1803,8 +1794,7 @@ module.exports = function sysInterface(){
 				}
 				else if(data[t.packetType] === "Probe"){
 					if(_.contains( nodeIDs,data[t.probeBssid])){
-							var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-							// console.log("Probe exists at "+ pIdx);
+						var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 						updateClientProbe(data);
 					}
 					else{
@@ -1815,8 +1805,6 @@ module.exports = function sysInterface(){
 				else{
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
 							var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-
-							// console.log("Probe exists at "+ dIdx);
 						updateClientData(data);
 					}
 					else{
@@ -1889,7 +1877,7 @@ module.exports = function sysInterface(){
 				bssid :r.bssid,
 				essid :r.essid,
 				created_at :r.created_at,
-				power: r.power,
+				power: updatedRouter.power,
 				timestamp: updatedRouter.timestamp,
 			});
 		},function(err, response) {
@@ -1916,14 +1904,12 @@ module.exports = function sysInterface(){
 		};
 
 		db.get(updatedClient.bssid).then(function(c) {
-			// console.log(c.probes);
-			// console.log(updatedClient.probes);
+
 			c.probes.push(updatedClient.probes);
 			c.probes = _.uniq(c.probes);
-			// console.log(c.probes);
 
 			return db.put({
-				_id: client.bssid,
+				_id: c.bssid,
 				_rev: c._rev,
 				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
@@ -1952,7 +1938,7 @@ module.exports = function sysInterface(){
 		db.get(updatedClient.bssid).then(function(c) {
 
 			return db.put({
-				_id: client.bssid,
+				_id: c.bssid,
 				_rev: c._rev,
 				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
@@ -2013,41 +1999,36 @@ module.exports.getTimeStamp = function(numHours, numMinutes, numSeconds){
 	var seconds = (ts.getSeconds()-numSeconds) >0 ? (ts.getSeconds()-numSeconds) : 0;
 	var hours 	= (ts.getHours()-numHours) >0 ? (ts.getHours()-numHours) : 0;
 
-var timestamp =days[ts.getDay()]+" "+ts.getFullYear()+" "+months[ts.getMonth()]+" "+(ts.getDate())+" "+(hours)+":"+ minutes	+":"+seconds;
-	console.log(timestamp);
-
+	var timestamp =days[ts.getDay()]+" "+ts.getFullYear()+" "+months[ts.getMonth()]+" "+(ts.getDate())+" "+(hours)+":"+ minutes	+":"+seconds;
 	var uxtimestamp = Date.parse(timestamp);
-	console.log(uxtimestamp/1000);
 	var millis = (60*60*numHours + 60*numMinutes + numSeconds) * 1000;
-	// console.log("Current Hours "  +	ts.getHours());
-	// console.log(hours+ " : "+minutes+ " : "+ seconds);
-	// console.log(parseInt((Date.now() - millis)/1000));
 	return parseInt((uxtimestamp)/1000);
 };
 
 var days = {
+	0:"Sun",
 	1:"Mon",
 	2:"Tue",
 	3:"Wed",
 	4:"Thurs",
 	5:"Fri",
-	6:"Sat",
-	7:"Sun",
-}
+	6:"Sat"
+};
 var months = {
 	0:"Jan",
 	1:"Feb",
 	2:"Mar",
 	3:"Apr",
 	4:"May",
-	4:"Jun",
+	5:"Jun",
 	6:"Jul",
 	7:"Aug",
 	8:"Sep",
 	9:"Oct",
 	10:"Nov",
 	11:"Dec"
-}
+};
+
 },{}],9:[function(require,module,exports){
 "use strict";
 

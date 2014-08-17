@@ -48,33 +48,17 @@ module.exports = function App(){
 
   this.myNetwork.loadParams(this.params.layoutParams);
   var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
-  //   var postData = [];
-  // 	for (var i =0; i<result.rows.length; i++){
-  // 		postData.push(result.rows[i].doc);
-  // 	}
-  // 		myNetwork('#vis',postData);
-  // 		myNetwork.updateData(postData);
-  // });
-  // this.sysInterface.pouch.getConflicts().then(function(result){
-  //     // var postData = [];
-  //   	for (var i =0; i<result.rows.length; i++){
-  //   		console.log(result.rows[i]);
-  //   	}
-  //   });
 
-  var sys = this.sysInterface.pouch;
   var timeoutID = null;
   var firstTime = true;
   function dataTimer(){
-    // console.log(params);
-    // console.log(params.hours+ " : "+params.minutes+ " : "+ params.seconds);
+
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     console.log(t);
-    
-    // sysInterface.pouch.getPostsBetween(t, parseInt(Date.now()/1000)).then(function(result){
-    sysInterface.pouch.getPostsSince(t).then(function(result){
-  
+    sysInterface.pouch.getPostsBetween(t, parseInt(Date.now()/1000)).then(function(result){
+    // sysInterface.pouch.getPostsSince(t).then(function(result){
+    // sysInterface.pouch.getPostsSince(1408300384).then(function(result){
+
       var postData = [];
       // console.log(time);
       for (var i =0; i<result.rows.length; i++){
@@ -83,23 +67,13 @@ module.exports = function App(){
           console.log(result.rows[i].doc.timestamp);
           postData.push(result.rows[i].doc);
         }
-        else{
-          // console.log("                  ");
-          // console.log(result.rows[i].doc);
-          // console.log("                  ");
-        }
-
-
       }
       if(firstTime){
-        // console.log(time);
-        // console.log(postData);
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
       }
       else{
-
         myNetwork.updateData(postData);
       }
 
@@ -112,8 +86,8 @@ module.exports = function App(){
 
 
 
-  // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
-  // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+  // params.intervalId = setInterval(myInterval,params.refreshRate * 1000);
+  console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
 
   h.onChange(function(value){console.log(value);});
   m.onChange(function(value){console.log(value);});
@@ -130,10 +104,9 @@ module.exports = function App(){
 
   realTime.onFinishChange(function(value){
     if(value){
-      //TODO: Fix Potential conflict with refreshRate clearInterval
       clearTimeout(timeoutID);
       timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
+      // console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
     }
     else{
       clearInterval(params.intervalId);
@@ -141,18 +114,15 @@ module.exports = function App(){
   });
 
   refreshRate.onFinishChange(function(value){
-    // console.log("clearing interval ID:" + params.intervalId);
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-    // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-    // console.log("setting interval ID:" + params.intervalId);
   });
 
 
 
   var myInterval = function(){
     // console.log("In interval");
-    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
+    // consle.log(params.hours+" : "+params.minutes+" : "+params.seconds);
     time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
     wrapper.queryByTimestamp(myNetwork,time,false);
   };

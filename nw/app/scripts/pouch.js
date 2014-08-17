@@ -36,12 +36,17 @@ module.exports = function(){
 
 	pouch.queryByTimestamp = function(network,time, firstTime){
 
+  var endTime = parseInt(Date.now()/1000);
+  time = String(time);
+  endTime = String(endTime);
+  console.log(typeof time === 'string');
+  console.log(typeof endTime === 'string');
 		var opts = {startkey:time,
-								endkey:parseInt(Date.now()/1000),
+								endkey : endTime,
   								reduce: false,
   								descending: false};
-
-		db.query("timestamp", opts, function(err, response) {
+    console.log(opts.startkey + " : "+opts.endkey);
+		db.query("by_timestamp", opts, function(err, response) {
 
 			if(err){ console.log(err); }
 			else{
@@ -51,6 +56,10 @@ module.exports = function(){
 						postData.push(response.rows[row].value);
 
 					}
+          if(postData.length<=0){
+            return;
+          }
+        console.log(	postData);
 				if(firstTime){
 					// console.log(	postData);
 					network('#vis',postData);
@@ -111,6 +120,7 @@ module.exports = function(){
     var opts = {live: true};
 		console.log(remoteCouch);
     db.replicate.from(remoteCouch, opts, syncError);
+    db.replicate.to(remoteCouch, opts, syncError);
   };
 
   // There was some form or error syncing

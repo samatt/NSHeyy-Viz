@@ -52,10 +52,18 @@ module.exports = function sysInterface(){
 	// function getPostsBetween(startTime, endTime) {
 	// 	return db.query('by_timestamp', {startkey: startTime, endkey: endTime,include_docs: true});
 	// }
-
+	// function getPostsSince(when) {
+	//   return db.query({
+	//     map: function(doc, emit) {
+	//       if (doc.timestamp > when) {
+	//         emit(doc.name, 1);
+	//       }
+	//     }
+	// 	});
+	// }
 	var db;
 	// var pouch = {};
-	function pouch(onComplete){
+	function pouch(){
 		db = new PouchDB("pouchtest3",'http://127.0.0.1:5984/pouchtest3');
 		db.info(function(err, info) {
 			if(info){ console.log(info);  }
@@ -69,17 +77,17 @@ module.exports = function sysInterface(){
 				for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
 				console.log("All complete!");
 		});
-	};
+	}
 
 	pouch.initDDocs = function(){
 		var ddoc = createDesignDoc('by_timestamp', function (doc) {
-			emit(doc.timestamp, doc.null);
+			emit(doc.timestamp, doc.bssid);
 		});
 
 		db.put(ddoc)
 		.then(function(){
 			// kick off an initial build, return immediately
-			console.log("Query added");
+			console.log("Original timestamp added");
 			return db.query('by_timestamp', {stale: 'update_after'});
 		})
 		.catch(function (err) {
@@ -91,9 +99,9 @@ module.exports = function sysInterface(){
 
 	pouch.getPostsSince = function(when) {
 		console.log("END KEY : "+ when);
-		return db.query('by_timestamp', {endkey: when, descending: true,include_docs: true});
+		return db.query('by_timestamp', {endkey: String(when), descending: true,include_docs: true});
 	};
-	
+
 	pouch.getPostsSinceMap = function(when) {
 		// function(doc){
 
@@ -105,7 +113,10 @@ module.exports = function sysInterface(){
 		return db.query('by_timestamp', {startkey: when,include_docs: true});
 	};
 	pouch.getPostsBetween = function(startTime, endTime) {
-		return db.query('by_timestamp', {startkey: startTime, endkey: endTime,
+		// startTime = "1408214365";
+		// endTime = "1408300377";
+		console.log(" START KEY : "+ startTime + " END KEY : "+ endTime + " delta: " +(endTime - startTime));
+		return db.query('by_timestamp', {startkey: String(startTime), endkey: String(endTime),
 			reduce: false,descending: false,include_docs: true});
 	};
 
@@ -134,8 +145,7 @@ module.exports = function sysInterface(){
 				}
 				else if(data[t.packetType] === "Probe"){
 					if(_.contains( nodeIDs,data[t.probeBssid])){
-							var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-							// console.log("Probe exists at "+ pIdx);
+						var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 						updateClientProbe(data);
 					}
 					else{
@@ -145,9 +155,7 @@ module.exports = function sysInterface(){
 				}
 				else{
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
-							var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-
-							// console.log("Probe exists at "+ dIdx);
+						var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 						updateClientData(data);
 					}
 					else{
@@ -220,7 +228,7 @@ module.exports = function sysInterface(){
 				bssid :r.bssid,
 				essid :r.essid,
 				created_at :r.created_at,
-				power: r.power,
+				power: updatedRouter.power,
 				timestamp: updatedRouter.timestamp,
 			});
 		},function(err, response) {
@@ -247,14 +255,12 @@ module.exports = function sysInterface(){
 		};
 
 		db.get(updatedClient.bssid).then(function(c) {
-			// console.log(c.probes);
-			// console.log(updatedClient.probes);
+
 			c.probes.push(updatedClient.probes);
 			c.probes = _.uniq(c.probes);
-			// console.log(c.probes);
 
 			return db.put({
-				_id: client.bssid,
+				_id: c.bssid,
 				_rev: c._rev,
 				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
@@ -283,7 +289,7 @@ module.exports = function sysInterface(){
 		db.get(updatedClient.bssid).then(function(c) {
 
 			return db.put({
-				_id: client.bssid,
+				_id: c.bssid,
 				_rev: c._rev,
 				power: updatedClient.power,
 				ap_essid: updatedClient.ap_essid,
