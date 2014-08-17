@@ -457,7 +457,7 @@ module.exports = function(){
       .size([width, height]);
 
       force.on("tick", forceTick);
-      force.on("end",function(){console.log("Over");});
+      // force.on("end",function(){console.log("Over");});
 
 // color function used to color nodes
   var nodeColors = d3.scale.category20();
@@ -1158,9 +1158,10 @@ module.exports = function(){
     var myDate  = new Date(d.timestamp*1000);
     content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
     content += '<hr class="tooltip-hr">';
-    content += '<p class="main">' +"TIME: " + myDate  + '</span></p>';
+    content += '<p class="main">' +"TIME: " + myDate.toLocaleTimeString()  + '</span></p>';
     content += '<hr class="tooltip-hr">';
     content += '<p class="main">' +"TIME: " + d.timestamp  + '</span></p>';
+    content += '<hr class="tooltip-hr">';
     if(d.kind == "Client"){
       var AP = d.essid;
       //contains
@@ -1243,11 +1244,37 @@ module.exports = function App(){
 
 
   this.params = new Params();
-  // this.wrapper =  Pouch();
-  // this.wrapper();
-
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
+
+  var timeoutID = null;
+  var firstTime = true;
+  function dataTimer(){
+    var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
+    sysInterface.pouch.getPostsSince(t).then(function(result){
+      var postData = [];
+      for (var i =0; i<result.rows.length; i++){
+        if(result.rows[i].doc.bssid){
+          postData.push(result.rows[i].doc);
+        }
+        else{
+          console.log("BOGUS");
+          console.log(result.rows[i].doc);
+        }
+      }
+      if(firstTime){
+        myNetwork('#vis',postData);
+        myNetwork.updateData(postData);
+        firstTime = false;
+      }
+      else{
+        myNetwork.updateData(postData);
+      }
+    });
+    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+  }
+
+  dataTimer();
 
 
   var gui1 = new dat.GUI();
@@ -1275,74 +1302,13 @@ module.exports = function App(){
   if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
 
   updateGui(currentLayout);
-
-
-  // console.log(this.wrapper;
   this.myNetwork = Network();
-
   this.myNetwork.loadParams(this.params.layoutParams);
   var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
-  //   var postData = [];
-  // 	for (var i =0; i<result.rows.length; i++){
-  // 		postData.push(result.rows[i].doc);
-  // 	}
-  // 		myNetwork('#vis',postData);
-  // 		myNetwork.updateData(postData);
-  // });
-  // this.sysInterface.pouch.getConflicts().then(function(result){
-  //     // var postData = [];
-  //   	for (var i =0; i<result.rows.length; i++){
-  //   		console.log(result.rows[i]);
-  //   	}
-  //   });
 
-  var sys = this.sysInterface.pouch;
-  var timeoutID = null;
-  var firstTime = true;
-  function dataTimer(){
-    // console.log(time);
-    var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    sysInterface.pouch.getPostsSince(t).then(function(result){
-      var postData = [];
-      // console.log(time);
-      for (var i =0; i<result.rows.length; i++){
-        if(result.rows[i].doc.bssid){
-          postData.push(result.rows[i].doc);
-        }
-        else{
-          console.log("                  ");
-          console.log(result.rows[i].doc);
-          console.log("                  ");
-        }
-
-
-      }
-      if(firstTime){
-        // console.log(time);
-        myNetwork('#vis',postData);
-        myNetwork.updateData(postData);
-        firstTime = false;
-      }
-      else{
-
-        myNetwork.updateData(postData);
-      }
-        console.log(postData.length);
-    });
-
-    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-  }
-
-  dataTimer();
-
-
-
-  // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
-  // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
   layouts.onChange(function(value) {
 
-    //TODO: Make sure the handkers are being removed from the folders too
+    //TODO: Make sure the handl ers are being removed from the folders too
     if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
     updateGui(value);
     currentLayout = value;
@@ -1363,21 +1329,11 @@ module.exports = function App(){
   });
 
   refreshRate.onFinishChange(function(value){
-    // console.log("clearing interval ID:" + params.intervalId);
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-    // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-    // console.log("setting interval ID:" + params.intervalId);
+
   });
 
-
-
-  var myInterval = function(){
-    // console.log("In interval");
-    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
-    time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    wrapper.queryByTimestamp(myNetwork,time,false);
-  };
   function updateGui(value){
 
     if(value == "Network"){
@@ -1490,12 +1446,12 @@ module.exports = function App(){
 
   function Params() {
     this.realTime = false;
-    this.dbName = "tests2";
-    this.remoteServer  = 'http://127.0.0.1:5984/test2';
+    this.dbName = utils.config.dbName;
+    this.remoteServer  = utils.config.remoteServer;
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 10;
-    this.minutes = 10;
+    this.hours = 0;
+    this.minutes = 5;
     this.seconds = 0;
     //Random value
     this.intervalId = 0;
@@ -1527,6 +1483,16 @@ module.exports = function App(){
   }
 
 };
+
+//
+//
+//
+// var myInterval = function(){
+//   time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
+//   wrapper.queryByTimestamp(myNetwork,time,false);
+// };
+// console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+// console.log("setting interval ID:" + params.intervalId);
 
 },{"./colorBrewer":3,"./graph":4,"./pouch":6,"./sysInterface":7,"./utils":8,"dat-gui":65}],6:[function(require,module,exports){
 var PouchDB = require('PouchDB');
@@ -1687,8 +1653,9 @@ module.exports = function sysInterface(){
 	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
 
-	var nodeRevMap = {};
+	// var nodeRevMap = {};
 	var nodeIDs = [];
+	var nodeTimeMap = [];
 	var t = {
 		timestamp:0,
 		radio:1,
@@ -1723,9 +1690,18 @@ module.exports = function sysInterface(){
 
 		sync();
 		pouch.initDDocs();
-		db.allDocs( function(err, doc) {
+		db.allDocs( {include_docs: true},function(err, doc) {
 			if(err){console.log(err);}
-				for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
+				for(var i=0; i<doc.rows.length;i++){
+					nodeIDs.push(doc.rows[i].id);
+					var obj = {
+						id:doc.rows[i].id,
+						timestamp:doc.rows[i].doc.timestamp
+					}
+					console.log(obj);
+					nodeTimeMap.push(obj);
+				}
+
 				console.log("All complete!");
 		});
 	}
@@ -1749,14 +1725,14 @@ module.exports = function sysInterface(){
 	};
 
 	pouch.getPostsSince = function(when) {
-		console.log("END KEY : "+ when);
+		// console.log("END KEY : "+ when);
 		return db.query('by_timestamp', {endkey: String(when), descending: true,include_docs: true});
 	};
 	pouch.getPostsBefore = function(when) {
 		return db.query('by_timestamp', {startkey: when,include_docs: true});
 	};
 	pouch.getPostsBetween = function(startTime, endTime) {
-		console.log(" START KEY : "+ startTime + " END KEY : "+ endTime + " delta: " +(endTime - startTime));
+		// console.log(" START KEY : "+ startTime + " END KEY : "+ endTime + " delta: " +(endTime - startTime));
 		return db.query('by_timestamp', {startkey: String(startTime), endkey: String(endTime),
 			reduce: false,descending: false,include_docs: true});
 	};
@@ -1776,8 +1752,13 @@ module.exports = function sysInterface(){
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
-						// console.log("Router exists at "+ rIdx);
-						updateRouter(data);
+						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
+						if(diff >5 ){
+							updateRouter(data);
+							console.log("Last updated : " + diff  +"secs ago");
+						}
+						nodeTimeMap[rIdx] = data[t.timestamp]
+
 					}
 					else{
 						nodeIDs.push($.trim(data[t.beaconBssid]));
@@ -1787,7 +1768,14 @@ module.exports = function sysInterface(){
 				else if(data[t.packetType] === "Probe"){
 					if(_.contains( nodeIDs,data[t.probeBssid])){
 						var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-						updateClientProbe(data);
+						var pdiff = ( Date.now()/1000 - nodeTimeMap[pIdx] );
+
+						if(pdiff >5 ){
+							updateClientProbe(data);
+							console.log("Last updated : " + pdiff + "secs ago");
+						}
+						nodeTimeMap[pIdx] = data[t.timestamp]
+
 					}
 					else{
 						nodeIDs.push($.trim(data[t.probeBssid]));
@@ -1797,7 +1785,13 @@ module.exports = function sysInterface(){
 				else{
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
 						var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-						updateClientData(data);
+						var ddiff = ( Date.now()/1000 - nodeTimeMap[dIdx] );
+						if(diff >5 ){
+							updateClientData(data);
+							console.log("Last updated : " + ddiff + "secs ago");
+						}
+						nodeTimeMap[dIdx] = data[t.timestamp]
+
 					}
 					else{
 						nodeIDs.push($.trim(data[t.dataClientBssid]));
@@ -1949,7 +1943,6 @@ module.exports = function sysInterface(){
 		);
 
 	};
-
 
 	return{
 		parser: parser,

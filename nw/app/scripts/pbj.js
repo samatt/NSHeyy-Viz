@@ -9,11 +9,37 @@ module.exports = function App(){
 
 
   this.params = new Params();
-  // this.wrapper =  Pouch();
-  // this.wrapper();
-
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
+
+  var timeoutID = null;
+  var firstTime = true;
+  function dataTimer(){
+    var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
+    sysInterface.pouch.getPostsSince(t).then(function(result){
+      var postData = [];
+      for (var i =0; i<result.rows.length; i++){
+        if(result.rows[i].doc.bssid){
+          postData.push(result.rows[i].doc);
+        }
+        else{
+          console.log("BOGUS");
+          console.log(result.rows[i].doc);
+        }
+      }
+      if(firstTime){
+        myNetwork('#vis',postData);
+        myNetwork.updateData(postData);
+        firstTime = false;
+      }
+      else{
+        myNetwork.updateData(postData);
+      }
+    });
+    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
+  }
+
+  dataTimer();
 
 
   var gui1 = new dat.GUI();
@@ -41,74 +67,13 @@ module.exports = function App(){
   if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
 
   updateGui(currentLayout);
-
-
-  // console.log(this.wrapper;
   this.myNetwork = Network();
-
   this.myNetwork.loadParams(this.params.layoutParams);
   var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
-  // this.sysInterface.pouch.getPostsSince(time).then(function(result){
-  //   var postData = [];
-  // 	for (var i =0; i<result.rows.length; i++){
-  // 		postData.push(result.rows[i].doc);
-  // 	}
-  // 		myNetwork('#vis',postData);
-  // 		myNetwork.updateData(postData);
-  // });
-  // this.sysInterface.pouch.getConflicts().then(function(result){
-  //     // var postData = [];
-  //   	for (var i =0; i<result.rows.length; i++){
-  //   		console.log(result.rows[i]);
-  //   	}
-  //   });
 
-  var sys = this.sysInterface.pouch;
-  var timeoutID = null;
-  var firstTime = true;
-  function dataTimer(){
-    // console.log(time);
-    var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    sysInterface.pouch.getPostsSince(t).then(function(result){
-      var postData = [];
-      // console.log(time);
-      for (var i =0; i<result.rows.length; i++){
-        if(result.rows[i].doc.bssid){
-          postData.push(result.rows[i].doc);
-        }
-        else{
-          console.log("                  ");
-          console.log(result.rows[i].doc);
-          console.log("                  ");
-        }
-
-
-      }
-      if(firstTime){
-        // console.log(time);
-        myNetwork('#vis',postData);
-        myNetwork.updateData(postData);
-        firstTime = false;
-      }
-      else{
-
-        myNetwork.updateData(postData);
-      }
-        console.log(postData.length);
-    });
-
-    timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-  }
-
-  dataTimer();
-
-
-
-  // params.intervalId = setInterval(myInterval,this.params.refreshRate * 1000);
-  // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
   layouts.onChange(function(value) {
 
-    //TODO: Make sure the handkers are being removed from the folders too
+    //TODO: Make sure the handl ers are being removed from the folders too
     if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
     updateGui(value);
     currentLayout = value;
@@ -129,21 +94,11 @@ module.exports = function App(){
   });
 
   refreshRate.onFinishChange(function(value){
-    // console.log("clearing interval ID:" + params.intervalId);
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-    // console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-    // console.log("setting interval ID:" + params.intervalId);
+
   });
 
-
-
-  var myInterval = function(){
-    // console.log("In interval");
-    // console.log(params.hours+" : "+params.minutes+" : "+params.seconds);
-    time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    wrapper.queryByTimestamp(myNetwork,time,false);
-  };
   function updateGui(value){
 
     if(value == "Network"){
@@ -256,12 +211,12 @@ module.exports = function App(){
 
   function Params() {
     this.realTime = false;
-    this.dbName = "tests2";
-    this.remoteServer  = 'http://127.0.0.1:5984/test2';
+    this.dbName = utils.config.dbName;
+    this.remoteServer  = utils.config.remoteServer;
     this.layout = [];
     this.refreshRate = 7;
-    this.hours = 10;
-    this.minutes = 10;
+    this.hours = 0;
+    this.minutes = 5;
     this.seconds = 0;
     //Random value
     this.intervalId = 0;
@@ -293,3 +248,13 @@ module.exports = function App(){
   }
 
 };
+
+//
+//
+//
+// var myInterval = function(){
+//   time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
+//   wrapper.queryByTimestamp(myNetwork,time,false);
+// };
+// console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
+// console.log("setting interval ID:" + params.intervalId);

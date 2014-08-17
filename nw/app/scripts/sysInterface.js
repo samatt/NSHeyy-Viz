@@ -21,8 +21,9 @@ module.exports = function sysInterface(){
 	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
 
-	var nodeRevMap = {};
+	// var nodeRevMap = {};
 	var nodeIDs = [];
+	var nodeTimeMap = [];
 	var t = {
 		timestamp:0,
 		radio:1,
@@ -57,9 +58,18 @@ module.exports = function sysInterface(){
 
 		sync();
 		pouch.initDDocs();
-		db.allDocs( function(err, doc) {
+		db.allDocs( {include_docs: true},function(err, doc) {
 			if(err){console.log(err);}
-				for(var i=0; i<doc.rows.length;i++){ nodeIDs.push(doc.rows[i].id); }
+				for(var i=0; i<doc.rows.length;i++){
+					nodeIDs.push(doc.rows[i].id);
+					var obj = {
+						id:doc.rows[i].id,
+						timestamp:doc.rows[i].doc.timestamp
+					}
+					console.log(obj);
+					nodeTimeMap.push(obj);
+				}
+
 				console.log("All complete!");
 		});
 	}
@@ -83,14 +93,14 @@ module.exports = function sysInterface(){
 	};
 
 	pouch.getPostsSince = function(when) {
-		console.log("END KEY : "+ when);
+		// console.log("END KEY : "+ when);
 		return db.query('by_timestamp', {endkey: String(when), descending: true,include_docs: true});
 	};
 	pouch.getPostsBefore = function(when) {
 		return db.query('by_timestamp', {startkey: when,include_docs: true});
 	};
 	pouch.getPostsBetween = function(startTime, endTime) {
-		console.log(" START KEY : "+ startTime + " END KEY : "+ endTime + " delta: " +(endTime - startTime));
+		// console.log(" START KEY : "+ startTime + " END KEY : "+ endTime + " delta: " +(endTime - startTime));
 		return db.query('by_timestamp', {startkey: String(startTime), endkey: String(endTime),
 			reduce: false,descending: false,include_docs: true});
 	};
@@ -110,8 +120,13 @@ module.exports = function sysInterface(){
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
-						// console.log("Router exists at "+ rIdx);
-						updateRouter(data);
+						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
+						if(diff >5 ){
+							updateRouter(data);
+							console.log("Last updated : " + diff  +"secs ago");
+						}
+						nodeTimeMap[rIdx] = data[t.timestamp]
+
 					}
 					else{
 						nodeIDs.push($.trim(data[t.beaconBssid]));
@@ -121,7 +136,14 @@ module.exports = function sysInterface(){
 				else if(data[t.packetType] === "Probe"){
 					if(_.contains( nodeIDs,data[t.probeBssid])){
 						var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-						updateClientProbe(data);
+						var pdiff = ( Date.now()/1000 - nodeTimeMap[pIdx] );
+
+						if(pdiff >5 ){
+							updateClientProbe(data);
+							console.log("Last updated : " + pdiff + "secs ago");
+						}
+						nodeTimeMap[pIdx] = data[t.timestamp]
+
 					}
 					else{
 						nodeIDs.push($.trim(data[t.probeBssid]));
@@ -131,7 +153,13 @@ module.exports = function sysInterface(){
 				else{
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
 						var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
-						updateClientData(data);
+						var ddiff = ( Date.now()/1000 - nodeTimeMap[dIdx] );
+						if(diff >5 ){
+							updateClientData(data);
+							console.log("Last updated : " + ddiff + "secs ago");
+						}
+						nodeTimeMap[dIdx] = data[t.timestamp]
+
 					}
 					else{
 						nodeIDs.push($.trim(data[t.dataClientBssid]));
@@ -283,7 +311,6 @@ module.exports = function sysInterface(){
 		);
 
 	};
-
 
 	return{
 		parser: parser,

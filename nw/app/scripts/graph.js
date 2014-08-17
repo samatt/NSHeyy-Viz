@@ -88,7 +88,7 @@ module.exports = function(){
       .size([width, height]);
 
       force.on("tick", forceTick);
-      force.on("end",function(){console.log("Over");});
+      // force.on("end",function(){console.log("Over");});
 
 // color function used to color nodes
   var nodeColors = d3.scale.category20();
@@ -789,9 +789,10 @@ module.exports = function(){
     var myDate  = new Date(d.timestamp*1000);
     content = '<p class="main">' + d.kind.toUpperCase() + " : "+ d.name + '</span></p>';
     content += '<hr class="tooltip-hr">';
-    content += '<p class="main">' +"TIME: " + myDate  + '</span></p>';
+    content += '<p class="main">' +"TIME: " + myDate.toLocaleTimeString()  + '</span></p>';
     content += '<hr class="tooltip-hr">';
     content += '<p class="main">' +"TIME: " + d.timestamp  + '</span></p>';
+    content += '<hr class="tooltip-hr">';
     if(d.kind == "Client"){
       var AP = d.essid;
       //contains
