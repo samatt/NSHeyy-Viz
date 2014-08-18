@@ -9,7 +9,7 @@ var partialify = require('partialify');
 
 var jsPath = './app/**/*';
 var cssPath = './app/css/**/*.scss';
-var sniffPath = '../common/sniffer/Release/*';
+var sniffPath = '../sniffer/build/forNW/Release/*';
 
 gulp.task('browserify', function() {
   var bundleStream = browserify('./app/main.js')

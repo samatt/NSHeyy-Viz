@@ -640,6 +640,14 @@ module.exports = function(){
     //Globals of sorts
     var countExtent = d3.extent(data.nodes, function(d){return d.power;});
     var countExtentESSID = d3.extent(data.nodes,function(d){ return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;});
+    // var countExtentESSID = d3.extent(data.nodes,function(d){
+    //   if(d.kind==="Client"){
+    //     console.log(d.probes);
+    //     var len = (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;
+    //     console.log(len);
+    //   }
+    //    return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;
+    // });
     var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
 
     var linkColor = layoutParams.linkColor;

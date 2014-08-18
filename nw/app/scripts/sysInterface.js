@@ -28,7 +28,7 @@ module.exports = function sysInterface(){
 	child.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
 	child.stderr.on('data', function (data) { fs.writeSync(err, data.toString());	});
 	//TODO: Check that the closeSync is being called correctly
-	child.on('close', function (code) {fs.closeSync(out);console.log('sniffer process exited with code ' + code);});
+	child.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
 
 	var tail  = spawn('tail', ['-f','./sniffer/packets.log']);
 	tail.stdout.on('data', function (data) {parser.parseLine(data);});
