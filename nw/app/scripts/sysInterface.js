@@ -3,8 +3,10 @@ var $ = require('jQuery');
 var _ = require('underscore');
 var PouchDB = require('PouchDB');
 var spawn = nodeRequire('child_process').spawn;
-// var process = nodeRequire('process');
-var path = require('path');
+var execFile = nodeRequire('child_process').execFile;
+var path = nodeRequire('path');
+var fs = nodeRequire('fs');
+var sudo = nodeRequire('sudo');
 
 
 function createDesignDoc(name, mapFunction) {
@@ -19,15 +21,50 @@ function createDesignDoc(name, mapFunction) {
 
 module.exports = function sysInterface(){
 
-	// var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
-	// console.log('Hello ' + __dirname);
-	// var cwd = path.dirname( process.execPath );
 
+
+	//  out = fs.openSync('./out.log', 'a'),
+	// err = fs.openSync('./out.log', 'a');
+	var out = fs.openSync("../public/sniffer/packets.log", 'a');
+	// var err = fs.openSync("../public/sniffer/error.log", 'a');
+	//
+	// var options = {
+	// 		cachePassword: true,
+	// 		prompt: 'Password, yo? ',
+	// 		spawnOptions: { stdio: [ 'ignore', out, err ] }
+	// };
+	// //  var stdout = '';
+	// var child = sudo([ '../public/sniffer/tinsSniffer' ], options);
+	var child = execFile( '../public/sniffer/tinsSniffer' );
+	child.stdout.on('data', function (data) {
+	    // console.log(data.toString());
+			// console.log('[STR] stdout "%s"', String(data));
+			fs.writeSync(out, data.toString());
+			// stdout += data;
+			// parser.parseLine(data.toString());
+	});
+
+	// child.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
+	// var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
+	// console.log('Hello ' + );
+	// var cwd = path.dirname( process.execPath );
+	// 	console.log(cwd);
 	//TODO: Need to change this as right now i think it need to be built each time;
 	var tail  = spawn('tail', ['-f','../public/sniffer/packets.log']);
+	// tail.stdout.setEncoding('utf8');
 	tail.stdout.on('data', function (data) {parser.parseLine(data);});
 	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
+
+	// var sniffer  = execFile('../public/sniffer/tinsSniffer');//,  function (error, stdout, stderr) {
+    // console.log('stdout: ' + stdout);
+    // console.log('stderr: ' + stderr);
+    // if (error !== null) {
+    //   console.log('exec error: ' + error);
+    // }});
+	// sniffer.stdout.on('data', function (data) {console.log(data);});
+	// sniffer.stderr.on('data', function (data) {console.log('sniffer stderr: ' + data);});
+	// sniffer.on('close', function (code) {console.log('sniffer process exited with code ' + code);});
 
 	// var nodeRevMap = {};
 	var nodeIDs = [];
@@ -52,8 +89,8 @@ module.exports = function sysInterface(){
 		var opts = {live: true};
 		console.log('syncing');
 	  // = 'http://127.0.0.1:5984/pouchtest3';
-		db.replicate.to(utils.config.remoteServer, opts, function(err){console.log(err);});
-		db.replicate.from(	utils.config.remoteServer, opts, function(err){console.log(err);});
+		db.replicate.to(utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
+		db.replicate.from(	utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
 	};
 
 	var db;
@@ -69,11 +106,21 @@ module.exports = function sysInterface(){
 		db.allDocs( {include_docs: true},function(err, doc) {
 			if(err){console.log(err);}
 				for(var i=0; i<doc.rows.length;i++){
+					// 11:22:33:44:55:66/
+
+					if(doc.rows[i].id.length === 17 ||doc.rows[i].id ==="_design/by_timestamp" ){
+					console.log(doc.rows[i].id.length);
+					}
+					else{
+						console.log(doc.rows[i]);
+						db.remove(doc.rows[i]._id, doc.rows[i]._rev, function(err, response) {console.log(err);console.log(response); });
+					}
 					nodeIDs.push(doc.rows[i].id);
 					var obj = {
 						id:doc.rows[i].id,
 						timestamp:doc.rows[i].doc.timestamp
 					};
+					// console.log(doc.rows[i].doc);
 					nodeTimeMap.push(obj);
 				}
 
@@ -116,13 +163,16 @@ module.exports = function sysInterface(){
 
 	parser.parseLine = function(lines){
 			var l = $.trim(lines);
+
 			var p =l.split("\n");
 
 			for(var i =0; i<p.length; i++){
+				// console.log(p);
 				var data = p[i].split(",");
-				if(data.length <6 ){
+			 	if(data.length <6 ){
 					return;
-				}
+			 	}
+
 
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
@@ -130,7 +180,7 @@ module.exports = function sysInterface(){
 						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
 						if(diff >5 ){
 							updateRouter(data);
-							console.log("Last updated : " + diff  +"secs ago");
+							console.log("Last updated beacon " + diff  +"secs ago");
 						}
 						nodeTimeMap[rIdx] = data[t.timestamp];
 
@@ -147,7 +197,7 @@ module.exports = function sysInterface(){
 
 						if(pdiff >5 ){
 							updateClientProbe(data);
-							console.log("Last updated : " + pdiff + "secs ago");
+							console.log("Last updated probe: " + pdiff + "secs ago");
 						}
 						nodeTimeMap[pIdx] = data[t.timestamp];
 
@@ -163,7 +213,7 @@ module.exports = function sysInterface(){
 						var ddiff = ( Date.now()/1000 - nodeTimeMap[dIdx] );
 						if(ddiff >5 ){
 							updateClientData(data);
-							console.log("Last updated : " + ddiff + "secs ago");
+							console.log("Last updated data: " + ddiff + "secs ago");
 						}
 						nodeTimeMap[dIdx] = data[t.timestamp];
 
@@ -186,7 +236,8 @@ module.exports = function sysInterface(){
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp]
 		};
-		console.log('adding router : '+ router.bssid);
+		console.log(router);
+		// console.log('adding router : '+ router.bssid);
 		db.put(router, router.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 	};
 
@@ -201,7 +252,8 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :[ p[t.probeProbedEssid] ]
 		};
-		console.log('adding client : '+ client.bssid);
+		console.log(client);
+		// console.log('adding client : '+ client.bssid);
 		db.put(client, client.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 
 	};
@@ -217,6 +269,7 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :[]
 		};
+		console.log(client);
 		db.put(client, client.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 	};
 
@@ -263,7 +316,7 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :p[t.probeProbedEssid]
 		};
-
+		console.log(updatedClient);
 		db.get(updatedClient.bssid).then(function(c) {
 
 			c.probes.push(updatedClient.probes);
@@ -298,6 +351,7 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 		};
 
+		console.log(updatedClient);
 		db.get(updatedClient.bssid).then(function(c) {
 
 			return db.put({
@@ -321,7 +375,8 @@ module.exports = function sysInterface(){
 
 	return{
 		parser: parser,
-		pouch:pouch,
-		tail: tail
+		pouch:pouch
+		// tail: tail
+		// sniffer:sniffer
 	};
 };

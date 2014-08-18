@@ -630,6 +630,7 @@ module.exports = function(){
         data.links.push(_l);
         n.essid =  _data[node].essid;
       }
+      // console.log(n);
       data.nodes.push(n);
     }
     return data;
@@ -725,7 +726,7 @@ module.exports = function(){
           l.target = nodesMap.get(l.target);
           l.linkColor = linkColor;
           linkedByIndex[l.source.name + " : " +l.target.name] = 1;
-          //console.log(l);
+          // console.log(l);
         }
         else if(layout === "Connections"){
 
