@@ -1007,7 +1007,7 @@ module.exports = function(){
 
   refreshD3Data = function(data){
     //Globals of sorts
-    var countExtent = d3.extent(data.nodes, function(d){ return d.power;});
+    var countExtent = d3.extent(data.nodes, function(d){ console.log(d);return d.power;});
     var countExtentESSID = d3.extent(data.nodes,function(d){ return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;});
     var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
 
@@ -1030,7 +1030,7 @@ module.exports = function(){
 
           _n = nodesMap.get(n.name);
           // if(_n.x)
-          // console.log(n);
+
           n.x =_n.x;
           n.y = _n.y;
           n.px = _n.px;
@@ -1078,8 +1078,16 @@ module.exports = function(){
 
           n.color =  nConnectionsColor(n.probes.length);
           if(n.kind == "Client"){
+            if(n.probes.length <1){
+              n.probes =[' '];
+            }
               n.radius = nConnectionsRadius(n.probes.length);
           }
+      }
+
+      if(n.radius< 0){
+        console.log("FUNKY RADIUS");
+        console.log(n);
       }
     });
 
@@ -1676,6 +1684,7 @@ module.exports = function sysInterface(){
 			// stdout += data;
 			// parser.parseLine(data.toString());
 	});
+	child.on('close', function (code) {fs.closeSync(out);console.log('sniffer process exited with code ' + code);});
 
 	// child.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	// var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
@@ -1743,9 +1752,10 @@ module.exports = function sysInterface(){
 
 					if(doc.rows[i].id.length === 17 ||doc.rows[i].id ==="_design/by_timestamp" ){
 					console.log(doc.rows[i].id.length);
+					console.log(doc.rows[i]);
 					}
 					else{
-						console.log(doc.rows[i]);
+						// console.log(doc.rows[i]);
 						db.remove(doc.rows[i]._id, doc.rows[i]._rev, function(err, response) {console.log(err);console.log(response); });
 					}
 					nodeIDs.push(doc.rows[i].id);
@@ -1800,11 +1810,12 @@ module.exports = function sysInterface(){
 			var p =l.split("\n");
 
 			for(var i =0; i<p.length; i++){
-				// console.log(p);
+
 				var data = p[i].split(",");
 			 	if(data.length <6 ){
 					return;
 			 	}
+				console.log(p[i]);
 
 
 				if(data[t.packetType] === "Beacn"){

@@ -638,7 +638,7 @@ module.exports = function(){
 
   refreshD3Data = function(data){
     //Globals of sorts
-    var countExtent = d3.extent(data.nodes, function(d){ return d.power;});
+    var countExtent = d3.extent(data.nodes, function(d){ console.log(d);return d.power;});
     var countExtentESSID = d3.extent(data.nodes,function(d){ return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;});
     var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
 
@@ -661,7 +661,7 @@ module.exports = function(){
 
           _n = nodesMap.get(n.name);
           // if(_n.x)
-          // console.log(n);
+
           n.x =_n.x;
           n.y = _n.y;
           n.px = _n.px;
@@ -709,8 +709,16 @@ module.exports = function(){
 
           n.color =  nConnectionsColor(n.probes.length);
           if(n.kind == "Client"){
+            if(n.probes.length <1){
+              n.probes =[' '];
+            }
               n.radius = nConnectionsRadius(n.probes.length);
           }
+      }
+
+      if(n.radius< 0){
+        console.log("FUNKY RADIUS");
+        console.log(n);
       }
     });
 

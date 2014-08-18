@@ -43,6 +43,7 @@ module.exports = function sysInterface(){
 			// stdout += data;
 			// parser.parseLine(data.toString());
 	});
+	child.on('close', function (code) {fs.closeSync(out);console.log('sniffer process exited with code ' + code);});
 
 	// child.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	// var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
@@ -110,9 +111,10 @@ module.exports = function sysInterface(){
 
 					if(doc.rows[i].id.length === 17 ||doc.rows[i].id ==="_design/by_timestamp" ){
 					console.log(doc.rows[i].id.length);
+					console.log(doc.rows[i]);
 					}
 					else{
-						console.log(doc.rows[i]);
+						// console.log(doc.rows[i]);
 						db.remove(doc.rows[i]._id, doc.rows[i]._rev, function(err, response) {console.log(err);console.log(response); });
 					}
 					nodeIDs.push(doc.rows[i].id);
@@ -167,11 +169,12 @@ module.exports = function sysInterface(){
 			var p =l.split("\n");
 
 			for(var i =0; i<p.length; i++){
-				// console.log(p);
+
 				var data = p[i].split(",");
 			 	if(data.length <6 ){
 					return;
 			 	}
+				console.log(p[i]);
 
 
 				if(data[t.packetType] === "Beacn"){
