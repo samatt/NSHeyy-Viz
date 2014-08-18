@@ -1079,9 +1079,13 @@ module.exports = function(){
           n.color =  nConnectionsColor(n.probes.length);
           if(n.kind == "Client"){
             if(n.probes.length <1){
-              n.probes =[' '];
+              // n.probes =[' '];
+              n.radius = 1;
             }
+            else{
               n.radius = nConnectionsRadius(n.probes.length);
+            }
+
           }
       }
 
@@ -1287,6 +1291,7 @@ module.exports = function App(){
 
 
   var gui1 = new dat.GUI();
+
   var realTime = gui1.add(this.params,'realTime', false);
   var utilsGui = gui1.addFolder("Utils");
 
@@ -1303,6 +1308,17 @@ module.exports = function App(){
 
   var graphGUI = new dat.GUI();
   var graphFolder =  graphGUI.addFolder("Graph");
+  graphFolder.removeFolder = function(name) {
+    var folder = this.__folders[name];
+    if (!folder) {
+      return;
+    }
+    folder.close();
+    this.__ul.removeChild(folder.domElement.parentNode);
+    delete this.__folders[name];
+    this.onResize();
+  };
+
   var layouts = graphFolder.add(this.params, 'layout', utils.config.layouts);
   var refreshRate =  graphFolder.add(this.params, 'refreshRate', 1, 10).step(1);
 
@@ -1662,53 +1678,20 @@ function createDesignDoc(name, mapFunction) {
 
 module.exports = function sysInterface(){
 
-
-
-	//  out = fs.openSync('./out.log', 'a'),
-	// err = fs.openSync('./out.log', 'a');
-	var out = fs.openSync("../public/sniffer/packets.log", 'a');
-	// var err = fs.openSync("../public/sniffer/error.log", 'a');
-	//
-	// var options = {
-	// 		cachePassword: true,
-	// 		prompt: 'Password, yo? ',
-	// 		spawnOptions: { stdio: [ 'ignore', out, err ] }
-	// };
-	// //  var stdout = '';
-	// var child = sudo([ '../public/sniffer/tinsSniffer' ], options);
-	var child = execFile( '../public/sniffer/tinsSniffer' );
+	var minUpdateInterval = 5;
+	var out = fs.openSync("./sniffer/packets.log", 'a');
+	var child = execFile( './sniffer/tinsSniffer' );
 	child.stdout.on('data', function (data) {
-	    // console.log(data.toString());
-			// console.log('[STR] stdout "%s"', String(data));
 			fs.writeSync(out, data.toString());
-			// stdout += data;
-			// parser.parseLine(data.toString());
 	});
+	//TODO: Check that the closeSync is being called correctly
 	child.on('close', function (code) {fs.closeSync(out);console.log('sniffer process exited with code ' + code);});
 
-	// child.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
-	// var tail  = spawn('tail', ['-f','/Users/surya/Code/TBD/common/sniffer/Release/packets.log']);
-	// console.log('Hello ' + );
-	// var cwd = path.dirname( process.execPath );
-	// 	console.log(cwd);
-	//TODO: Need to change this as right now i think it need to be built each time;
-	var tail  = spawn('tail', ['-f','../public/sniffer/packets.log']);
-	// tail.stdout.setEncoding('utf8');
+	var tail  = spawn('tail', ['-f','./sniffer/packets.log']);
 	tail.stdout.on('data', function (data) {parser.parseLine(data);});
 	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
 
-	// var sniffer  = execFile('../public/sniffer/tinsSniffer');//,  function (error, stdout, stderr) {
-    // console.log('stdout: ' + stdout);
-    // console.log('stderr: ' + stderr);
-    // if (error !== null) {
-    //   console.log('exec error: ' + error);
-    // }});
-	// sniffer.stdout.on('data', function (data) {console.log(data);});
-	// sniffer.stderr.on('data', function (data) {console.log('sniffer stderr: ' + data);});
-	// sniffer.on('close', function (code) {console.log('sniffer process exited with code ' + code);});
-
-	// var nodeRevMap = {};
 	var nodeIDs = [];
 	var nodeTimeMap = [];
 	var t = {
@@ -1730,7 +1713,6 @@ module.exports = function sysInterface(){
 	sync = function() {
 		var opts = {live: true};
 		console.log('syncing');
-	  // = 'http://127.0.0.1:5984/pouchtest3';
 		db.replicate.to(utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
 		db.replicate.from(	utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
 	};
@@ -1748,25 +1730,22 @@ module.exports = function sysInterface(){
 		db.allDocs( {include_docs: true},function(err, doc) {
 			if(err){console.log(err);}
 				for(var i=0; i<doc.rows.length;i++){
-					// 11:22:33:44:55:66/
 
 					if(doc.rows[i].id.length === 17 ||doc.rows[i].id ==="_design/by_timestamp" ){
-					console.log(doc.rows[i].id.length);
-					console.log(doc.rows[i]);
+
 					}
 					else{
-						// console.log(doc.rows[i]);
-						db.remove(doc.rows[i]._id, doc.rows[i]._rev, function(err, response) {console.log(err);console.log(response); });
+						console.log("FUNKY VALUE");
+						console.log(doc.rows[i]);
+						// db.remove(doc.rows[i]._id, doc.rows[i]._rev, function(err, response) {console.log(err);console.log(response); });
 					}
 					nodeIDs.push(doc.rows[i].id);
 					var obj = {
 						id:doc.rows[i].id,
 						timestamp:doc.rows[i].doc.timestamp
 					};
-					// console.log(doc.rows[i].doc);
 					nodeTimeMap.push(obj);
 				}
-
 				console.log("All complete!");
 		});
 	}
@@ -1815,14 +1794,12 @@ module.exports = function sysInterface(){
 			 	if(data.length <6 ){
 					return;
 			 	}
-				console.log(p[i]);
-
 
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
 						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
-						if(diff >5 ){
+						if(diff >minUpdateInterval ){
 							updateRouter(data);
 							console.log("Last updated beacon " + diff  +"secs ago");
 						}
@@ -1839,7 +1816,7 @@ module.exports = function sysInterface(){
 						var pIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 						var pdiff = ( Date.now()/1000 - nodeTimeMap[pIdx] );
 
-						if(pdiff >5 ){
+						if(pdiff >minUpdateInterval ){
 							updateClientProbe(data);
 							console.log("Last updated probe: " + pdiff + "secs ago");
 						}
@@ -1855,7 +1832,7 @@ module.exports = function sysInterface(){
 					if(_.contains( nodeIDs,data[t.dataClientBssid])){
 						var dIdx = _.indexOf(nodeIDs, data[t.probeBssid]) ;
 						var ddiff = ( Date.now()/1000 - nodeTimeMap[dIdx] );
-						if(ddiff >5 ){
+						if(ddiff >minUpdateInterval ){
 							updateClientData(data);
 							console.log("Last updated data: " + ddiff + "secs ago");
 						}
@@ -1880,8 +1857,8 @@ module.exports = function sysInterface(){
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp]
 		};
-		console.log(router);
-		// console.log('adding router : '+ router.bssid);
+		// console.log(router);
+		console.log('adding router : '+ router.bssid);
 		db.put(router, router.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 	};
 
@@ -1896,8 +1873,8 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :[ p[t.probeProbedEssid] ]
 		};
-		console.log(client);
-		// console.log('adding client : '+ client.bssid);
+		// console.log(client);
+		console.log('adding client probe : '+ client.bssid);
 		db.put(client, client.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 
 	};
@@ -1913,7 +1890,8 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :[]
 		};
-		console.log(client);
+		// console.log(client);
+		console.log('adding client data : '+ client.bssid);
 		db.put(client, client.bssid, function(err, response) { if(err){console.log(err); if(response){console.log(response);}}});
 	};
 
@@ -1922,7 +1900,6 @@ module.exports = function sysInterface(){
 			kind :"Router",
 			bssid :p[t.beaconBssid],
 			essid :p[t.beaconEssid],
-			// created_at :Date.now(),
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp]
 		};
@@ -1933,7 +1910,7 @@ module.exports = function sysInterface(){
 				_rev: r._rev,
 				kind:"Router",
 				bssid :r.bssid,
-				essid :r.essid,
+				essid :updatedRouters.essid,
 				created_at :r.created_at,
 				power: updatedRouter.power,
 				timestamp: updatedRouter.timestamp,
@@ -1960,7 +1937,7 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :p[t.probeProbedEssid]
 		};
-		console.log(updatedClient);
+		// console.log(updatedClient);
 		db.get(updatedClient.bssid).then(function(c) {
 
 			c.probes.push(updatedClient.probes);
@@ -1995,7 +1972,7 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 		};
 
-		console.log(updatedClient);
+		// console.log(updatedClient);
 		db.get(updatedClient.bssid).then(function(c) {
 
 			return db.put({
@@ -2020,10 +1997,18 @@ module.exports = function sysInterface(){
 	return{
 		parser: parser,
 		pouch:pouch
-		// tail: tail
-		// sniffer:sniffer
 	};
 };
+
+// var sniffer  = execFile('../public/sniffer/tinsSniffer');//,  function (error, stdout, stderr) {
+	// console.log('stdout: ' + stdout);
+	// console.log('stderr: ' + stderr);
+	// if (error !== null) {
+	//   console.log('exec error: ' + error);
+	// }});
+// sniffer.stdout.on('data', function (data) {console.log(data);});
+// sniffer.stderr.on('data', function (data) {console.log('sniffer stderr: ' + data);});
+// sniffer.on('close', function (code) {console.log('sniffer process exited with code ' + code);});
 
 },{"./utils":8,"PouchDB":23,"jQuery":68,"underscore":69}],8:[function(require,module,exports){
 module.exports.config = {};
@@ -23104,17 +23089,17 @@ dat.GUI = dat.gui.GUI = (function (css, saveDialogueContents, styleSheet, contro
           return gui;
 
         },
-        removeFolder: function(name) {
-          var folder = this.__folders[name];
-          if (!folder) {
-            return;
-          }
-
-          folder.close();
-          this.__ul.removeChild(folder.domElement.parentNode);
-          delete this.__folders[name];
-          this.onResize();
-        },
+        // removeFolder: function(name) {
+        //   var folder = this.__folders[name];
+        //   if (!folder) {
+        //     return;
+        //   }
+        //
+        //   folder.close();
+        //   this.__ul.removeChild(folder.domElement.parentNode);
+        //   delete this.__folders[name];
+        //   this.onResize();
+        // },
 
         open: function() {
           this.closed = false;

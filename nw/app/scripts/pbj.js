@@ -43,6 +43,7 @@ module.exports = function App(){
 
 
   var gui1 = new dat.GUI();
+
   var realTime = gui1.add(this.params,'realTime', false);
   var utilsGui = gui1.addFolder("Utils");
 
@@ -59,6 +60,17 @@ module.exports = function App(){
 
   var graphGUI = new dat.GUI();
   var graphFolder =  graphGUI.addFolder("Graph");
+  graphFolder.removeFolder = function(name) {
+    var folder = this.__folders[name];
+    if (!folder) {
+      return;
+    }
+    folder.close();
+    this.__ul.removeChild(folder.domElement.parentNode);
+    delete this.__folders[name];
+    this.onResize();
+  };
+
   var layouts = graphFolder.add(this.params, 'layout', utils.config.layouts);
   var refreshRate =  graphFolder.add(this.params, 'refreshRate', 1, 10).step(1);
 

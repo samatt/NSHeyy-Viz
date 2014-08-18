@@ -710,9 +710,13 @@ module.exports = function(){
           n.color =  nConnectionsColor(n.probes.length);
           if(n.kind == "Client"){
             if(n.probes.length <1){
-              n.probes =[' '];
+              // n.probes =[' '];
+              n.radius = 1;
             }
+            else{
               n.radius = nConnectionsRadius(n.probes.length);
+            }
+
           }
       }
 
