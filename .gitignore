@@ -33,3 +33,7 @@ public/css
 hQIMA:ebRhvC0wfOAQ::VXqZVI24cdW1+GgzWlVI8+HBHby9VB
 
 /_visualiser/
+
+/nw/public/sniffer/packets.log
+/nw/public/sniffer/error.log
+/nw/public/sniffer/err.log

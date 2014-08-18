@@ -1007,7 +1007,7 @@ module.exports = function(){
 
   refreshD3Data = function(data){
     //Globals of sorts
-    var countExtent = d3.extent(data.nodes, function(d){ console.log(d);return d.power;});
+    var countExtent = d3.extent(data.nodes, function(d){return d.power;});
     var countExtentESSID = d3.extent(data.nodes,function(d){ return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;});
     var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
 
@@ -1090,8 +1090,8 @@ module.exports = function(){
       }
 
       if(n.radius< 0){
-        console.log("FUNKY RADIUS");
-        console.log(n);
+        // console.log("FUNKY RADIUS");
+        // console.log(n);
       }
     });
 
@@ -1680,10 +1680,10 @@ module.exports = function sysInterface(){
 
 	var minUpdateInterval = 5;
 	var out = fs.openSync("./sniffer/packets.log", 'a');
+	var err = fs.openSync("./sniffer/err.log", 'a');
 	var child = execFile( './sniffer/tinsSniffer' );
-	child.stdout.on('data', function (data) {
-			fs.writeSync(out, data.toString());
-	});
+	child.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
+	child.stderr.on('data', function (data) { fs.writeSync(err, data.toString());	});
 	//TODO: Check that the closeSync is being called correctly
 	child.on('close', function (code) {fs.closeSync(out);console.log('sniffer process exited with code ' + code);});
 
