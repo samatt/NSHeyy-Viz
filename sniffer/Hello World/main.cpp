@@ -1,8 +1,8 @@
 #include <iostream>
 #include <set>
 #include <string>
-//#include <tins/tins.>
-#include "tins.h"
+#include <tins/tins.h>
+//#include "tins.h"
 #include <signal.h>
 
 using namespace Tins;
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout <<"Closing file"<<std::endl;
-    file.close();
+//    file.close();
 //    sniffer.run(interface);
     
 }
