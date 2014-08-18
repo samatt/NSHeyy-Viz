@@ -664,6 +664,7 @@ module.exports = function(){
     var lConnectionsOpacity = d3.scale.linear().range([0.4,0.6]).domain(connectionsLinksExtent);
 
     data.nodes.forEach( function(n,i){
+      // console.log(n);
       if(nodesMap.has(n.name)){
         //update existing nodes
 

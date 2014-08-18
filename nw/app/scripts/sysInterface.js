@@ -142,10 +142,11 @@ module.exports = function sysInterface(){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
 						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
-						if(diff >minUpdateInterval ){
-							updateRouter(data);
-							console.log("Last updated beacon " + diff  +"secs ago");
-						}
+						// if(diff >minUpdateInterval ){
+						// 	updateRouter(data);
+						// 	console.log("Last updated beacon " + diff  +"secs ago");
+						// }
+						updateRouter(data);
 						nodeTimeMap[rIdx] = data[t.timestamp];
 
 					}
@@ -246,14 +247,17 @@ module.exports = function sysInterface(){
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp]
 		};
+		// console.log(updatedRouter);
 		// console.log('update Router : '+ router.bssid);
 		db.get(updatedRouter.bssid).then(function(r) {
+	console.log("Update");
+			console.log(updatedRouter);
 			return db.put({
-				_id: r.bssid,
+				_id: updatedRouter.bssid,
 				_rev: r._rev,
 				kind:"Router",
-				bssid :r.bssid,
-				essid :updatedRouters.essid,
+				bssid :updatedRouter.bssid,
+				essid :updatedRouter.essid,
 				created_at :r.created_at,
 				power: updatedRouter.power,
 				timestamp: updatedRouter.timestamp,

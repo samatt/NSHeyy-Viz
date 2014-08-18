@@ -14,12 +14,17 @@ module.exports = function App(){
 
   var timeoutID = null;
   var firstTime = true;
+  this.myNetwork = Network();
+  this.myNetwork.loadParams(this.params.layoutParams);
   function dataTimer(){
+
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    sysInterface.pouch.getPostsSince(t).then(function(result){
+    sysInterface.pouch.getPostsBetween(t,Date.now()/1000).then(function(result){
+    // sysInterface.pouch.getPostsSince(t).then(function(result){
       var postData = [];
       for (var i =0; i<result.rows.length; i++){
         if(result.rows[i].doc.bssid){
+          // console.log(resul  t.rows[i].doc);
           postData.push(result.rows[i].doc);
         }
         else{
@@ -28,11 +33,13 @@ module.exports = function App(){
         }
       }
       if(firstTime){
+        // console.log("first");
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
       }
       else{
+        // console.log("othe");
         myNetwork.updateData(postData);
       }
     });
@@ -79,9 +86,9 @@ module.exports = function App(){
   if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
 
   updateGui(currentLayout);
-  this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);
-  var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  // this.myNetwork = Network();
+  // this.myNetwork.loadParams(this.params.layoutParams);
+  // var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
 
   layouts.onChange(function(value) {
 
@@ -246,7 +253,7 @@ module.exports = function App(){
       linkRadiusMinNetwork: 10,
       linkRadiusMaxNetwork: 20,
       linkStrength: 0.5 ,
-      routerRadius: 4,
+      routerRadius: 6,
       clientRadius: 4,
       friction: 0.53,
       charge: -150,

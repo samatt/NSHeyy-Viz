@@ -1033,6 +1033,7 @@ module.exports = function(){
     var lConnectionsOpacity = d3.scale.linear().range([0.4,0.6]).domain(connectionsLinksExtent);
 
     data.nodes.forEach( function(n,i){
+      // console.log(n);
       if(nodesMap.has(n.name)){
         //update existing nodes
 
@@ -1270,12 +1271,17 @@ module.exports = function App(){
 
   var timeoutID = null;
   var firstTime = true;
+  this.myNetwork = Network();
+  this.myNetwork.loadParams(this.params.layoutParams);
   function dataTimer(){
+
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-    sysInterface.pouch.getPostsSince(t).then(function(result){
+    sysInterface.pouch.getPostsBetween(t,Date.now()/1000).then(function(result){
+    // sysInterface.pouch.getPostsSince(t).then(function(result){
       var postData = [];
       for (var i =0; i<result.rows.length; i++){
         if(result.rows[i].doc.bssid){
+          // console.log(resul  t.rows[i].doc);
           postData.push(result.rows[i].doc);
         }
         else{
@@ -1284,11 +1290,13 @@ module.exports = function App(){
         }
       }
       if(firstTime){
+        // console.log("first");
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
       }
       else{
+        // console.log("othe");
         myNetwork.updateData(postData);
       }
     });
@@ -1335,9 +1343,9 @@ module.exports = function App(){
   if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
 
   updateGui(currentLayout);
-  this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);
-  var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
+  // this.myNetwork = Network();
+  // this.myNetwork.loadParams(this.params.layoutParams);
+  // var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
 
   layouts.onChange(function(value) {
 
@@ -1502,7 +1510,7 @@ module.exports = function App(){
       linkRadiusMinNetwork: 10,
       linkRadiusMaxNetwork: 20,
       linkStrength: 0.5 ,
-      routerRadius: 4,
+      routerRadius: 6,
       clientRadius: 4,
       friction: 0.53,
       charge: -150,
@@ -1807,10 +1815,11 @@ module.exports = function sysInterface(){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
 						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
-						if(diff >minUpdateInterval ){
-							updateRouter(data);
-							console.log("Last updated beacon " + diff  +"secs ago");
-						}
+						// if(diff >minUpdateInterval ){
+						// 	updateRouter(data);
+						// 	console.log("Last updated beacon " + diff  +"secs ago");
+						// }
+						updateRouter(data);
 						nodeTimeMap[rIdx] = data[t.timestamp];
 
 					}
@@ -1911,14 +1920,17 @@ module.exports = function sysInterface(){
 			power :p[t.signalStrength],
 			timestamp :p[t.timestamp]
 		};
+		// console.log(updatedRouter);
 		// console.log('update Router : '+ router.bssid);
 		db.get(updatedRouter.bssid).then(function(r) {
+	console.log("Update");
+			console.log(updatedRouter);
 			return db.put({
-				_id: r.bssid,
+				_id: updatedRouter.bssid,
 				_rev: r._rev,
 				kind:"Router",
-				bssid :r.bssid,
-				essid :updatedRouters.essid,
+				bssid :updatedRouter.bssid,
+				essid :updatedRouter.essid,
 				created_at :r.created_at,
 				power: updatedRouter.power,
 				timestamp: updatedRouter.timestamp,
@@ -2022,7 +2034,7 @@ module.exports = function sysInterface(){
 module.exports.config = {};
 module.exports.config.dbName = "pouchtest4";
 module.exports.config.remoteServer  = 'http://127.0.0.1:5984/pouchtest4';
-module.exports.config.layouts = [ 'Connections','Distance','Network'];
+module.exports.config.layouts = [ 'Network','Distance','Connections'];
 
 // var node = null;
 // var link = null;
