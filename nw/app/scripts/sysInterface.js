@@ -21,7 +21,7 @@ function createDesignDoc(name, mapFunction) {
 
 module.exports = function sysInterface(){
 
-	var minUpdateInterval = 5;
+	var minUpdateInterval = 2;
 	var out = fs.openSync("./sniffer/packets.log", 'a');
 	var err = fs.openSync("./sniffer/err.log", 'a');
 	var child = execFile( './sniffer/tinsSniffer' );
@@ -142,11 +142,10 @@ module.exports = function sysInterface(){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
 						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
-						// if(diff >minUpdateInterval ){
-						// 	updateRouter(data);
-						// 	console.log("Last updated beacon " + diff  +"secs ago");
-						// }
-						updateRouter(data);
+						if(diff >minUpdateInterval ){
+							updateRouter(data);
+							console.log("Last updated beacon " + diff  +" secs ago");
+						}
 						nodeTimeMap[rIdx] = data[t.timestamp];
 
 					}
@@ -162,7 +161,7 @@ module.exports = function sysInterface(){
 
 						if(pdiff >minUpdateInterval ){
 							updateClientProbe(data);
-							console.log("Last updated probe: " + pdiff + "secs ago");
+							console.log("Last updated probe: " + pdiff + " secs ago");
 						}
 						nodeTimeMap[pIdx] = data[t.timestamp];
 
@@ -178,7 +177,7 @@ module.exports = function sysInterface(){
 						var ddiff = ( Date.now()/1000 - nodeTimeMap[dIdx] );
 						if(ddiff >minUpdateInterval ){
 							updateClientData(data);
-							console.log("Last updated data: " + ddiff + "secs ago");
+							console.log("Last updated data: " + ddiff + " secs ago");
 						}
 						nodeTimeMap[dIdx] = data[t.timestamp];
 
