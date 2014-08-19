@@ -1,6 +1,7 @@
 {
   "name": "PBJ",
   "main": "index.html",
+  "version": "0.0.1",
   "single-instance": true,
   "dom_storage_quota": 2048,
   "window": {

@@ -15,7 +15,7 @@ module.exports = function App(){
   var timeoutID = null;
   var firstTime = true;
   this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);
+  this.myNetwork.loadParams(this.params.layoutParams);  
   function dataTimer(){
 
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);

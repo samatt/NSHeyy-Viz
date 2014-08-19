@@ -1272,7 +1272,7 @@ module.exports = function App(){
   var timeoutID = null;
   var firstTime = true;
   this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);
+  this.myNetwork.loadParams(this.params.layoutParams);  
   function dataTimer(){
 
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
@@ -1693,21 +1693,6 @@ function createDesignDoc(name, mapFunction) {
 }
 
 module.exports = function sysInterface(){
-
-	var minUpdateInterval = 2;
-	var out = fs.openSync("./sniffer/packets.log", 'a');
-	var err = fs.openSync("./sniffer/err.log", 'a');
-	var child = execFile( './sniffer/tinsSniffer' );
-	child.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
-	child.stderr.on('data', function (data) { fs.writeSync(err, data.toString());	});
-	//TODO: Check that the closeSync is being called correctly
-	child.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
-
-	var tail  = spawn('tail', ['-f','./sniffer/packets.log']);
-	tail.stdout.on('data', function (data) {parser.parseLine(data);});
-	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
-	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-
 	var nodeIDs = [];
 	var nodeTimeMap = [];
 	var t = {
@@ -1726,6 +1711,42 @@ module.exports = function sysInterface(){
 		dataAPBssid : 7
 	};
 
+
+	/* Executing Sniffer using nodes child_process and reading stdout to a log file */
+
+	var minUpdateInterval = 2;
+	var out = fs.openSync("./sniffer/packets.log", 'a');
+	var errFile= fs.openSync("./sniffer/err.log", 'a');
+	var child = execFile( './sniffer/tinsSniffer' );
+	child.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
+	child.stderr.on('data', function (err) { fs.writeSync(errFile, data.toString());	});
+	//TODO: Check that the closeSync is being called correctly
+	// child.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
+  child.on('close', function (code) {
+        try {
+            if (fs.existsSync(errFile)) {
+                init.emit('stderr', fs.readFileSync(errFile));
+                fs.closeSync(err);
+                fs.unlinkSync(errFile);
+            }
+            if (fs.existsSync(outFile)) {
+                init.emit('stdout', code, fs.readFileSync(outFile));
+                fs.closeSync(out);
+                fs.unlinkSync(outFile);
+            }
+        } catch (err){
+            //DO SOMETHING
+						console.error(err);
+        }
+    });
+
+	/* tail -f that log file to feed it into pouch */
+	var tail  = spawn('tail', ['-f','./sniffer/packets.log']);
+	tail.stdout.on('data', function (data) {parser.parseLine(data);});
+	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
+	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
+
+	/* Pouch DB Stuff*/
 	sync = function() {
 		var opts = {live: true};
 		console.log('syncing');

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D84DD0C619A3BBF700BDF367 /* libtins.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84DD0C519A3BBF700BDF367 /* libtins.a */; };
+		D84DD0C819A3BDB300BDF367 /* libpcap.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D84DD0C719A3BDB300BDF367 /* libpcap.a */; };
 		D8CD923A19A264DD00A0E520 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D8CD923919A264DD00A0E520 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +25,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D84DD0C519A3BBF700BDF367 /* libtins.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtins.a; path = ../../../../../usr/local/lib/libtins.a; sourceTree = "<group>"; };
+		D84DD0C719A3BDB300BDF367 /* libpcap.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpcap.a; path = ../../../macports/lib/libpcap.a; sourceTree = "<group>"; };
 		D8C8FA9A196DC8ED00593C74 /* tinsSniffer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tinsSniffer; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8CD923919A264DD00A0E520 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -32,15 +36,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D84DD0C619A3BBF700BDF367 /* libtins.a in Frameworks */,
+				D84DD0C819A3BDB300BDF367 /* libpcap.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D84DD0C419A3BBED00BDF367 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				D84DD0C719A3BDB300BDF367 /* libpcap.a */,
+				D84DD0C519A3BBF700BDF367 /* libtins.a */,
+			);
+			name = lib;
+			sourceTree = "<group>";
+		};
 		D8C8FA91196DC8ED00593C74 = {
 			isa = PBXGroup;
 			children = (
+				D84DD0C419A3BBED00BDF367 /* lib */,
 				D8CD923919A264DD00A0E520 /* main.cpp */,
 				D8C8FA9B196DC8ED00593C74 /* Products */,
 			);
@@ -145,6 +161,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_MASTER_OBJECT_FILE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -154,7 +171,7 @@
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "-ltins";
+				OTHER_LDFLAGS = /usr/local/lib/libtins.a;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -188,6 +205,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_MASTER_OBJECT_FILE = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -196,7 +214,7 @@
 				INSTALL_PATH = ../;
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				OTHER_LDFLAGS = "-ltins";
+				OTHER_LDFLAGS = /usr/local/lib/libtins.a;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
@@ -211,7 +229,10 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INSTALL_PATH = ../../;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/surya/macports/lib,
+				);
 				OBJROOT = build;
 				PRODUCT_NAME = tinsSniffer;
 				SYMROOT = build/forNW;
@@ -227,7 +248,10 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				INSTALL_PATH = ../../;
-				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/Users/surya/macports/lib,
+				);
 				OBJROOT = build;
 				PRODUCT_NAME = tinsSniffer;
 				SYMROOT = build/forNW;
