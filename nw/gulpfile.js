@@ -6,40 +6,40 @@ var source = require('vinyl-source-stream');
 var browserify = require('browserify');
 var partialify = require('partialify');
 
-var NwBuilder = require('node-webkit-builder');
-var Path = require('path');
-var fs = require('fs');
-var info = require('./package.json');
+// var NwBuilder = require('node-webkit-builder');
+// var Path = require('path');
+// var fs = require('fs');
+// var info = require('./package.json');
 
 var jsPath = './app/**/*';
 var cssPath = './app/css/**/*.scss';
 var sniffPath = '../sniffer/build/forNW/Release/*';
 
-var builderOptions = {
-  version: '0.9.2',
-  buildType: 'versioned',
-  files: [ './public/**'],
-  buildDir: './dist',
-  platforms: ['osx'],
-  macIcns: './icons/pbjs.icns'
-};
+// var builderOptions = {
+//   version: '0.9.2',
+//   buildType: 'versioned',
+//   files: [ './public/**'],
+//   buildDir: './dist',
+//   platforms: ['osx'],
+//   macIcns: './icons/pbjs.icns'
+// };
 var binaryDir = Path.join(builderOptions.buildDir, info.name + " - v" + info.version, 'osx');
 
-function build (cb) {
-  var nw = new NwBuilder(builderOptions);
-
-  nw.on('log', console.log);
-  console.log(binaryDir);
-  nw.build().then(function () {
-
-    fs.renameSync(binaryDir + '/node-webkit.app', binaryDir + '/pbjs.app');
-    console.log('Build created');
-    cb();
-  }).catch(function (error) {
-    console.error(error);
-  });
-
-}
+// function build (cb) {
+//   var nw = new NwBuilder(builderOptions);
+//
+//   nw.on('log', console.log);
+//   console.log(binaryDir);
+//   nw.build().then(function () {
+//
+//     fs.renameSync(binaryDir + '/node-webkit.app', binaryDir + '/pbjs.app');
+//     console.log('Build created');
+//     cb();
+//   }).catch(function (error) {
+//     console.error(error);
+//   });
+//
+// }
 
 gulp.task('browserify', function() {
   var bundleStream = browserify('./app/main.js')
@@ -71,6 +71,6 @@ gulp.task('watch', function() {
   gulp.watch(cssPath, ['css']);
   gulp.watch(sniffPath, ['sniffer']);
 });
-gulp.task('build',build);
+// gulp.task('build',build);
 // gulp.task('default',['build']);
 gulp.task('default', ['sniffer','css', 'browserify', 'watch']);
