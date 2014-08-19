@@ -94,7 +94,7 @@ bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
 //#ifdef DEBUG_LOG
         cout<< ss.str()<<endl;
 //#else
-        file <<ss.str()<<endl;
+       // file <<ss.str()<<endl;
 //#endif
 
         

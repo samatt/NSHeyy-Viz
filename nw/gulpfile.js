@@ -23,7 +23,7 @@ var sniffPath = '../sniffer/build/forNW/Release/*';
 //   platforms: ['osx'],
 //   macIcns: './icons/pbjs.icns'
 // };
-var binaryDir = Path.join(builderOptions.buildDir, info.name + " - v" + info.version, 'osx');
+// var binaryDir = Path.join(builderOptions.buildDir, info.name + " - v" + info.version, 'osx');
 
 // function build (cb) {
 //   var nw = new NwBuilder(builderOptions);
