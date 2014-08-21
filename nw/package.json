@@ -11,6 +11,7 @@
     "gulp-concat": "^2.2.0",
     "gulp-rename": "^1.2.0",
     "gulp-sass": "^0.7.1",
+    "jquery": "^2.1.1",
     "node-webkit-builder": "^0.1.1",
     "nodewebkit": "^0.9.2",
     "partialify": "^3.1.1",
