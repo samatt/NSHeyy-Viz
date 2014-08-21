@@ -44,7 +44,7 @@ module.exports = function sysInterface(){
 	var minUpdateInterval = 2;
 	var out = fs.openSync("./sniffer/packets.log", 'a');
 	var errFile= fs.openSync("./sniffer/err.log", 'a');
-	var sniff = execFile( './sniffer/tinsSniffer' );
+	var sniff = execFile( './sniffer/tinsSniffer',["en0"] );
 	sniff.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
 	sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, data.toString());	});
 	//TODO: Check that the closeSync is being called correctly
@@ -70,6 +70,11 @@ module.exports = function sysInterface(){
 
 	/* tail -f that log file to feed it into pouch */
 	var tail  = spawn('tail', ['-f','./sniffer/packets.log']);
+	tail.stdout.on('data', function (data) {parser.parseLine(data);});
+	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
+	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
+
+	var channelHopper  = spawn('airport', ['-f','./sniffer/packets.log']);
 	tail.stdout.on('data', function (data) {parser.parseLine(data);});
 	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
