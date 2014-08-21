@@ -4,18 +4,30 @@ var utils = require('./utils');
 var Pouch = require('./pouch');
 var SysInterface = require('./sysInterface');
 var Network = require('./graph');
+var win = gui.Window.get();
+var App;
+
 
 module.exports = function App(){
+
+  win.on('close',function(){
+    //clean up
+    console.log("Im closing");
+    console.log(sysInterface);
+    sysInterface.sniff.kill();
+    sysInterface.tail.kill();
+    this.close(true);
+  });
 
 
   this.params = new Params();
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
-
   var timeoutID = null;
   var firstTime = true;
   this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);  
+  this.myNetwork.loadParams(this.params.layoutParams);
+
   function dataTimer(){
 
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);

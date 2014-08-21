@@ -1261,18 +1261,30 @@ var utils = require('./utils');
 var Pouch = require('./pouch');
 var SysInterface = require('./sysInterface');
 var Network = require('./graph');
+var win = gui.Window.get();
+var App;
+
 
 module.exports = function App(){
+
+  win.on('close',function(){
+    //clean up
+    console.log("Im closing");
+    console.log(sysInterface);
+    sysInterface.sniff.kill();
+    sysInterface.tail.kill();
+    this.close(true);
+  });
 
 
   this.params = new Params();
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
-
   var timeoutID = null;
   var firstTime = true;
   this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);  
+  this.myNetwork.loadParams(this.params.layoutParams);
+
   function dataTimer(){
 
     var t = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
@@ -1717,12 +1729,13 @@ module.exports = function sysInterface(){
 	var minUpdateInterval = 2;
 	var out = fs.openSync("./sniffer/packets.log", 'a');
 	var errFile= fs.openSync("./sniffer/err.log", 'a');
-	var child = execFile( './sniffer/tinsSniffer' );
-	child.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
-	child.stderr.on('data', function (err) { fs.writeSync(errFile, data.toString());	});
+	var sniff = execFile( './sniffer/tinsSniffer' );
+	sniff.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
+	sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, data.toString());	});
 	//TODO: Check that the closeSync is being called correctly
-	// child.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
-  child.on('close', function (code) {
+	// sniff.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
+  sniff.on('close', function (code) {
+		console.error("Closing sniffer");
         try {
             if (fs.existsSync(errFile)) {
                 init.emit('stderr', fs.readFileSync(errFile));
@@ -2036,7 +2049,9 @@ module.exports = function sysInterface(){
 
 	return{
 		parser: parser,
-		pouch:pouch
+		pouch:pouch,
+		sniff: sniff,
+		tail: tail
 	};
 };
 

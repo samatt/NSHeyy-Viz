@@ -44,12 +44,13 @@ module.exports = function sysInterface(){
 	var minUpdateInterval = 2;
 	var out = fs.openSync("./sniffer/packets.log", 'a');
 	var errFile= fs.openSync("./sniffer/err.log", 'a');
-	var child = execFile( './sniffer/tinsSniffer' );
-	child.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
-	child.stderr.on('data', function (err) { fs.writeSync(errFile, data.toString());	});
+	var sniff = execFile( './sniffer/tinsSniffer' );
+	sniff.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
+	sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, data.toString());	});
 	//TODO: Check that the closeSync is being called correctly
-	// child.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
-  child.on('close', function (code) {
+	// sniff.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
+  sniff.on('close', function (code) {
+		console.error("Closing sniffer");
         try {
             if (fs.existsSync(errFile)) {
                 init.emit('stderr', fs.readFileSync(errFile));
@@ -363,7 +364,9 @@ module.exports = function sysInterface(){
 
 	return{
 		parser: parser,
-		pouch:pouch
+		pouch:pouch,
+		sniff: sniff,
+		tail: tail
 	};
 };
 
