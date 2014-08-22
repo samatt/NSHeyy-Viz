@@ -94,7 +94,7 @@ bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
 //#ifdef DEBUG_LOG
         cout<< ss.str()<<endl;
 //#else
-       // file <<ss.str()<<endl;
+       file <<ss.str()<<endl;
 //#endif
 
         
@@ -108,10 +108,12 @@ int main(int argc, char* argv[]) {
     std::string interface = "en0";
     if(argc == 2)
     interface = argv[1];
+    cout<<interface<<endl;
     ofstream file;
-    file.open("packets.log", ios::ate);
+    file.open("local.log", ios::app);
     cout<<"EXECUTING!!!"<<endl;
 //    Sniffer sniffer;
+    
     Sniffer sniffer(interface, 2000, true, "type mgt or type data", true);
     
     while(Packet pkt = sniffer.next_packet()) {
