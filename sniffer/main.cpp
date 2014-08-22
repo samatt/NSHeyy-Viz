@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
     interface = argv[1];
     cout<<interface<<endl;
     ofstream file;
-    file.open("local.log", ios::app);
+//    file.open("local.log", ios::app);
     cout<<"EXECUTING!!!"<<endl;
 //    Sniffer sniffer;
     
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
 //       cout<< to_string(t.seconds())<<endl; // <- tim estamp
     }
 
-    std::cout <<"Closing file"<<std::endl;
+//    std::cout <<"Closing file"<<std::endl;
 //    file.close();
 //    sniffer.run(interface);
     
