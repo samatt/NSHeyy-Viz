@@ -35,7 +35,7 @@ bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
             //addr3: BSSID
         }
         
-        if(d11_b.matches_flag(Tins::PDU::PDUType::DOT11_BEACON)){
+        if(d11_b.matches_flag(PDU::PDUType::DOT11_BEACON)){
             
             //addr2 == bssid == addr3
             addRadioHeader(ss, rf,t);
@@ -51,7 +51,7 @@ bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
             }
 #endif
         }
-        else if(d11.matches_flag(Tins::PDU::PDUType::DOT11_PROBE_REQ) ){
+        else if(d11.matches_flag(PDU::PDUType::DOT11_PROBE_REQ) ){
             //addr1,addr3==broadcast, addr2 == station
             addRadioHeader(ss, rf,t);
 #if defined DEBUG_LOG
@@ -61,7 +61,7 @@ bool processPacket(PDU &pdu, ostream& file,Timestamp& t) {
 #endif
         }
     }
-    else if (d11.matches_flag(Tins::PDU::DOT11_DATA)){
+    else if (d11.matches_flag(PDU::DOT11_DATA)){
         const Dot11Data &data = pdu.rfind_pdu<Dot11Data>();
         //cout<<"DATA"<<endl;
         if (data.to_ds() == 1 && data.from_ds() == 1) {
