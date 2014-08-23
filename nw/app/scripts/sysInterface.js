@@ -44,14 +44,15 @@ module.exports = function sysInterface(){
 	var minUpdateInterval = 2;
 	var out = fs.openSync("./sniffer/packets.log", 'a');
 	var errFile= fs.openSync("./sniffer/err.log", 'a');
-	var sniff = execFile( './sniffer/tinsSniffer',["en0"] );
+	var sniff = spawn( './sniffer/tinsSniffer',["en0"] );
 	sniff.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
-	sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, data.toString());	});
+	sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, err.toString());	});
 	//TODO: Check that the closeSync is being called correctly
 	// sniff.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
   sniff.on('close', function (code) {
 		console.error("Closing sniffer");
-        try {
+		console.error("Sniffer code " + code);
+
             if (fs.existsSync(errFile)) {
                 init.emit('stderr', fs.readFileSync(errFile));
                 fs.closeSync(err);
@@ -62,10 +63,7 @@ module.exports = function sysInterface(){
                 fs.closeSync(out);
                 fs.unlinkSync(outFile);
             }
-        } catch (err){
-            //DO SOMETHING
-						console.error(err);
-        }
+
     });
 
 	/* tail -f that log file to feed it into pouch */
@@ -74,31 +72,31 @@ module.exports = function sysInterface(){
 	tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
 	tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
 
-	// var channelHopper  = spawn('airport', ['sniff','1']);
-	// channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
-	// channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
-	// channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-	//
-	// var channels = ['1','6','11'];
-	// var i=0;
-	// var hop = function(){
-	// 		channelHopper.kill();
-	// 		console.log("current index " + i);
-	//
-	// 	  if(i <(channels.length-1)){
-	// 					i++;
-	// 		}
-	// 		else{
-	// 			i=0;
-	// 		}
-	// 		console.log('switching to  channel ' + channels[i]);
-	// 		channelHopper  = spawn('airport', ['sniff',channels[i]]);
-	// 		channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
-	// 		channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
-	// 		// channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-	// 		setTimeout(hop,5000);
-	// }
-	//
+	var channelHopper  = spawn('airport', ['sniff','1']);
+	channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
+	channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
+	channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
+
+	var channels = ['1','6','11'];
+	var i=0;
+	var hop = function(){
+			channelHopper.kill();
+			console.log("current index " + i);
+
+		  if(i <(channels.length-1)){
+						i++;
+			}
+			else{
+				i=0;
+			}
+			console.log('switching to  channel ' + channels[i]);
+			channelHopper  = spawn('airport', ['sniff',channels[i]]);
+			channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
+			channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
+			channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
+			setTimeout(hop,5000);
+	}
+
 	// hop();
 
 	/* Pouch DB Stuff*/
