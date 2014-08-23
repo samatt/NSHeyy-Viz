@@ -1731,7 +1731,7 @@ module.exports = function sysInterface(){
 	var errFile= fs.openSync("./sniffer/err.log", 'a');
 	var sniff = spawn( './sniffer/tinsSniffer',["en0"] );
 	sniff.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
-	sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, data.toString());	});
+	sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, err.toString());	});
 	//TODO: Check that the closeSync is being called correctly
 	// sniff.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
   sniff.on('close', function (code) {
