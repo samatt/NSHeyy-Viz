@@ -4,6 +4,8 @@ var utils = require('./utils');
 var Pouch = require('./pouch');
 var SysInterface = require('./sysInterface');
 var Network = require('./graph');
+var sniffer = nodeRequire('nshey');
+var fs = nodeRequire('fs');
 var win = gui.Window.get();
 var App;
 
@@ -14,12 +16,13 @@ module.exports = function App(){
     //clean up
     console.log("Im closing");
     console.log(sysInterface);
-    sysInterface.sniff.kill();
-    sysInterface.tail.kill();
+    // sysInterface.sniff.kill();
+    // sysInterface.tail.kill();
+    stopSniff();
     this.close(true);
   });
 
-
+  var channels = [36,40,44,48,6,11,1];
   this.params = new Params();
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
@@ -27,6 +30,42 @@ module.exports = function App(){
   var firstTime = true;
   this.myNetwork = Network();
   this.myNetwork.loadParams(this.params.layoutParams);
+  function startSniff(filename, channels){
+
+    sniffer.getInterface(function(obj) {
+      var interfaceName;
+
+      if (obj) {
+        interfaceName = obj.name;
+      } else {
+        interfaceName = 'en0';
+      }
+
+      sniffer.sniff(interfaceName, function(data) {
+        // logEl.textContent += data;
+        // logEl.scrollTop = logEl.scrollHeight;
+        this.sysInterface.parser.parseLine(data);
+        fs.appendFile(filename, data, function (err) {
+          if (err) {
+            console.log(err);
+          }
+        });
+      });
+
+      sniffer.hop(channels);
+
+      statusInterval = setInterval(function(){
+        // console.log('Sniffing on channel ' + sniffer.getCurrentChannel());
+        // statusEl.textContent = 'Sniffing on channel ' + sniffer.getCurrentChannel();
+      }, 500);
+    });
+  }
+
+  function stopSniff() {
+    clearInterval(statusInterval);
+    sniffer.stop();
+  }
+  startSniff("./sniffer/packets.log", channels);
 
   function dataTimer(){
 

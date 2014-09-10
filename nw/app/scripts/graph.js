@@ -291,7 +291,7 @@ module.exports = function(){
 
     link.enter().append("line")
       .attr("class", "link")
-      .style("stroke-width","0.3")
+      .style("stroke-width","1.0")
       .style("stroke",function(d){return d.linkColor;})
       .attr("stroke-dasharray",function(d){return d.target.kind ==="Router"?"10":"35";})
       .attr("x1", function(d){ return d.source.x;})
