@@ -1280,6 +1280,7 @@ module.exports = function App(){
   });
 
   var channels = [36,40,44,48,6,11,1];
+  // var channels = [1,6,11];
   this.params = new Params();
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
@@ -1301,6 +1302,7 @@ module.exports = function App(){
       sniffer.sniff(interfaceName, function(data) {
         // logEl.textContent += data;
         // logEl.scrollTop = logEl.scrollHeight;
+        // console.log(data);
         this.sysInterface.parser.parseLine(data);
         fs.appendFile(filename, data, function (err) {
           if (err) {
@@ -1762,7 +1764,7 @@ module.exports = function sysInterface(){
 		dataAPBssid : 7
 	};
 
-	var minUpdateInterval = 2;
+	var minUpdateInterval = 1;
 
 	/* Pouch DB Stuff*/
 	sync = function() {
@@ -1850,13 +1852,14 @@ module.exports = function sysInterface(){
 
 				var data = p[i].split(",");
 			 	if(data.length <6 ){
-					return;
+					continue;
 			 	}
 
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
 						var diff = ( Date.now()/1000 - nodeTimeMap[rIdx] );
+						// console.log(data);
 						if(diff >minUpdateInterval ){
 							updateRouter(data);
 							// console.log("Last updated beacon " + diff  +" secs ago");
@@ -1865,6 +1868,7 @@ module.exports = function sysInterface(){
 
 					}
 					else{
+						console.log("add router " + data[t.beaconBssid] );
 						nodeIDs.push($.trim(data[t.beaconBssid]));
 						addRouter(data);
 					}
@@ -1876,6 +1880,7 @@ module.exports = function sysInterface(){
 
 						if(pdiff >minUpdateInterval ){
 							updateClientProbe(data);
+
 							// console.log("Last updated probe: " + pdiff + " secs ago");
 						}
 						nodeTimeMap[pIdx] = data[t.timestamp];
@@ -1962,11 +1967,11 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp]
 		};
 		// console.log(updatedRouter);
-		// console.log('update Router : '+ router.bssid);
+
 		db.get(updatedRouter.bssid).then(function(r) {
-		x
+		console.log('update Router : '+ updatedRouter.bssid);
 			return db.put({
-				_id: updatedRouter.bssid,
+				_id: r.bssid,
 				_rev: r._rev,
 				kind:"Router",
 				bssid :updatedRouter.bssid,
@@ -1997,7 +2002,7 @@ module.exports = function sysInterface(){
 			timestamp :p[t.timestamp],
 			probes :p[t.probeProbedEssid]
 		};
-		// console.log(updatedClient);
+		// console.log(updatedClient.probes);
 		db.get(updatedClient.bssid).then(function(c) {
 
 			c.probes.push(updatedClient.probes);

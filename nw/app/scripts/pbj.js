@@ -23,6 +23,7 @@ module.exports = function App(){
   });
 
   var channels = [36,40,44,48,6,11,1];
+  // var channels = [1,6,11];
   this.params = new Params();
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
@@ -44,6 +45,7 @@ module.exports = function App(){
       sniffer.sniff(interfaceName, function(data) {
         // logEl.textContent += data;
         // logEl.scrollTop = logEl.scrollHeight;
+        // console.log(data);
         this.sysInterface.parser.parseLine(data);
         fs.appendFile(filename, data, function (err) {
           if (err) {
