@@ -1,4 +1,6 @@
-# PBJ (Working Title) 
+# NSHEyy-Vizualiser
+
+Visualised for the [NSHey](https://github.com/antiboredom/NSHey) npm
 
 Right now there are 3 components to this app.
 
@@ -7,6 +9,7 @@ Puts NIC into monitor mode with a PCAP filter of `type mgt or type data`.
 The parsed data is stored to a log file called `packets.log`
 To compile this youll need to download and install [libtins](https://github.com/mfontanini/libtins)
 The repo comes with the binary so if you have libtins installed it should 'just work'.
+UPDATE: Recently updated to work with static libs so you don't need to have libtins installed
 
 ###Setup
 Everything is now called from the NW app. You will need to first install libtins. Im working on simplifying this process.
