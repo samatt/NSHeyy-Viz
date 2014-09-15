@@ -5,6 +5,7 @@ var Pouch = require('./pouch');
 var SysInterface = require('./sysInterface');
 var Network = require('./graph');
 var sniffer = nodeRequire('nshey');
+var nw = nodeRequire('nw.gui');
 var fs = nodeRequire('fs');
 var win = gui.Window.get();
 var App;
@@ -31,21 +32,30 @@ module.exports = function App(){
   var firstTime = true;
   this.myNetwork = Network();
   this.myNetwork.loadParams(this.params.layoutParams);
-  function startSniff(filename, channels){
+  function startSniff(filename, channels, interface){
 
-    sniffer.getInterface(function(obj) {
+    if(interface){
+      console.log(interface);
+      sniffer.sniff(interface, function(data) {
+        this.sysInterface.parser.parseLine(data);
+        fs.appendFile(filename, data, function (err) {
+          if (err) {
+            console.log(err);
+          }
+        });
+      });
+    }
+    else{
       var interfaceName;
-
-      if (obj) {
-        interfaceName = obj.name;
-      } else {
-        interfaceName = 'en0';
-      }
+      sniffer.getInterface(function(obj) {
+        if (obj) {
+          interfaceName = obj.name;
+        } else {
+          interfaceName = 'en0';
+        }
+      });
 
       sniffer.sniff(interfaceName, function(data) {
-        // logEl.textContent += data;
-        // logEl.scrollTop = logEl.scrollHeight;
-        // console.log(data);
         this.sysInterface.parser.parseLine(data);
         fs.appendFile(filename, data, function (err) {
           if (err) {
@@ -54,20 +64,59 @@ module.exports = function App(){
         });
       });
 
-      sniffer.hop(channels);
+    }
+      sniffer.hop(channels,5000);
 
-      statusInterval = setInterval(function(){
-        // console.log('Sniffing on channel ' + sniffer.getCurrentChannel());
-        // statusEl.textContent = 'Sniffing on channel ' + sniffer.getCurrentChannel();
-      }, 500);
-    });
+    // statusInterval = setInterval(function(){
+    // }, 500);
+    // });
   }
 
   function stopSniff() {
-    clearInterval(statusInterval);
+    // clearInterval(statusInterval);
     sniffer.stop();
   }
   startSniff("./sniffer/packets.log", channels);
+
+  function setupMenu() {
+    var nativeMenuBar = new nw.Menu({ type: "menubar" });
+    nativeMenuBar.createMacBuiltin("N.S.Heyyy Viz", {hideEdit: true, hideWindow: true});
+    win.menu = nativeMenuBar;
+
+    var snifferMenu = new nw.Menu();
+    var interfaces = [];
+    var label;
+
+    sniffer.getInterfaceList(function(list){
+      interfaces = list;
+
+    });
+    console.log("interfaces");
+    console.log(interfaces);
+
+    for(var i = 0; i< interfaces.length; i++){
+      console.log(interfaces[i]);
+      label = interfaces[i];
+      console.log(label);
+    }
+    snifferMenu.append(new nw.MenuItem({ label: label, click: function(){
+    console.log("Clicked");
+    console.log(label);
+    stopSniff();
+    startSniff("./sniffer/packets.log", channels,label);
+    }}));
+    // console.log("interfaces");
+    // console.log(interfaces);
+    // for(var i = 0; i< interfaces.length; i++){
+    //   console.log(interfaces[i]);
+    //   snifferMenu.append(new nw.MenuItem({ label: interfaces[i], click: function(){
+    //   stopSniff();
+    //   startSniff("./sniffer/packets.log", channels,interfaces[i]);
+    //   }}));
+    // }
+    win.menu.append(new nw.MenuItem({label: 'Sniffer', submenu: snifferMenu}));
+
+}
 
   function dataTimer(){
 
@@ -98,7 +147,7 @@ module.exports = function App(){
     });
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
   }
-
+  // setupMenu();
   dataTimer();
 
 
