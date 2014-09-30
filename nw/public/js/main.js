@@ -1009,14 +1009,6 @@ module.exports = function(){
     //Globals of sorts
     var countExtent = d3.extent(data.nodes, function(d){return d.power;});
     var countExtentESSID = d3.extent(data.nodes,function(d){ return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;});
-    // var countExtentESSID = d3.extent(data.nodes,function(d){
-    //   if(d.kind==="Client"){
-    //     console.log(d.probes);
-    //     var len = (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;
-    //     console.log(len);
-    //   }
-    //    return (d.kind==="Client")?((d.probes.length>0)?d.probes.length:1):1;
-    // });
     var connectionsLinksExtent = d3.extent(data.links, function(d){return d.power;});
 
     var linkColor = layoutParams.linkColor;
@@ -1027,7 +1019,7 @@ module.exports = function(){
     var nCircleRadius = d3.scale.pow().range([ 1  ,layoutParams.circleRadius]).domain(countExtent);
     var nConnectionsRadius = d3.scale.linear().range([ layoutParams.circMin, layoutParams.circMax]).domain(countExtentESSID);
     var nNetworkLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMinNetwork, layoutParams.linkRadiusMaxNetwork ]).domain(countExtent);
-    var nDistanceLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain([255,0]);
+    var nDistanceLinkRadius = d3.scale.linear().range([layoutParams.linkRadiusMin, layoutParams.linkRadiusMax]).domain([255,100]);
 
     var lConnectionsPower = d3.scale.linear().range([layoutParams.linkRadiusMinConnections,layoutParams.linkRadiusMaxConnections]).domain(connectionsLinksExtent);
     var lConnectionsOpacity = d3.scale.linear().range([0.4,0.6]).domain(connectionsLinksExtent);
@@ -1182,9 +1174,11 @@ module.exports = function(){
     content += '<hr class="tooltip-hr">';
     content += '<p class="main">' +"TIME: " + myDate.toLocaleTimeString()  + '</span></p>';
     content += '<hr class="tooltip-hr">';
-    content += '<p class="main">' +"TIME: " + d.timestamp  + '</span></p>';
-    content += '<hr class="tooltip-hr">';
+    // content += '<p class="main">' +"TIME: " + d.timestamp  + '</span></p>';
+    // content += '<hr class="tooltip-hr">';
+
     if(d.kind == "Client"){
+      console.log(d);
       var AP = d.essid;
       //contains
       var networkName = $.trim(AP);
@@ -1194,7 +1188,7 @@ module.exports = function(){
       else{
 
       if( nodesMap.has($.trim(AP)) ){
-        // console.log(nodesMap.get($.trim(AP)));
+        console.log(nodesMap.get($.trim(AP)));
         if(typeof(nodesMap.get($.trim(AP)).essid) !=="undefined" || nodesMap.get($.trim(AP)).essid !== ""){
           networkName ="AP: "+ nodesMap.get($.trim(AP)).essid;
         }
@@ -1262,6 +1256,7 @@ var Pouch = require('./pouch');
 var SysInterface = require('./sysInterface');
 var Network = require('./graph');
 var sniffer = nodeRequire('nshey');
+var nw = nodeRequire('nw.gui');
 var fs = nodeRequire('fs');
 var win = gui.Window.get();
 var App;
@@ -1269,62 +1264,63 @@ var App;
 
 module.exports = function App(){
 
-  win.on('close',function(){
+  win.on('closed',function(){
     //clean up
     console.log("Im closing");
     console.log(sysInterface);
-    // sysInterface.sniff.kill();
-    // sysInterface.tail.kill();
-    stopSniff();
+    this.sysInterface.pouch.cleanUp();
+    sniffer.stop();
     this.close(true);
   });
 
   var channels = [36,40,44,48,6,11,1];
-  // var channels = [1,6,11];
+  
   this.params = new Params();
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
+  this.sysInterface.pouch.cleanUp();
   var timeoutID = null;
+  var layoutTimeout = null;
+  var currentLayoutIndex = 0;
   var firstTime = true;
-  this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);
-  function startSniff(filename, channels){
 
-    sniffer.getInterface(function(obj) {
-      var interfaceName;
+  myNetwork = Network();
+  myNetwork.loadParams(this.params.layoutParams);
 
-      if (obj) {
-        interfaceName = obj.name;
-      } else {
-        interfaceName = 'en0';
-      }
+  var options = options || {};
+  options.filename = "./sniffer/packets.log";
+  options.channels = [1,6,11,36,40,44,48];
+  options.interval = 5000;
+  options.cb = this.sysInterface.parser.parseLine;
+  sniffer.start(options);
 
-      sniffer.sniff(interfaceName, function(data) {
-        // logEl.textContent += data;
-        // logEl.scrollTop = logEl.scrollHeight;
-        // console.log(data);
-        this.sysInterface.parser.parseLine(data);
-        fs.appendFile(filename, data, function (err) {
-          if (err) {
-            console.log(err);
-          }
-        });
-      });
+  function setupMenu() {
+    var nativeMenuBar = new nw.Menu({ type: "menubar" });
+    nativeMenuBar.createMacBuiltin("N.S.Heyyy Viz", {hideEdit: true, hideWindow: true});
+    win.menu = nativeMenuBar;
 
-      sniffer.hop(channels);
+    var snifferMenu = new nw.Menu();
+    var interfaces = [];
+    
+    var addMenuItem = function(l,snifferMenu){
+      snifferMenu.append(new nw.MenuItem({ label: l, click: function(){
+        console.log("Clicked");
+        sniffer.stop();
+        sniffer.start()
+      }}));
+    }
+    sniffer.getWiFiInterfaces(function(list){
+      for(var i = 0; i< list.length; i++){
 
-      statusInterval = setInterval(function(){
-        // console.log('Sniffing on channel ' + sniffer.getCurrentChannel());
-        // statusEl.textContent = 'Sniffing on channel ' + sniffer.getCurrentChannel();
-      }, 500);
-    });
+       var label = list[i];
+       console.log(list[i]);
+       addMenuItem(list[i] ,snifferMenu);
+     }
+
+   });
+    win.menu.append(new nw.MenuItem({label: 'Sniffer', submenu: snifferMenu}));
+
   }
-
-  function stopSniff() {
-    clearInterval(statusInterval);
-    sniffer.stop();
-  }
-  startSniff("./sniffer/packets.log", channels);
 
   function dataTimer(){
 
@@ -1347,6 +1343,7 @@ module.exports = function App(){
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
+        updateOnTimer();
       }
       else{
         // console.log("othe");
@@ -1355,13 +1352,12 @@ module.exports = function App(){
     });
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
   }
-
+  setupMenu();
   dataTimer();
 
 
   var gui1 = new dat.GUI();
 
-  var realTime = gui1.add(this.params,'realTime', false);
   var utilsGui = gui1.addFolder("Utils");
 
   var f1 =  utilsGui.addFolder("Server");
@@ -1396,37 +1392,63 @@ module.exports = function App(){
   if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
 
   updateGui(currentLayout);
-  // this.myNetwork = Network();
-  // this.myNetwork.loadParams(this.params.layoutParams);
+  // myNetwork = Network();
+  // myNetwork.loadParams(this.params.layoutParams);
   // var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
 
   layouts.onChange(function(value) {
 
-    //TODO: Make sure the handl ers are being removed from the folders too
+    //TODO: Make sure the handlers are being removed from the folders too
     if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
     updateGui(value);
     currentLayout = value;
     myNetwork.toggleLayout(value);
-
   });
 
-  realTime.onFinishChange(function(value){
-    if(value){
-      //TODO: Fix Potential conflict with refreshRate clearInterval
-      clearTimeout(timeoutID);
-      timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
-    }
-    else{
-      clearInterval(params.intervalId);
-    }
-  });
+
 
   refreshRate.onFinishChange(function(value){
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-
   });
+
+  function updateOnTimer(){
+    console.log("timer");
+    if (currentLayoutIndex < (utils.config.layouts.length-1) ){
+      currentLayoutIndex ++;
+    }
+    else{
+      currentLayoutIndex = 0;
+    }
+
+    if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
+    console.log(utils.config.layouts[currentLayoutIndex]);
+    updateGui(utils.config.layouts[currentLayoutIndex]);
+    currentLayout = utils.config.layouts[currentLayoutIndex];
+    
+
+    params.layoutParams.routerColor =  colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )];
+    params.layoutParams.clientColor  =  colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )];
+    params.layoutParams.linkColor = colorbrewer.Spectral[11][Math.ceil((Math.random() * (colorbrewer.Spectral[11].length-2)) )];
+
+
+      
+    myNetwork.updateParams("false:routerColor:"+ colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )]);
+    myNetwork.updateParams("false:clientColor:" + colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )]);
+    myNetwork.updateParams("false:linkColor:"+ colorbrewer.Spectral[11][Math.ceil((Math.random() * (colorbrewer.Spectral[11].length-2)) )]);
+
+    myNetwork.updateParams("false:minColor:"+ colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))]);
+    myNetwork.updateParams("false:maxColor:"+ colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))]);
+    
+    
+    myNetwork.toggleLayout(utils.config.layouts[currentLayoutIndex]);
+
+    layoutTimeout =  setTimeout(updateOnTimer,10000);
+  }
+  
+
+
+
 
   function updateGui(value){
 
@@ -1535,13 +1557,14 @@ module.exports = function App(){
     else{
       value = "";
     }
-
   }
+
 
   function Params() {
     this.realTime = false;
     this.dbName = utils.config.dbName;
-    this.remoteServer  = utils.config.remoteServer;
+
+    this.remoteServer  = ( utils.config.remoteServer)?utils.config.remoteServer:"no remote";
     this.layout = [];
     this.refreshRate = 7;
     this.hours = 0;
@@ -1575,18 +1598,7 @@ module.exports = function App(){
       strokeWidth:3
     };
   }
-
 };
-
-//
-//
-//
-// var myInterval = function(){
-//   time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-//   wrapper.queryByTimestamp(myNetwork,time,false);
-// };
-// console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-// console.log("setting interval ID:" + params.intervalId);
 
 },{"./colorBrewer":3,"./graph":4,"./pouch":6,"./sysInterface":7,"./utils":8,"dat-gui":65}],6:[function(require,module,exports){
 var PouchDB = require('PouchDB');
@@ -1764,26 +1776,39 @@ module.exports = function sysInterface(){
 		dataAPBssid : 7
 	};
 
-	var minUpdateInterval = 1;
+	var minUpdateInterval = 5;
 
 	/* Pouch DB Stuff*/
 	sync = function() {
-		var opts = {live: true};
-		console.log('syncing');
-		db.replicate.to(utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
-		db.replicate.from(	utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
+		
+		if(utils.config.remoteServer){
+			var opts = {live: true};
+			console.log('syncing');
+			db.replicate.to(utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
+			db.replicate.from(	utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});	
+		}
+		
 	};
 
 	var db;
 	function pouch(){
-		db = new PouchDB(	utils.config.dbName,	utils.config.remoteServer);
+		if(utils.config.remoteServer){
+			db = new PouchDB(utils.config.dbName,utils.config.remoteServer);	
+		}
+		else{
+			db = new PouchDB(utils.config.dbName);		
+		}
+		
+
 		db.info(function(err, info) {
+			console.log("HERE");
 			if(info){ console.log(info);  }
 			if(err){ console.error(err); }
 		});
 
-		sync();
-		pouch.initDDocs();
+		// sync();
+		pouch.initDDocs();	
+
 		db.allDocs( {include_docs: true},function(err, doc) {
 			if(err){console.log(err);}
 				for(var i=0; i<doc.rows.length;i++){
@@ -1805,6 +1830,7 @@ module.exports = function sysInterface(){
 				}
 				console.log("All complete!");
 		});
+		console.log("THERE");
 	}
 
 	pouch.initDDocs = function(){
@@ -1823,9 +1849,15 @@ module.exports = function sysInterface(){
 					console.log("Design document already exists");
 			}
 		});
+
+		// db.viewCleanup();
 	};
 
 	pouch.cleanUp=function(){
+		db.compact(function(){
+			console.log("Compaction complete!!");
+		});
+		db.viewCleanup();
 
 	}
 	pouch.getPostsSince = function(when) {
@@ -1854,7 +1886,11 @@ module.exports = function sysInterface(){
 			 	if(data.length <6 ){
 					continue;
 			 	}
-
+				if(data[t.beaconBssid] === "ff:ff:ff:ff:ff:ff" ||
+					data[t.beaconBssid] === "FF:FF:FF:FF:FF:FF")
+				{
+					continue;
+				}
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
@@ -1862,13 +1898,14 @@ module.exports = function sysInterface(){
 						// console.log(data);
 						if(diff >minUpdateInterval ){
 							updateRouter(data);
+							// console.log("update router " + data[t.beaconBssid] );
 							// console.log("Last updated beacon " + diff  +" secs ago");
 						}
 						nodeTimeMap[rIdx] = data[t.timestamp];
 
 					}
 					else{
-						console.log("add router " + data[t.beaconBssid] );
+						// console.log("add router " + data[t.beaconBssid] );
 						nodeIDs.push($.trim(data[t.beaconBssid]));
 						addRouter(data);
 					}
@@ -1969,7 +2006,7 @@ module.exports = function sysInterface(){
 		// console.log(updatedRouter);
 
 		db.get(updatedRouter.bssid).then(function(r) {
-		console.log('update Router : '+ updatedRouter.bssid);
+		// console.log('update Router : '+ updatedRouter.bssid);
 			return db.put({
 				_id: r.bssid,
 				_rev: r._rev,
@@ -1984,6 +2021,7 @@ module.exports = function sysInterface(){
 				if (err) {
 					// on error
 					console.log(err);
+					// addRouter(p);
 				} else {
 					console.log(response);
 					// on success
@@ -2020,7 +2058,12 @@ module.exports = function sysInterface(){
 				probes: c.probes
 			});
 		},function(err, response) {
-				if (err) {console.log(err);}
+				if (err) {
+
+					console.log(err);
+					console.log(p);
+					console.log(nodeIDs[p[t.probeBssid]]);
+				}
 				else { console.log(response);}
 			}
 		);
@@ -2062,85 +2105,12 @@ module.exports = function sysInterface(){
 	return{
 		parser: parser,
 		pouch:pouch
-		// sniff: sniff,
-		// tail: tail/
-		// hop:hop
 	};
 };
-/* Executing Sniffer using nodes child_process and reading stdout to a log file */
-
-
-// var out = fs.openSync("./sniffer/packets.log", 'a');
-// var errFile= fs.openSync("./sniffer/err.log", 'a');
-// var sniff = spawn( './sniffer/tinsSniffer',["en0"] );
-// sniff.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
-// sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, err.toString());	});
-//TODO: Check that the closeSync is being called correctly
-// sniff.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
-// sniff.on('close', function (code) {
-// 	console.error("Closing sniffer");
-// 	console.error("Sniffer code " + code);
-//
-//           if (fs.existsSync(errFile)) {
-//               init.emit('stderr', fs.readFileSync(errFile));
-//               fs.closeSync(err);
-//               fs.unlinkSync(errFile);
-//           }
-//           if (fs.existsSync(outFile)) {
-//               init.emit('stdout', code, fs.readFileSync(outFile));
-//               fs.closeSync(out);
-//               fs.unlinkSync(outFile);
-//           }
-//
-//   });
-
-/* tail -f that log file to feed it into pouch */
-// var tail  = spawn('tail', ['-f','./sniffer/packets.log']);
-// tail.stdout.on('data', function (data) {parser.parseLine(data);});
-// tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
-// tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-//
-// var channelHopper  = spawn('airport', ['sniff','1']);
-// channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
-// channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
-// channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-//
-// var channels = ['1','6','11'];
-// var i=0;
-// var hop = function(){
-// 		channelHopper.kill();
-// 		console.log("current index " + i);
-//
-// 	  if(i <(channels.length-1)){
-// 					i++;
-// 		}
-// 		else{
-// 			i=0;
-// 		}
-// 		console.log('switching to  channel ' + channels[i]);
-// 		channelHopper  = spawn('airport', ['sniff',channels[i]]);
-// 		channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
-// 		channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
-// 		channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-// 		setTimeout(hop,5000);
-// }
-
-// hop();
-
-// var sniffer  = execFile('../public/sniffer/tinsSniffer');//,  function (error, stdout, stderr) {
-	// console.log('stdout: ' + stdout);
-	// console.log('stderr: ' + stderr);
-	// if (error !== null) {
-	//   console.log('exec error: ' + error);
-	// }});
-// sniffer.stdout.on('data', function (data) {console.log(data);});
-// sniffer.stderr.on('data', function (data) {console.log('sniffer stderr: ' + data);});
-// sniffer.on('close', function (code) {console.log('sniffer process exited with code ' + code);});
-
 },{"./utils":8,"PouchDB":23,"jQuery":68,"underscore":69}],8:[function(require,module,exports){
 module.exports.config = {};
-module.exports.config.dbName = "pouchtest4";
-module.exports.config.remoteServer  = 'http://127.0.0.1:5984/pouchtest4';
+module.exports.config.dbName = "itp";
+module.exports.config.remoteServer  = null;//'http://127.0.0.1:5984/itp';
 module.exports.config.layouts = [ 'Network','Distance','Connections'];
 
 // var node = null;

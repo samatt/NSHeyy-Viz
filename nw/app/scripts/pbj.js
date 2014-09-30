@@ -13,70 +13,35 @@ var App;
 
 module.exports = function App(){
 
-  win.on('close',function(){
+  win.on('closed',function(){
     //clean up
     console.log("Im closing");
     console.log(sysInterface);
-    // sysInterface.sniff.kill();
-    // sysInterface.tail.kill();
-    stopSniff();
+    this.sysInterface.pouch.cleanUp();
+    sniffer.stop();
     this.close(true);
   });
 
   var channels = [36,40,44,48,6,11,1];
-  // var channels = [1,6,11];
+  
   this.params = new Params();
   this.sysInterface = SysInterface();
   this.sysInterface.pouch();
+  this.sysInterface.pouch.cleanUp();
   var timeoutID = null;
+  var layoutTimeout = null;
+  var currentLayoutIndex = 0;
   var firstTime = true;
-  this.myNetwork = Network();
-  this.myNetwork.loadParams(this.params.layoutParams);
-  function startSniff(filename, channels, interface){
 
-    if(interface){
-      console.log(interface);
-      sniffer.sniff(interface, function(data) {
-        this.sysInterface.parser.parseLine(data);
-        fs.appendFile(filename, data, function (err) {
-          if (err) {
-            console.log(err);
-          }
-        });
-      });
-    }
-    else{
-      var interfaceName;
-      sniffer.getInterface(function(obj) {
-        if (obj) {
-          interfaceName = obj.name;
-        } else {
-          interfaceName = 'en0';
-        }
-      });
+  myNetwork = Network();
+  myNetwork.loadParams(this.params.layoutParams);
 
-      sniffer.sniff(interfaceName, function(data) {
-        this.sysInterface.parser.parseLine(data);
-        fs.appendFile(filename, data, function (err) {
-          if (err) {
-            console.log(err);
-          }
-        });
-      });
-
-    }
-      sniffer.hop(channels,5000);
-
-    // statusInterval = setInterval(function(){
-    // }, 500);
-    // });
-  }
-
-  function stopSniff() {
-    // clearInterval(statusInterval);
-    sniffer.stop();
-  }
-  startSniff("./sniffer/packets.log", channels);
+  var options = options || {};
+  options.filename = "./sniffer/packets.log";
+  options.channels = [1,6,11,36,40,44,48];
+  options.interval = 5000;
+  options.cb = this.sysInterface.parser.parseLine;
+  sniffer.start(options);
 
   function setupMenu() {
     var nativeMenuBar = new nw.Menu({ type: "menubar" });
@@ -85,38 +50,26 @@ module.exports = function App(){
 
     var snifferMenu = new nw.Menu();
     var interfaces = [];
-    var label;
-
-    sniffer.getInterfaceList(function(list){
-      interfaces = list;
-
-    });
-    console.log("interfaces");
-    console.log(interfaces);
-
-    for(var i = 0; i< interfaces.length; i++){
-      console.log(interfaces[i]);
-      label = interfaces[i];
-      console.log(label);
+    
+    var addMenuItem = function(l,snifferMenu){
+      snifferMenu.append(new nw.MenuItem({ label: l, click: function(){
+        console.log("Clicked");
+        sniffer.stop();
+        sniffer.start()
+      }}));
     }
-    snifferMenu.append(new nw.MenuItem({ label: label, click: function(){
-    console.log("Clicked");
-    console.log(label);
-    stopSniff();
-    startSniff("./sniffer/packets.log", channels,label);
-    }}));
-    // console.log("interfaces");
-    // console.log(interfaces);
-    // for(var i = 0; i< interfaces.length; i++){
-    //   console.log(interfaces[i]);
-    //   snifferMenu.append(new nw.MenuItem({ label: interfaces[i], click: function(){
-    //   stopSniff();
-    //   startSniff("./sniffer/packets.log", channels,interfaces[i]);
-    //   }}));
-    // }
+    sniffer.getWiFiInterfaces(function(list){
+      for(var i = 0; i< list.length; i++){
+
+       var label = list[i];
+       console.log(list[i]);
+       addMenuItem(list[i] ,snifferMenu);
+     }
+
+   });
     win.menu.append(new nw.MenuItem({label: 'Sniffer', submenu: snifferMenu}));
 
-}
+  }
 
   function dataTimer(){
 
@@ -139,6 +92,7 @@ module.exports = function App(){
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
+        updateOnTimer();
       }
       else{
         // console.log("othe");
@@ -147,13 +101,12 @@ module.exports = function App(){
     });
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
   }
-  // setupMenu();
+  setupMenu();
   dataTimer();
 
 
   var gui1 = new dat.GUI();
 
-  var realTime = gui1.add(this.params,'realTime', false);
   var utilsGui = gui1.addFolder("Utils");
 
   var f1 =  utilsGui.addFolder("Server");
@@ -188,37 +141,63 @@ module.exports = function App(){
   if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
 
   updateGui(currentLayout);
-  // this.myNetwork = Network();
-  // this.myNetwork.loadParams(this.params.layoutParams);
+  // myNetwork = Network();
+  // myNetwork.loadParams(this.params.layoutParams);
   // var time = utils.getTimeStamp(this.params.hours,this.params.minutes,this.params.seconds);
 
   layouts.onChange(function(value) {
 
-    //TODO: Make sure the handl ers are being removed from the folders too
+    //TODO: Make sure the handlers are being removed from the folders too
     if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
     updateGui(value);
     currentLayout = value;
     myNetwork.toggleLayout(value);
-
   });
 
-  realTime.onFinishChange(function(value){
-    if(value){
-      //TODO: Fix Potential conflict with refreshRate clearInterval
-      clearTimeout(timeoutID);
-      timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-      console.log("Interval ID set to : " +  timeoutID  + " with refresh rate: " + (params.refreshRate * 1000) );
-    }
-    else{
-      clearInterval(params.intervalId);
-    }
-  });
+
 
   refreshRate.onFinishChange(function(value){
     clearInterval(timeoutID);
     timeoutID = setTimeout(dataTimer,params.refreshRate*1000);
-
   });
+
+  function updateOnTimer(){
+    console.log("timer");
+    if (currentLayoutIndex < (utils.config.layouts.length-1) ){
+      currentLayoutIndex ++;
+    }
+    else{
+      currentLayoutIndex = 0;
+    }
+
+    if(currentLayout !== ""){graphFolder.removeFolder(currentLayout);}
+    console.log(utils.config.layouts[currentLayoutIndex]);
+    updateGui(utils.config.layouts[currentLayoutIndex]);
+    currentLayout = utils.config.layouts[currentLayoutIndex];
+    
+
+    params.layoutParams.routerColor =  colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )];
+    params.layoutParams.clientColor  =  colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )];
+    params.layoutParams.linkColor = colorbrewer.Spectral[11][Math.ceil((Math.random() * (colorbrewer.Spectral[11].length-2)) )];
+
+
+      
+    myNetwork.updateParams("false:routerColor:"+ colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )]);
+    myNetwork.updateParams("false:clientColor:" + colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)) )]);
+    myNetwork.updateParams("false:linkColor:"+ colorbrewer.Spectral[11][Math.ceil((Math.random() * (colorbrewer.Spectral[11].length-2)) )]);
+
+    myNetwork.updateParams("false:minColor:"+ colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))]);
+    myNetwork.updateParams("false:maxColor:"+ colorbrewer.Set3[12][Math.ceil((Math.random() * (colorbrewer.Set3[12].length-2)))]);
+    
+    
+    myNetwork.toggleLayout(utils.config.layouts[currentLayoutIndex]);
+
+    layoutTimeout =  setTimeout(updateOnTimer,10000);
+  }
+  
+
+
+
 
   function updateGui(value){
 
@@ -327,13 +306,14 @@ module.exports = function App(){
     else{
       value = "";
     }
-
   }
+
 
   function Params() {
     this.realTime = false;
     this.dbName = utils.config.dbName;
-    this.remoteServer  = utils.config.remoteServer;
+
+    this.remoteServer  = ( utils.config.remoteServer)?utils.config.remoteServer:"no remote";
     this.layout = [];
     this.refreshRate = 7;
     this.hours = 0;
@@ -367,15 +347,4 @@ module.exports = function App(){
       strokeWidth:3
     };
   }
-
 };
-
-//
-//
-//
-// var myInterval = function(){
-//   time = utils.getTimeStamp(params.hours,params.minutes,params.seconds);
-//   wrapper.queryByTimestamp(myNetwork,time,false);
-// };
-// console.log("Interval ID set to : " +  params.intervalId + " with refresh rate: " + (params.refreshRate * 1000) );
-// console.log("setting interval ID:" + params.intervalId);

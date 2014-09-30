@@ -1,6 +1,6 @@
 module.exports.config = {};
-module.exports.config.dbName = "pouchtest4";
-module.exports.config.remoteServer  = 'http://127.0.0.1:5984/pouchtest4';
+module.exports.config.dbName = "itp";
+module.exports.config.remoteServer  = null;//'http://127.0.0.1:5984/itp';
 module.exports.config.layouts = [ 'Network','Distance','Connections'];
 
 // var node = null;

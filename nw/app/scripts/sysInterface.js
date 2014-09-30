@@ -38,26 +38,39 @@ module.exports = function sysInterface(){
 		dataAPBssid : 7
 	};
 
-	var minUpdateInterval = 1;
+	var minUpdateInterval = 5;
 
 	/* Pouch DB Stuff*/
 	sync = function() {
-		var opts = {live: true};
-		console.log('syncing');
-		db.replicate.to(utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
-		db.replicate.from(	utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
+		
+		if(utils.config.remoteServer){
+			var opts = {live: true};
+			console.log('syncing');
+			db.replicate.to(utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});
+			db.replicate.from(	utils.config.remoteServer, opts, function(err){if(err){console.log(err);}});	
+		}
+		
 	};
 
 	var db;
 	function pouch(){
-		db = new PouchDB(	utils.config.dbName,	utils.config.remoteServer);
+		if(utils.config.remoteServer){
+			db = new PouchDB(utils.config.dbName,utils.config.remoteServer);	
+		}
+		else{
+			db = new PouchDB(utils.config.dbName);		
+		}
+		
+
 		db.info(function(err, info) {
+			console.log("HERE");
 			if(info){ console.log(info);  }
 			if(err){ console.error(err); }
 		});
 
-		sync();
-		pouch.initDDocs();
+		// sync();
+		pouch.initDDocs();	
+
 		db.allDocs( {include_docs: true},function(err, doc) {
 			if(err){console.log(err);}
 				for(var i=0; i<doc.rows.length;i++){
@@ -79,6 +92,7 @@ module.exports = function sysInterface(){
 				}
 				console.log("All complete!");
 		});
+		console.log("THERE");
 	}
 
 	pouch.initDDocs = function(){
@@ -97,9 +111,15 @@ module.exports = function sysInterface(){
 					console.log("Design document already exists");
 			}
 		});
+
+		// db.viewCleanup();
 	};
 
 	pouch.cleanUp=function(){
+		db.compact(function(){
+			console.log("Compaction complete!!");
+		});
+		db.viewCleanup();
 
 	}
 	pouch.getPostsSince = function(when) {
@@ -128,7 +148,11 @@ module.exports = function sysInterface(){
 			 	if(data.length <6 ){
 					continue;
 			 	}
-
+				if(data[t.beaconBssid] === "ff:ff:ff:ff:ff:ff" ||
+					data[t.beaconBssid] === "FF:FF:FF:FF:FF:FF")
+				{
+					continue;
+				}
 				if(data[t.packetType] === "Beacn"){
 					if(_.contains( nodeIDs,data[t.beaconBssid])){
 						var rIdx = _.indexOf(nodeIDs, data[t.beaconBssid]) ;
@@ -136,13 +160,14 @@ module.exports = function sysInterface(){
 						// console.log(data);
 						if(diff >minUpdateInterval ){
 							updateRouter(data);
+							// console.log("update router " + data[t.beaconBssid] );
 							// console.log("Last updated beacon " + diff  +" secs ago");
 						}
 						nodeTimeMap[rIdx] = data[t.timestamp];
 
 					}
 					else{
-						console.log("add router " + data[t.beaconBssid] );
+						// console.log("add router " + data[t.beaconBssid] );
 						nodeIDs.push($.trim(data[t.beaconBssid]));
 						addRouter(data);
 					}
@@ -243,7 +268,7 @@ module.exports = function sysInterface(){
 		// console.log(updatedRouter);
 
 		db.get(updatedRouter.bssid).then(function(r) {
-		console.log('update Router : '+ updatedRouter.bssid);
+		// console.log('update Router : '+ updatedRouter.bssid);
 			return db.put({
 				_id: r.bssid,
 				_rev: r._rev,
@@ -258,6 +283,7 @@ module.exports = function sysInterface(){
 				if (err) {
 					// on error
 					console.log(err);
+					// addRouter(p);
 				} else {
 					console.log(response);
 					// on success
@@ -294,7 +320,12 @@ module.exports = function sysInterface(){
 				probes: c.probes
 			});
 		},function(err, response) {
-				if (err) {console.log(err);}
+				if (err) {
+
+					console.log(err);
+					console.log(p);
+					console.log(nodeIDs[p[t.probeBssid]]);
+				}
 				else { console.log(response);}
 			}
 		);
@@ -336,77 +367,5 @@ module.exports = function sysInterface(){
 	return{
 		parser: parser,
 		pouch:pouch
-		// sniff: sniff,
-		// tail: tail/
-		// hop:hop
 	};
 };
-/* Executing Sniffer using nodes child_process and reading stdout to a log file */
-
-
-// var out = fs.openSync("./sniffer/packets.log", 'a');
-// var errFile= fs.openSync("./sniffer/err.log", 'a');
-// var sniff = spawn( './sniffer/tinsSniffer',["en0"] );
-// sniff.stdout.on('data', function (data) { fs.writeSync(out, data.toString());	});
-// sniff.stderr.on('data', function (err) { fs.writeSync(errFile	, err.toString());	});
-//TODO: Check that the closeSync is being called correctly
-// sniff.on('close', function (code) {fs.closeSync(out);fs.closeSync(err);console.log('sniffer process exited with code ' + code);});
-// sniff.on('close', function (code) {
-// 	console.error("Closing sniffer");
-// 	console.error("Sniffer code " + code);
-//
-//           if (fs.existsSync(errFile)) {
-//               init.emit('stderr', fs.readFileSync(errFile));
-//               fs.closeSync(err);
-//               fs.unlinkSync(errFile);
-//           }
-//           if (fs.existsSync(outFile)) {
-//               init.emit('stdout', code, fs.readFileSync(outFile));
-//               fs.closeSync(out);
-//               fs.unlinkSync(outFile);
-//           }
-//
-//   });
-
-/* tail -f that log file to feed it into pouch */
-// var tail  = spawn('tail', ['-f','./sniffer/packets.log']);
-// tail.stdout.on('data', function (data) {parser.parseLine(data);});
-// tail.stderr.on('data', function (data) {console.log('tail stderr: ' + data);});
-// tail.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-//
-// var channelHopper  = spawn('airport', ['sniff','1']);
-// channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
-// channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
-// channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-//
-// var channels = ['1','6','11'];
-// var i=0;
-// var hop = function(){
-// 		channelHopper.kill();
-// 		console.log("current index " + i);
-//
-// 	  if(i <(channels.length-1)){
-// 					i++;
-// 		}
-// 		else{
-// 			i=0;
-// 		}
-// 		console.log('switching to  channel ' + channels[i]);
-// 		channelHopper  = spawn('airport', ['sniff',channels[i]]);
-// 		channelHopper.stdout.on('data', function (data) {console.log('airport stdout: ' + data);});
-// 		channelHopper.stderr.on('data', function (data) {console.log('airport stderr: ' + data);});
-// 		channelHopper.on('close', function (code) {if (code !== 0) {console.log('tail process exited with code ' + code);}});
-// 		setTimeout(hop,5000);
-// }
-
-// hop();
-
-// var sniffer  = execFile('../public/sniffer/tinsSniffer');//,  function (error, stdout, stderr) {
-	// console.log('stdout: ' + stdout);
-	// console.log('stderr: ' + stderr);
-	// if (error !== null) {
-	//   console.log('exec error: ' + error);
-	// }});
-// sniffer.stdout.on('data', function (data) {console.log(data);});
-// sniffer.stderr.on('data', function (data) {console.log('sniffer stderr: ' + data);});
-// sniffer.on('close', function (code) {console.log('sniffer process exited with code ' + code);});

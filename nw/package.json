@@ -14,7 +14,7 @@
     "jquery": "^2.1.1",
     "node-webkit-builder": "^0.1.1",
     "nodewebkit": "^0.10.2",
-    "nshey": "0.0.4",
+    "nshey": "0.0.8",
     "partialify": "^3.1.1",
     "pouchdb": "^2.2.3",
     "sudo": "^1.0.3",
