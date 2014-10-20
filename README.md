@@ -30,17 +30,17 @@ In the current set up it is not required to install couchdb. You can avoid using
 ## Node Webkit App
 
 ###Required
-1. Node.js
+
+1. [Node.js](http://nodejs.org/)
+2. Global installation of Gulp: `npm install gulp -g`
 
 
 ### Setup
 
-
-2. Enter the `nw` directory and install the development modules: `npm
-   install`
-3. Install gulp.js globally: `npm install gulp -g`
-4. From nw run gulp: `gulp`
-5. Start up the app: `npm run app`
+1. After cloning the repo, `cd nw`.
+2. Install the development modules with `npm install`.
+2. Run gulp with `gulp`. After it says "default" is finished, you can `ctrl-c` to exit, or open a new terminal in the same location.
+3. Start the app with `npm run app`.
 
 The public folder contains the `package.json` for the application window, as well as the base `index.html` file for the application.
 
