@@ -15,31 +15,31 @@ var jsPath = './app/**/*';
 var cssPath = './app/css/**/*.scss';
 var sniffPath = '../sniffer/build/forNW/Release/*';
 
-// var builderOptions = {
-//   version: '0.9.2',
-//   buildType: 'versioned',
-//   files: [ './public/**'],
-//   buildDir: './dist',
-//   platforms: ['osx'],
-//   macIcns: './icons/pbjs.icns'
-// };
+var builderOptions = {
+  version: '0.10.2',
+  buildType: 'versioned',
+  files: [ './public/**'],
+  buildDir: './dist',
+  platforms: ['osx'],
+  macIcns: './icons/pbjs.icns'
+};
 // var binaryDir = Path.join(builderOptions.buildDir, info.name + " - v" + info.version, 'osx');
 
-// function build (cb) {
-//   var nw = new NwBuilder(builderOptions);
-//
-//   nw.on('log', console.log);
-//   console.log(binaryDir);
-//   nw.build().then(function () {
-//
-//     fs.renameSync(binaryDir + '/node-webkit.app', binaryDir + '/pbjs.app');
-//     console.log('Build created');
-//     cb();
-//   }).catch(function (error) {
-//     console.error(error);
-//   });
-//
-// }
+function build (cb) {
+  var nw = new NwBuilder(builderOptions);
+
+  nw.on('log', console.log);
+  console.log(binaryDir);
+  nw.build().then(function () {
+
+    fs.renameSync(binaryDir + '/node-webkit.app', binaryDir + '/pbjs.app');
+    console.log('Build created');
+    cb();
+  }).catch(function (error) {
+    console.error(error);
+  });
+
+}
 
 gulp.task('browserify', function() {
   var bundleStream = browserify('./app/main.js')

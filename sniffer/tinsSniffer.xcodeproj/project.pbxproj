@@ -168,7 +168,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = /usr/local/lib/libtins.a;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.9;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
@@ -207,7 +207,7 @@
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = /usr/local/lib/libtins.a;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.9;
 				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
@@ -225,6 +225,7 @@
 					"$(inherited)",
 					/Users/surya/macports/lib,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OBJROOT = build;
 				OTHER_LDFLAGS = (
 					/usr/local/lib/libtins.a,
@@ -234,6 +235,7 @@
 					"-std=c++11",
 				);
 				PRODUCT_NAME = tinsSniffer;
+				SDKROOT = macosx10.9;
 				SYMROOT = build/forNW;
 			};
 			name = Debug;
@@ -251,6 +253,7 @@
 					"$(inherited)",
 					/Users/surya/macports/lib,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OBJROOT = build;
 				OTHER_LDFLAGS = (
 					/usr/local/lib/libtins.a,
@@ -260,6 +263,7 @@
 					"-std=c++11",
 				);
 				PRODUCT_NAME = tinsSniffer;
+				SDKROOT = macosx10.9;
 				SYMROOT = build/forNW;
 			};
 			name = Release;

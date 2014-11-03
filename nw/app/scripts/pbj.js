@@ -92,7 +92,7 @@ module.exports = function App(){
         myNetwork('#vis',postData);
         myNetwork.updateData(postData);
         firstTime = false;
-        updateOnTimer();
+        // updateOnTimer();
       }
       else{
         // console.log("othe");
@@ -192,7 +192,7 @@ module.exports = function App(){
     
     myNetwork.toggleLayout(utils.config.layouts[currentLayoutIndex]);
 
-    layoutTimeout =  setTimeout(updateOnTimer,10000);
+    // layoutTimeout =  setTimeout(updateOnTimer,10000);
   }
   
 
